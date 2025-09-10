@@ -1,0 +1,459 @@
+:root {
+    --primary-color: #4CAF50; /* Green */
+    --secondary-color: #2196F3; /* Blue */
+    --accent-color: #FFC107; /* Amber */
+    --bg-color: #282c34; /* Dark Grey */
+    --card-bg: #3c414d; /* Slightly lighter grey */
+    --text-color: #e0e0e0; /* Light Grey */
+    --border-color: #555;
+    --button-text-color: #ffffff;
+    --wooden-button-text-color: #ffffff;
+    --wooden-button-bg-color: #8B4513; /* Saddle Brown */
+    --font-heading: 'Luckiest Guy', cursive;
+    --font-body: 'Open Sans', sans-serif;
+    --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-medium: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden; /* Prevent body scrolling, let main-content handle it */
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--text-color);
+    background: linear-gradient(135deg, #1a1a1d, #323235);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+}
+
+#app {
+    width: 100%;
+    max-width: 500px; /* Typical mobile width */
+    height: 100%;
+    background-color: var(--bg-color);
+    box-shadow: var(--shadow-medium);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden; /* For modal animations */
+}
+
+#header {
+    width: 100%;
+    padding: 15px 20px;
+    background-color: rgba(60, 65, 77, 0.9); /* card-bg with transparency */
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-light);
+    position: relative;
+    z-index: 10;
+}
+
+.balance-info {
+    display: flex;
+    align-items: center;
+    background-color: #2e313a;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #444;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--accent-color);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.toncoin-logo {
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
+}
+
+#user-balance {
+    color: var(--accent-color);
+}
+
+#main-content {
+    flex: 1;
+    overflow-y: auto; /* Make content scrollable */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-bottom: 80px; /* Extra padding for bottom content if needed */
+}
+
+/* Ad Section */
+.ad-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+    min-height: 250px; /* Ensure button section has enough height */
+}
+
+.ad-button-container {
+    position: relative;
+    width: 280px; /* Rectangular width */
+    height: 120px; /* Rectangular height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ad-button {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: var(--secondary-color); /* Modern blue background */
+    border-radius: 15px; /* Slightly rounded corners for rectangle */
+    font-family: var(--font-heading);
+    font-size: 2.2em;
+    color: var(--button-text-color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    outline: none;
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), inset 0 4px 10px rgba(255, 255, 255, 0.2);
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    border: 2px solid #1976D2; /* Darker blue border */
+}
+
+.ad-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.2);
+    background-color: #1976D2; /* Slightly darker blue on active */
+}
+
+.ad-placeholder {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--accent-color);
+    font-weight: bold;
+    font-size: 1.1em;
+    width: 90%;
+    max-width: 300px;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ad-placeholder .loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--accent-color);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin-top: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Earnings & Withdrawal Section */
+#earnings-withdrawal {
+    background-color: var(--card-bg);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+#earnings-withdrawal h2, #earnings-withdrawal h3 {
+    font-family: var(--font-heading);
+    color: var(--accent-color);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+    font-size: 1.6em;
+}
+
+#earnings-withdrawal h3 {
+    margin-top: 25px;
+    font-size: 1.4em;
+}
+
+.earnings-display {
+    background-color: #2e313a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    border: 1px solid #444;
+}
+
+.earnings-display p {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.earnings-display p:last-child {
+    margin-bottom: 0;
+}
+
+.earnings-display span {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Styling for the new withdrawn amount */
+#withdrawn-amount {
+    color: var(--secondary-color); /* Or a distinct color like a softer green or blue */
+}
+
+.withdrawal-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.min-withdrawal {
+    font-size: 0.9em;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.button {
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-family: var(--font-body);
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.primary-button {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border: 1px solid #388E3C;
+}
+
+.primary-button:hover {
+    background-color: #5cb85c;
+}
+
+.secondary-button {
+    background-color: #6c757d;
+    color: var(--button-text-color);
+    border: 1px solid #5a6268;
+}
+
+.secondary-button:hover {
+    background-color: #5a6268;
+}
+
+.button-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Referral Section */
+#referral-section {
+    background-color: var(--card-bg);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    margin-top: 30px;
+}
+
+#referral-section h3 {
+    font-family: var(--font-heading);
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+    font-size: 1.4em;
+}
+
+.referral-display {
+    background-color: #2e313a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    border: 1px solid #444;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+#my-referral-code {
+    font-family: var(--font-heading);
+    font-size: 1.5em;
+    color: var(--accent-color);
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Modal Styling */
+.modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.modal.visible .modal-content {
+    transform: translateY(0);
+}
+
+.modal-content h3 {
+    font-family: var(--font-heading);
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 1.8em;
+}
+
+.modal-content label {
+    font-size: 0.95em;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+.modal-content input[type="number"],
+.modal-content input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #2e313a;
+    color: var(--text-color);
+    font-size: 1.1em;
+    outline: none;
+    margin-bottom: 15px;
+    transition: border-color 0.2s ease;
+}
+
+.modal-content input[type="number"]:focus,
+.modal-content input[type="text"]:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}
+
+.modal-content input::placeholder {
+    color: rgba(224, 224, 224, 0.5);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.modal-buttons .button {
+    flex: 1;
+    padding: 10px 15px;
+}
+
+.message {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.message.success {
+    color: var(--primary-color);
+}
+
+.message.error {
+    color: #e57373; /* Light Red */
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Scrollbar Styling */
+#main-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+#main-content::-webkit-scrollbar-track {
+    background: #3c414d; /* card-bg */
+    border-radius: 10px;
+}
+
+#main-content::-webkit-scrollbar-thumb {
+    background: #6a748a; /* A medium grey-blue */
+    border-radius: 10px;
+    border: 2px solid #3c414d;
+}
+
+#main-content::-webkit-scrollbar-thumb:hover {
+    background: #8b95a8;
+}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TakoniAds Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <script type="importmap">
+        {
+          "imports": {
+            "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.mjs",
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+          }
+        }
+    </script>
+</head>
+<body>
+    <div id="app">
+        <header id="header">
+            <div class="balance-info">
+                <img src="toncoin_logo.png" alt="Toncoin Logo" class="toncoin-logo">
+                <span id="user-balance">0.00 TON</span>
+            </div>
+        </header>
+
+        <main id="main-content">
+            <section class="ad-section">
+                <div class="ad-button-container">
+                    <button id="watch-ad-button" class="ad-button">Reklam İzle</button>
+                </div>
+                <div id="ad-placeholder" class="ad-placeholder hidden">
+                    <p>Reklam Oynatılıyor...</p>
+                    <div class="loader"></div>
+                </div>
+            </section>
+
+            <section id="earnings-withdrawal">
+                <h2>Kazançlarınız</h2>
+                <div class="earnings-display">
+                    <p>Toplam Kazanılan: <span id="total-earned">0.00 TON</span></p>
+                    <p>Çekilen Miktar: <span id="withdrawn-amount">0.00 TON</span></p>
+                </div>
+
+                <h3>Para Çekme</h3>
+                <div class="withdrawal-area">
+                    <p class="min-withdrawal">Minimum Çekim: 0.05 TON</p>
+                    <button id="open-withdrawal-modal" class="button primary-button">
+                        <img src="toncoin_logo.png" alt="Toncoin Logo" class="button-icon">
+                        Para Çek
+                    </button>
+                </div>
+            </section>
+
+            <!-- Referral Code Section -->
+            <section id="referral-section">
+                <h3>Referans Kodunuz</h3>
+                <div class="referral-display">
+                    <p>Kodunuz: <span id="my-referral-code">YÜKLENİYOR...</span></p>
+                    <button id="share-referral-button" class="button secondary-button">
+                        Referans Kodunu Paylaş
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <div id="withdrawal-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Para Çek</h3>
+                <p>Mevcut Bakiyeniz: <span id="modal-current-balance">0.00 TON</span></p>
+                <label for="withdrawal-amount">Çekim Miktarı (TON):</label>
+                <input type="number" id="withdrawal-amount" step="0.01" min="0.05" placeholder="0.05">
+                <label for="ton-wallet-address">Toncoin Cüzdan Adresi:</label>
+                <input type="text" id="ton-wallet-address" placeholder="TON cüzdan adresinizi girin">
+                <div class="modal-buttons">
+                    <button id="confirm-withdrawal" class="button primary-button">Çekimi Onayla</button>
+                    <button id="cancel-withdrawal" class="button secondary-button">İptal</button>
+                </div>
+                <p id="withdrawal-message" class="message"></p>
+            </div>
+        </div>
+
+        <!-- Referral Code Entry Modal for First-time Users -->
+        <div id="initial-referral-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Hoş Geldiniz!</h3>
+                <p>Uygulamayı kullanmaya başlamak için bir referans kodu girebilirsiniz (isteğe bağlı).</p>
+                <label for="initial-referral-input">Referans Kodu (İsteğe Bağlı):</label>
+                <input type="text" id="initial-referral-input" placeholder="Referans kodu girin">
+                <div class="modal-buttons">
+                    <button id="submit-initial-referral" class="button primary-button">Devam Et</button>
+                </div>
+                <p id="initial-referral-message" class="message"></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
