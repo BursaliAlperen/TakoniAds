@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TakoniAds Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div id="app">
+    <!-- Header -->
+    <header>
+        <div class="balance-info">
+            <img src="{{ url_for('static', filename='toncoin_logo.png') }}" alt="Toncoin Logo" class="toncoin-logo">
+            <span id="user-balance">0.00 TON</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Ad Section -->
+        <section class="ad-section">
+            <button id="watch-ad-button" class="ad-button">Reklam İzle</button>
+            <div id="ad-placeholder" class="ad-placeholder hidden">
+                <p>Reklam Oynatılıyor...</p>
+                <div class="loader"></div>
+            </div>
+        </section>
+
+        <!-- Earnings & Withdrawal -->
+        <section id="earnings-withdrawal">
+            <p>Toplam Kazanılan: <span id="total-earned">0.00 TON</span></p>
+            <p>Çekilen Miktar: <span id="withdrawn-amount">0.00 TON</span></p>
+            <button id="open-withdrawal-modal">Para Çek</button>
+        </section>
+
+        <!-- Referral Section -->
+        <section id="referral-section">
+            <p>Kodunuz: <span id="my-referral-code">YÜKLENİYOR...</span></p>
+            <button id="share-referral-button">Referans Kodunu Paylaş</button>
+        </section>
+    </main>
+
+    <!-- Withdrawal Modal -->
+    <div id="withdrawal-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Para Çek</h3>
+            <p>Mevcut Bakiyeniz: <span id="modal-current-balance">0.00 TON</span></p>
+            <label for="withdrawal-amount">Miktar (TON)</label>
+            <input type="number" id="withdrawal-amount" step="0.01" min="0.05">
+            <label for="ton-wallet-address">Cüzdan Adresi</label>
+            <input type="text" id="ton-wallet-address">
+            <div class="modal-buttons">
+                <button id="confirm-withdrawal">Onayla</button>
+                <button id="cancel-withdrawal">İptal</button>
+            </div>
+            <p id="withdrawal-message" class="message"></p>
+        </div>
+    </div>
+
+    <!-- Initial Referral Modal -->
+    <div id="initial-referral-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Hoş Geldiniz!</h3>
+            <p>Referans kodu girerek başlamak isterseniz ekleyin (isteğe bağlı)</p>
+            <input type="text" id="initial-referral-input" placeholder="Referans kodu">
+            <button id="submit-initial-referral">Devam Et</button>
+            <p id="initial-referral-message" class="message"></p>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+    </html>
