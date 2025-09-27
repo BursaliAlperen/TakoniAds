@@ -1,345 +1,642 @@
+Takoni Ads - Coin Rewards Mini App
+
+I'll create a complete Telegram mini app with coin rewards, swapping functionality, and payment methods. Here's the implementation:
+
+```html
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Earn & Reward App</title>
-    
-    <!-- Google Fonts (Nunito) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-
-    <!-- Gigapub Script -->
-    <script src="https://ad.gigapub.tech/script?id=1689"></script>
-
-    <!-- Internal CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takoni Ads - Earn Coins</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* (CSS কোড অপরিবর্তিত, আগের ফাইলের মতোই) */
-        /* Google Font Import */
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
-        :root {
-            --font-family: 'Nunito', sans-serif;
-            --bg-color-light: #f4f4f9;
-            --secondary-bg-light: #ffffff;
-            --text-color-light: #1c1c1e;
-            --subtle-text-light: #6d6d72;
-            --primary-color-light: #007aff;
-            --border-color-light: #e0e0e0;
-            --bg-color-dark: #121212;
-            --secondary-bg-dark: #1c1c1e;
-            --text-color-dark: #ffffff;
-            --subtle-text-dark: #8e8e93;
-            --primary-color-dark: #0a84ff;
-            --border-color-dark: #38383a;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: var(--font-family); transition: background-color 0.3s, color 0.3s; }
-        body.light-theme { background-color: var(--bg-color-light); color: var(--text-color-light); }
-        body.dark-theme { background-color: var(--bg-color-dark); color: var(--text-color-dark); }
-        #app { max-width: 500px; margin: 0 auto; padding-bottom: 70px; }
-        /* এখানে তোমার আগের সব CSS রেখেছি */
+        
+        body {
+            background: linear-gradient(135deg, #1a1f2b 0%, #2d3748 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        header {
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff9a00, #ffcc00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            color: #a0aec0;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            flex: 1;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .coin-display {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .coin-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            background: gold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .coin-count {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .coin-value {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            color: #a0aec0;
+        }
+        
+        .progress-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .progress-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9a00, #ffcc00);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #ff9a00, #ffcc00);
+            color: #333;
+            box-shadow: 0 5px 15px rgba(255, 154, 0, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .payment-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .payment-method {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-method:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .method-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .method-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .method-name {
+            font-weight: bold;
+        }
+        
+        .method-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-available {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+        }
+        
+        .status-coming {
+            background: rgba(237, 137, 54, 0.2);
+            color: #ed8936;
+        }
+        
+        .swap-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #2d3748;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .swap-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .swap-rate {
+            text-align: center;
+            margin: 15px 0;
+            opacity: 0.8;
+        }
+        
+        .swap-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #ff9a00, #ffcc00);
+            border: none;
+            border-radius: 10px;
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .reward-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .coin-reward {
+            animation: coinReward 1s ease-out forwards;
+        }
+        
+        @keyframes coinReward {
+            0% { 
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0;
+            }
+        }
+        
+        .daily-reset {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            text-align: center;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .coin-count {
+                font-size: 2.5rem;
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
-
-    <!-- HTML Content অপরিবর্তিত -->
-    <div id="app">
-        <header class="profile-header">
-            <div class="profile-info">
-                <img id="user-photo" src="" alt="User Photo">
-                <div class="user-details">
-                    <h1 id="user-name">Loading... <i class="fas fa-check-circle verified-icon"></i></h1>
-                    <p> Balance: ৳<span id="user-points">0</span>TK</p>
-                </div>
+    <div class="container">
+        <header>
+            <div class="logo">T</div>
+            <div>
+                <h1>Takoni Ads</h1>
+                <p class="subtitle">Watch ads, earn coins, get paid!</p>
             </div>
         </header>
-
-        <main id="main-content">
-            <div id="home-page" class="page active">
-                <h2>Dashboard</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Daily Ads Watched</h3>
-                        <p><span id="daily-ads-watched">00</span> /  25</p>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-value" id="adsWatchedCount">0</div>
+                <div class="stat-label">Ads Watched</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalEarned">$0.00</div>
+                <div class="stat-label">Total Earned</div>
+            </div>
+        </div>
+        
+        <div class="coin-display">
+            <div class="coin-icon">🪙</div>
+            <div class="coin-count" id="coinCount">0</div>
+            <div class="coin-value" id="coinValue">$0.00</div>
+            <p>Available Coins</p>
+        </div>
+        
+        <div class="progress-section">
+            <h2 class="progress-title">Today's Progress</h2>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-stats">
+                <span id="adsWatched">0/5 ads watched</span>
+                <span id="progressPercent">0%</span>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="watchAdBtn">
+                <i class="fas fa-tv"></i>
+                Watch Ad
+            </button>
+            <button class="btn btn-secondary" id="swapBtn">
+                <i class="fas fa-exchange-alt"></i>
+                Swap Coins
+            </button>
+        </div>
+        
+        <div class="payment-section">
+            <h2 class="section-title"><i class="fas fa-wallet"></i> Payment Methods</h2>
+            <div class="payment-methods">
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #f2a900;">
+                            <i class="fab fa-btc"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">Bitcoin (Lightning)</div>
+                            <div class="method-desc">Min. 1000 coins</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Total Referrals</h3>
-                        <p id="referral-count">00</p>
-                    </div>
+                    <div class="method-status status-available">Available</div>
                 </div>
-                <div class="referral-section">
-                    <h3>Refer & Earn More!</h3>
-                    <p>Share your link to get bonus points.</p>
-                    <input type="text" id="referral-link" readonly>
-                    <button id="copy-ref-link-btn">Copy Referral Link</button>
+                
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #26a17b;">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">USDT (TRC20)</div>
+                            <div class="method-desc">Min. 1000 coins</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-coming">Coming Soon</div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #0088cc;">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">Toncoin</div>
+                            <div class="method-desc">Min. 1000 coins</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-coming">Coming Soon</div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #ef0027;">
+                            <i class="fab fa-reddit"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">TRX</div>
+                            <div class="method-desc">Min. 1000 coins</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-coming">Coming Soon</div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #c2a633;">
+                            <i class="fab fa-reddit"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">Dogecoin</div>
+                            <div class="method-desc">Min. 1000 coins</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-coming">Coming Soon</div>
                 </div>
             </div>
-
-            <div id="tasks-page" class="page">
-                <h2>Complete Tasks</h2>
-                <div class="task-container">
-                    <i class="fas fa-video task-icon"></i>
-                    <h3>Watch a Rewarded Ad</h3>
-                    <p>Earn 0.25 TK for every ad.</p>
-                    <button id="watch-ad-btn" class="action-btn">Watch Ad</button>
-                </div>
-                <div class="task-container">
-                    <i class="fab fa-telegram task-icon"></i>
-                    <h3>Join Our Channel</h3>
-                    <p>Get ৳10 bonus.</p>
-                    <button id="join-channel-btn" class="action-btn">Join & Claim Bonus</button>
-                </div>
-                <div class="task-container">
-                    <i class="fas fa-users task-icon"></i>
-                    <h3>Join Our Group</h3>
-                    <p>Get ৳2 bonus.</p>
-                    <button id="join-group-btn" class="action-btn">Join & Claim Bonus</button>
-                </div>
-            </div>
-            
-            <div id="withdraw-page" class="page">
-                <h2>Withdraw</h2>
-                <p>Minimum 50 TK required to withdraw.</p>
-                <form id="withdraw-form">
-                    <div class="form-group">
-                        <label for="withdraw-method">Method:</label>
-                        <select id="withdraw-method" required>
-                            <option value="Bkash">Bkash</option>
-                            <option value="Nagad">Nagad</option>
-                            <option value="Binance">Binance</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="account-number">Account Number/ID:</label>
-                        <input type="text" id="account-number" placeholder="e.g., 012345..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="amount">Taka to Withdraw:</label>
-                        <input type="number" id="amount" placeholder="e.g., 02" required>
-                    </div>
-                    <button type="submit" id="withdraw-submit-btn" class="action-btn">
-                        <span class="btn-text">Submit Request</span>
-                        <span class="btn-loader"></span>
-                    </button>
-                </form>
-            </div>
-        </main>
-
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
-            <button class="nav-btn" data-page="tasks-page"><i class="fas fa-tasks"></i><span>Tasks</span></button>
-            <button class="nav-btn" data-page="withdraw-page"><i class="fas fa-wallet"></i><span>Withdraw</span></button>
-        </nav>
-    </div>
-
-    <div id="loading-modal" class="modal">
-        <div class="modal-content"><div class="loader"></div><p>Loading Ad...</p></div>
+        </div>
+        
+        <p class="daily-reset">Progress resets daily at midnight</p>
+        
+        <footer>
+            <p>Powered by Takoni Ads • Telegram Mini App</p>
+        </footer>
     </div>
     
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Swap Modal -->
+    <div class="swap-modal" id="swapModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Swap Coins</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <p>Swap your Takoni coins to available payment methods</p>
+            
+            <div class="swap-rate">
+                100 Coins = ~$0.01 (1:1 ratio)
+            </div>
+            
+            <input type="number" class="swap-input" id="swapAmount" placeholder="Enter coin amount" min="100">
+            
+            <div id="swapResult" class="swap-rate">
+                You will receive: $0.00
+            </div>
+            
+            <button class="swap-btn" id="confirmSwap">Swap Coins</button>
+            
+            <p style="margin-top: 15px; font-size: 0.9rem; opacity: 0.7;">
+                Minimum swap: 100 coins. Only Bitcoin (Lightning) is currently available.
+            </p>
+        </div>
+    </div>
+    
+    <div class="reward-animation" id="rewardAnimation">+10 🪙</div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const tg = window.Telegram.WebApp;
-            const BOT_TOKEN = "8440148461:AAGDh6aXDswlpR1ug_Cx9JAnOGKnmvH8h_4";
-            const BOT_USERNAME = "Takamakerbd_bot";
-            const ADMIN_CHAT_ID = "6786186083";
-            const CHANNEL_LINK = "https://t.me/trickmimicrojob";
-            const GROUP_LINK = "https://t.me/+XOFG-KodIfkzMDc1";
-            const DAILY_AD_LIMIT = 25;
-            const POINTS_PER_AD = 0.25;
-            const CHANNEL_JOIN_BONUS = 10;
-            const GROUP_JOIN_BONUS = 2;
-            const MIN_WITHDRAW_POINTS = 50;
-
-            const userPhotoElem = document.getElementById('user-photo');
-            const userNameElem = document.getElementById('user-name');
-            const userPointsElem = document.getElementById('user-points');
-            const dailyAdsWatchedElem = document.getElementById('daily-ads-watched');
-            const referralCountElem = document.getElementById('referral-count');
-            const watchAdBtn = document.getElementById('watch-ad-btn');
-            const joinChannelBtn = document.getElementById('join-channel-btn');
-            const joinGroupBtn = document.getElementById('join-group-btn');
-            const withdrawForm = document.getElementById('withdraw-form');
-            const referralLinkElem = document.getElementById('referral-link');
-            const copyRefLinkBtn = document.getElementById('copy-ref-link-btn');
-            const loadingModal = document.getElementById('loading-modal');
-
-            let userState = {
-                points: 0,
-                dailyAdWatchCount: 0,
-                lastAdWatchDate: null,
-                referrals: [],
-                hasJoinedChannel: false,
-                hasJoinedGroup: false,
-                userId: null
-            };
-
-            const saveState = () => {
-                if(userState.userId) {
-                    localStorage.setItem(`userState_${userState.userId}`, JSON.stringify(userState));
-                }
-            };
-
-            const loadState = (userId) => {
-                const savedState = localStorage.getItem(`userState_${userId}`);
-                if (savedState) {
-                    userState = JSON.parse(savedState);
-                    if (userState.hasJoinedGroup === undefined) userState.hasJoinedGroup = false;
-                }
-            };
-
-            const initApp = () => {
-                tg.ready();
-                tg.expand();
-                document.body.className = `${tg.colorScheme}-theme`;
-
-                const user = tg.initDataUnsafe.user;
-                if (!user || !user.id) {
-                    tg.showAlert("Could not verify user. Please open this app through Telegram.", () => tg.close());
-                    return;
-                }
-                
-                userState.userId = user.id;
-                loadState(user.id);
-                
-                const today = new Date().toISOString().slice(0, 10);
-                if (userState.lastAdWatchDate !== today) {
-                    userState.dailyAdWatchCount = 0;
-                    userState.lastAdWatchDate = today;
-                }
-                
-                updateUI();
-                setupNavigation();
-                setupEventListeners();
-                saveState();
-            };
+        // Initialize app state
+        const appState = {
+            totalCoins: 0,
+            adsWatchedToday: 0,
+            totalAdsWatched: 0,
+            maxAdsPerDay: 5,
+            coinsPerAd: 10,
+            lastResetDate: null,
+            coinValue: 0.0001, // $0.01 per 100 coins
+            swappedCoins: 0
+        };
+        
+        // DOM Elements
+        const coinCountElement = document.getElementById('coinCount');
+        const coinValueElement = document.getElementById('coinValue');
+        const adsWatchedCountElement = document.getElementById('adsWatchedCount');
+        const totalEarnedElement = document.getElementById('totalEarned');
+        const progressBarElement = document.getElementById('progressBar');
+        const adsWatchedElement = document.getElementById('adsWatched');
+        const progressPercentElement = document.getElementById('progressPercent');
+        const watchAdBtn = document.getElementById('watchAdBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const swapModal = document.getElementById('swapModal');
+        const closeModal = document.getElementById('closeModal');
+        const swapAmount = document.getElementById('swapAmount');
+        const swapResult = document.getElementById('swapResult');
+        const confirmSwap = document.getElementById('confirmSwap');
+        const rewardAnimation = document.getElementById('rewardAnimation');
+        
+        // Initialize the app
+        function initApp() {
+            loadState();
+            checkDailyReset();
+            updateUI();
             
-            const updateUI = () => {
-                const user = tg.initDataUnsafe.user;
-                if (user) {
-                    userPhotoElem.src = user.photo_url || 'https://i.imgur.com/placeholder.png';
-                    userNameElem.innerHTML = `${user.first_name || ''} ${user.last_name || ''} <i class="fas fa-check-circle verified-icon"></i>`;
-                }
-                
-                userPointsElem.textContent = userState.points;
-                dailyAdsWatchedElem.textContent = userState.dailyAdWatchCount;
-                referralCountElem.textContent = userState.referrals.length;
-                referralLinkElem.value = `https://t.me/${BOT_USERNAME}?start=ref_${userState.userId}`;
-
-                if (userState.hasJoinedChannel) {
-                    joinChannelBtn.textContent = 'Bonus Claimed';
-                    joinChannelBtn.disabled = true;
-                }
-                if (userState.hasJoinedGroup) {
-                    joinGroupBtn.textContent = 'Bonus Claimed';
-                    joinGroupBtn.disabled = true;
-                }
-            };
+            // Set up event listeners
+            watchAdBtn.addEventListener('click', watchAd);
+            swapBtn.addEventListener('click', openSwapModal);
+            closeModal.addEventListener('click', closeSwapModal);
+            swapAmount.addEventListener('input', updateSwapResult);
+            confirmSwap.addEventListener('click', processSwap);
             
-            const setupEventListeners = () => {
-                watchAdBtn.addEventListener('click', handleWatchAd);
-                joinChannelBtn.addEventListener('click', handleJoinChannel);
-                joinGroupBtn.addEventListener('click', handleJoinGroup);
-                withdrawForm.addEventListener('submit', handleWithdraw);
-                copyRefLinkBtn.addEventListener('click', copyReferralLink);
-            };
-
-            const handleWatchAd = () => {
-                if (userState.dailyAdWatchCount >= DAILY_AD_LIMIT) {
-                    tg.showAlert("You have reached your daily ad watch limit."); 
-                    return;
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === swapModal) {
+                    closeSwapModal();
                 }
-                loadingModal.style.display = 'flex';
-                window.showGiga()
-                    .then(() => {
-                        userState.points += POINTS_PER_AD;
-                        userState.dailyAdWatchCount++;
-                        saveState();
-                        updateUI();
-                        tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert(`Congratulations! You've earned ${POINTS_PER_AD} taka.`);
-                    })
-                    .catch(() => {
-                        tg.showAlert("Ad could not be loaded. Please try again later.");
-                    })
-                    .finally(() => {
-                        loadingModal.style.display = 'none';
-                    });
-            };
-            
-            const handleJoinChannel = () => {
-                if(userState.hasJoinedChannel) {
-                    tg.showAlert('You have already claimed this bonus.'); return;
-                }
-                tg.openTelegramLink(CHANNEL_LINK);
-                setTimeout(() => {
-                    userState.points += CHANNEL_JOIN_BONUS;
-                    userState.hasJoinedChannel = true;
-                    tg.showAlert(`Thank you! You received ${CHANNEL_JOIN_BONUS} bonus taka.`);
-                    saveState();
-                    updateUI();
-                }, 3000);
-            };
-
-            const handleJoinGroup = () => {
-                if(userState.hasJoinedGroup) {
-                    tg.showAlert('You have already claimed this bonus.'); return;
-                }
-                tg.openTelegramLink(GROUP_LINK);
-                setTimeout(() => {
-                    userState.points += GROUP_JOIN_BONUS;
-                    userState.hasJoinedGroup = true;
-                    tg.showAlert(`Thank you! You received ${GROUP_JOIN_BONUS} bonus taka.`);
-                    saveState();
-                    updateUI();
-                }, 3000);
-            };
-
-            const handleWithdraw = async (e) => {
-                e.preventDefault();
-                const method = document.getElementById('withdraw-method').value;
-                const accountNumber = document.getElementById('account-number').value;
-                const amount = parseInt(document.getElementById('amount').value, 10);
-
-                if (isNaN(amount) || amount <= 0) { tg.showAlert("Please enter a valid amount."); return; }
-                if (amount < MIN_WITHDRAW_POINTS) { tg.showAlert(`Minimum withdrawal is ${MIN_WITHDRAW_POINTS} points.`); return; }
-                if (amount > userState.points) { tg.showAlert("You don't have enough balance."); return; }
-
-                userState.points -= amount;
-                saveState();
-                updateUI();
-                tg.showAlert("Withdrawal request submitted successfully!");
-                withdrawForm.reset();
-            };
-            
-            const copyReferralLink = () => {
-                navigator.clipboard.writeText(referralLinkElem.value).then(() => {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert("Referral link copied!");
-                });
-            };
-
-            const setupNavigation = () => {
-                const navButtons = document.querySelectorAll('.nav-btn');
-                const pages = document.querySelectorAll('.page');
-                navButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const pageId = button.dataset.page;
-                        pages.forEach(page => page.classList.remove('active'));
-                        document.getElementById(pageId).classList.add('active');
-                        navButtons.forEach(btn => btn.classList.remove('active'));
-                        button.classList.add('active');
-                    });
-                });
-            };
-
-            initApp();
-        });
-    </script>
-</body>
-</html>
+            });
+        }
+        
+        // Load state from localStorage
+        function loadState() {
+            const savedCoins = localStorage.getItem('takoni_totalCoins');
+            const savedAdsWatched = localStorage.getItem('takoni_adsWa
