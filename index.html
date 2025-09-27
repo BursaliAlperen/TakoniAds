@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tap & Earn TON - Prod</title>
+<title>Takoni Ads - Tap & Earn TON</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background-color: #121212; color: #fff; padding: 20px; }
@@ -16,22 +16,33 @@ button { padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 5px; bo
 .approve { background-color: #4caf50; color: #fff; }
 .reject { background-color: #f44336; color: #fff; }
 .tapBtn { background-color: #ffcc00; color: #000; font-size: 16px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
+input { padding: 10px; margin: 10px 0; width: 80%; border-radius: 5px; border: none; }
 canvas { background-color: #1f1f1f; border-radius: 8px; padding: 10px; }
 </style>
 </head>
 <body>
 
-<header>TAP & EARN TON - PROD</header>
+<header>Takoni Ads - Tap & Earn TON</header>
 
-<div class="section" id="userSection">
+<div class="section" id="loginSection">
+  <h2>Kullanıcı Girişi</h2>
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Şifre" />
+  <button onclick="login()">Giriş Yap</button>
+  <button onclick="signup()">Kayıt Ol</button>
+  <p id="loginStatus"></p>
+</div>
+
+<div class="section" id="userSection" style="display:none;">
   <h2>Kullanıcı Paneli</h2>
+  <p>Email: <span id="userEmail"></span></p>
   <p>Balance: <span id="userBalance">0.000000 TON</span></p>
   <button class="tapBtn" onclick="tapToEarn()">Tap & Earn +0.0005 TON</button>
 </div>
 
-<div class="section" id="adminSection">
+<div class="section" id="adminSection" style="display:none;">
   <h2>Admin Dashboard</h2>
-  <p id="adminStatus">Giriş yapılıyor...</p>
+  <p id="adminStatus"></p>
   <table>
     <thead>
       <tr>
@@ -44,7 +55,6 @@ canvas { background-color: #1f1f1f; border-radius: 8px; padding: 10px; }
     </thead>
     <tbody id="adminTableBody"></tbody>
   </table>
-
   <h3>Toplam Coin ve Referral Grafiği</h3>
   <canvas id="analyticsChart" width="400" height="200"></canvas>
 </div>
@@ -69,125 +79,124 @@ const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.database(app);
 const auth = firebase.auth(app);
 
-// Anonim giriş
-auth.signInAnonymously().catch(console.error);
+const adminUIDs = ['7904032877']; // Admin UID listesi
+
+// Giriş Fonksiyonu
+function login() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  auth.signInWithEmailAndPassword(email, password)
+    .then(cred => {
+      document.getElementById('loginStatus').innerText = 'Giriş başarılı!';
+      initUser(cred.user);
+    })
+    .catch(err => document.getElementById('loginStatus').innerText = err.message);
+}
+
+// Kayıt Fonksiyonu
+function signup() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(cred => {
+      db.ref('users/' + cred.user.uid).set({coins:0});
+      document.getElementById('loginStatus').innerText = 'Kayıt başarılı, giriş yapabilirsiniz.';
+    })
+    .catch(err => document.getElementById('loginStatus').innerText = err.message);
+}
+
+// Kullanıcı ve Admin Panelini Başlat
+function initUser(user) {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('userSection').style.display = 'block';
+  document.getElementById('userEmail').innerText = user.email;
+
+  const userRef = db.ref('users/' + user.uid);
+  userRef.on('value', snap => {
+    document.getElementById('userBalance').innerText = ((snap.val()||{}).coins||0).toFixed(6) + " TON";
+  });
+
+  if(adminUIDs.includes(user.uid)) {
+    document.getElementById('adminSection').style.display = 'block';
+    document.getElementById('adminStatus').innerText = 'Admin girişi başarılı: ' + user.uid;
+    loadWithdrawals();
+    loadAnalytics();
+  }
+}
 
 // Tap & Earn
 function tapToEarn() {
   const user = auth.currentUser;
-  if(!user) return alert("Giriş yapılmadı.");
+  if(!user) return alert('Giriş yapmadınız!');
   const userRef = db.ref('users/' + user.uid);
-  userRef.transaction(currentData => {
-    if(currentData === null) return {coins: 0.0005};
-    currentData.coins = (currentData.coins || 0) + 0.0005;
-    return currentData;
-  }, (error, committed, snapshot) => {
-    if(error) console.error(error);
-    else document.getElementById('userBalance').innerText = snapshot.val().coins.toFixed(6) + " TON";
+  userRef.transaction(current => {
+    if(!current) return {coins:0.0005};
+    current.coins = (current.coins||0)+0.0005;
+    return current;
   });
 }
 
-// Kullanıcı Bakiye Güncelle
-auth.onAuthStateChanged(user => {
-  if(!user) return;
-  const userRef = db.ref('users/' + user.uid);
-  userRef.on('value', snapshot => {
-    if(snapshot.exists()) {
-      document.getElementById('userBalance').innerText = (snapshot.val().coins || 0).toFixed(6) + " TON";
-    }
-  });
-  checkAdmin(user.uid);
-});
-
-// Admin Dashboard
-function checkAdmin(uid) {
-  db.ref('admins/' + uid).get().then(snapshot => {
-    if(snapshot.exists()){
-      document.getElementById('adminStatus').innerText = 'Admin girişi başarılı: ' + uid;
-      loadWithdrawals();
-      loadAnalytics();
-    } else {
-      document.getElementById('adminStatus').innerText = 'Bu kullanıcı admin değil.';
-      document.getElementById('adminSection').style.display = 'none';
-    }
-  });
-}
-
+// Admin Withdrawal
 function loadWithdrawals() {
-  db.ref('withdrawals').on('value', snapshot => {
+  db.ref('withdrawals').on('value', snap => {
     const tbody = document.getElementById('adminTableBody');
     tbody.innerHTML = '';
-    snapshot.forEach(snap => {
-      const w = snap.val();
-      if(w.status === 'Pending'){
+    snap.forEach(s => {
+      const w = s.val();
+      if(w.status==='Pending'){
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${w.userId}</td>
-          <td>${w.walletAddress}</td>
-          <td>${w.amount.toFixed(6)}</td>
-          <td>${w.status}</td>
-          <td>
-            <button class="approve" onclick="approve('${snap.key}', ${w.amount}, '${w.userId}')">Approve</button>
-            <button class="reject" onclick="reject('${snap.key}')">Reject</button>
-          </td>
-        `;
+        tr.innerHTML = `<td>${w.userId}</td><td>${w.walletAddress}</td><td>${w.amount.toFixed(6)}</td><td>${w.status}</td>
+        <td>
+          <button class="approve" onclick="approve('${s.key}', ${w.amount}, '${w.userId}')">Approve</button>
+          <button class="reject" onclick="reject('${s.key}')">Reject</button>
+        </td>`;
         tbody.appendChild(tr);
       }
     });
   });
 }
 
-function approve(withdrawId, amount, userId){
-  const userRef = db.ref('users/' + userId);
-  userRef.transaction(currentData => {
-    if(currentData === null) return currentData;
-    currentData.coins = (currentData.coins || 0) - amount;
-    return currentData;
+function approve(id, amount, userId){
+  db.ref('users/'+userId).transaction(current=>{
+    if(current) current.coins=(current.coins||0)-amount;
+    return current;
   });
-  db.ref('withdrawals/' + withdrawId).update({status: 'Approved'});
-  alert('Withdrawal approved!');
+  db.ref('withdrawals/'+id).update({status:'Approved'});
 }
 
-function reject(withdrawId){
-  db.ref('withdrawals/' + withdrawId).update({status: 'Rejected'});
-  alert('Withdrawal rejected!');
+function reject(id){
+  db.ref('withdrawals/'+id).update({status:'Rejected'});
 }
 
 // Analytics Chart
-function loadAnalytics(){
-  db.ref('users').once('value').then(snapshot => {
-    const labels = [];
-    const coinData = [];
-    const referralData = [];
-
-    snapshot.forEach(snap => {
-      labels.push(snap.key);
-      coinData.push(snap.val().coins || 0);
-      db.ref('reffers/' + snap.key).once('value').then(refSnap => {
-        referralData.push(refSnap.exists() ? Object.keys(refSnap.val()).length : 0);
-        if(coinData.length === labels.length && referralData.length === labels.length){
-          renderChart(labels, coinData, referralData);
+function loadAnalytics() {
+  db.ref('users').once('value').then(snapshot=>{
+    const labels=[], coins=[], refs=[];
+    snapshot.forEach(s=>{
+      labels.push(s.key);
+      coins.push((s.val().coins||0));
+      db.ref('reffers/'+s.key).once('value').then(r=>{
+        refs.push(r.exists()?Object.keys(r.val()).length:0);
+        if(coins.length===labels.length && refs.length===labels.length){
+          renderChart(labels, coins, refs);
         }
       });
     });
   });
 }
 
-function renderChart(labels, coins, referrals){
-  const ctx = document.getElementById('analyticsChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        { label: 'Coins', data: coins, backgroundColor: '#ffcc00' },
-        { label: 'Referrals', data: referrals, backgroundColor: '#4caf50' }
-      ]
-    },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+function renderChart(labels, coins, refs){
+  const ctx=document.getElementById('analyticsChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{labels:labels,datasets:[
+      {label:'Coins', data:coins, backgroundColor:'#ffcc00'},
+      {label:'Referrals', data:refs, backgroundColor:'#4caf50'}
+    ]},
+    options:{responsive:true, scales:{y:{beginAtZero:true}}}
   });
 }
 </script>
 
 </body>
-</html>
+  </html>
