@@ -86,10 +86,7 @@ function login() {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
   auth.signInWithEmailAndPassword(email, password)
-    .then(cred => {
-      document.getElementById('loginStatus').innerText = 'Giriş başarılı!';
-      initUser(cred.user);
-    })
+    .then(cred => initUser(cred.user))
     .catch(err => document.getElementById('loginStatus').innerText = err.message);
 }
 
@@ -110,6 +107,96 @@ function initUser(user) {
   document.getElementById('loginSection').style.display = 'none';
   document.getElementById('userSection').style.display = 'block';
   document.getElementById('userEmail').innerText = user.email;
+
+  const userRef = db.ref('users/' + user.uid);
+  userRef.on('value', snap => {
+    document.getElementById('userBalance').innerText = ((snap.val()||{}).coins||0).toFixed(6) + " TON";
+  });
+
+  if(adminUIDs.includes(user.uid)) {
+    document.getElementById('adminSection').style.display = 'block';
+    document.getElementById('adminStatus').innerText = 'Admin girişi başarılı: ' + user.uid;
+    loadWithdrawals();
+    loadAnalytics();
+  }
+}
+
+// Tap & Earn
+function tapToEarn() {
+  const user = auth.currentUser;
+  if(!user) return alert('Giriş yapmadınız!');
+  const userRef = db.ref('users/' + user.uid);
+  userRef.transaction(current => {
+    if(!current) return {coins:0.0005};
+    current.coins = (current.coins||0)+0.0005;
+    return current;
+  });
+}
+
+// Admin Withdrawal
+function loadWithdrawals() {
+  db.ref('withdrawals').on('value', snap => {
+    const tbody = document.getElementById('adminTableBody');
+    tbody.innerHTML = '';
+    snap.forEach(s => {
+      const w = s.val();
+      if(w.status==='Pending'){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${w.userId}</td><td>${w.walletAddress}</td><td>${w.amount.toFixed(6)}</td><td>${w.status}</td>
+        <td>
+          <button class="approve" onclick="approve('${s.key}', ${w.amount}, '${w.userId}')">Approve</button>
+          <button class="reject" onclick="reject('${s.key}')">Reject</button>
+        </td>`;
+        tbody.appendChild(tr);
+      }
+    });
+  });
+}
+
+function approve(id, amount, userId){
+  db.ref('users/'+userId).transaction(current=>{
+    if(current) current.coins=(current.coins||0)-amount;
+    return current;
+  });
+  db.ref('withdrawals/'+id).update({status:'Approved'});
+}
+
+function reject(id){
+  db.ref('withdrawals/'+id).update({status:'Rejected'});
+}
+
+// Analytics Chart
+function loadAnalytics() {
+  db.ref('users').once('value').then(snapshot=>{
+    const labels=[], coins=[], refs=[];
+    snapshot.forEach(s=>{
+      labels.push(s.key);
+      coins.push((s.val().coins||0));
+      db.ref('reffers/'+s.key).once('value').then(r=>{
+        refs.push(r.exists()?Object.keys(r.val()).length:0);
+        if(coins.length===labels.length && refs.length===labels.length){
+          renderChart(labels, coins, refs);
+        }
+      });
+    });
+  });
+}
+
+function renderChart(labels, coins, refs){
+  const ctx=document.getElementById('analyticsChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{labels:labels,datasets:[
+      {label:'Coins', data:coins, backgroundColor:'#ffcc00'},
+      {label:'Referrals', data:refs, backgroundColor:'#4caf50'}
+    ]},
+    options:{responsive:true, scales:{y:{beginAtZero:true}}}
+  });
+}
+</script>
+
+</body>
+</html>  document.getElementById('userEmail').innerText = user.email;
 
   const userRef = db.ref('users/' + user.uid);
   userRef.on('value', snap => {
