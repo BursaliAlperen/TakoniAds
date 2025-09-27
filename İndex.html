@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tap & Earn TON - Prod</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; background-color: #121212; color: #fff; padding: 20px; }
+  header { text-align: center; font-size: 28px; margin-bottom: 20px; }
+  .section { margin-bottom: 40px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #444; padding: 8px; text-align: center; }
+  th { background-color: #1f1f1f; }
+  button { padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 5px; border: none; }
+  .approve { background-color: #4caf50; color: #fff; }
+  .reject { background-color: #f44336; color: #fff; }
+  .tapBtn { background-color: #ffcc00; color: #000; font-size: 16px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
+  canvas { background-color: #1f1f1f; border-radius: 8px; padding: 10px; }
+</style>
+</head>
+<body>
+
+<header>TAP & EARN TON - PROD</header>
+
+<div class="section" id="userSection">
+  <h2>Kullanıcı Paneli</h2>
+  <p>Balance: <span id="userBalance">0.000000 TON</span></p>
+  <button class="tapBtn" onclick="tapToEarn()">Tap & Earn +0.0005 TON</button>
+</div>
+
+<div class="section" id="adminSection">
+  <h2>Admin Dashboard</h2>
+  <p id="adminStatus">Giriş yapılıyor...</p>
+  <table>
+    <thead>
+      <tr>
+        <th>UID</th>
+        <th>Wallet</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="adminTableBody"></tbody>
+  </table>
+
+  <h3>Toplam Coin ve Referral Grafiği</h3>
+  <canvas id="analyticsChart" width="400" height="200"></canvas>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCwsNNz8mLlvRqCTxycfTFMGFBnCQ1oJ8s",
+  authDomain: "takoniads.firebaseapp.com",
+  databaseURL: "https://takoniads-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "takoniads",
+  storageBucket: "takoniads.firebasestorage.app",
+  messagingSenderId: "921718345986",
+  appId: "1:921718345986:web:a3484dceee0defaaf4b21b",
+  measurementId: "G-4S0B4YQCK7"
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database(app);
+const auth = firebase.auth(app);
+
+// Anonim giriş
+auth.signInAnonymously().catch(console.error);
+
+// Tap & Earn
+function tapToEarn() {
+  const user = auth.currentUser;
+  if(!user) return alert("Giriş yapılmadı.");
+  const userRef = db.ref('users/' + user.uid);
+  userRef.transaction(currentData => {
+    if(currentData === null) return {coins: 0.0005};
+    currentData.coins = (currentData.coins || 0) + 0.0005;
+    return currentData;
+  }, (error, committed, snapshot) => {
+    if(error) console.error(error);
+    else document.getElementById('userBalance').innerText = snapshot.val().coins.toFixed(6) + " TON";
+  });
+}
+
+// Kullanıcı Bakiye Güncelle
+auth.onAuthStateChanged(user => {
+  if(!user) return;
+  const userRef = db.ref('users/' + user.uid);
+  userRef.on('value', snapshot => {
+    if(snapshot.exists()) {
+      document.getElementById('userBalance').innerText = (snapshot.val().coins || 0).toFixed(6) + " TON";
+    }
+  });
+  checkAdmin(user.uid);
+});
+
+// Admin Dashboard
+function checkAdmin(uid) {
+  db.ref('admins/' + uid).get().then(snapshot => {
+    if(snapshot.exists()){
+      document.getElementById('adminStatus').innerText = 'Admin girişi başarılı: ' + uid;
+      loadWithdrawals();
+      loadAnalytics();
+    } else {
+      document.getElementById('adminStatus').innerText = 'Bu kullanıcı admin değil.';
+      document.getElementById('adminSection').style.display = 'none';
+    }
+  });
+}
+
+function loadWithdrawals() {
+  db.ref('withdrawals').on('value', snapshot => {
+    const tbody = document.getElementById('adminTableBody');
+    tbody.innerHTML = '';
+    snapshot.forEach(snap => {
+      const w = snap.val();
+      if(w.status === 'Pending'){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${w.userId}</td>
+          <td>${w.walletAddress}</td>
+          <td>${w.amount.toFixed(6)}</td>
+          <td>${w.status}</td>
+          <td>
+            <button class="approve" onclick="approve('${snap.key}', ${w.amount}, '${w.userId}')">Approve</button>
+            <button class="reject" onclick="reject('${snap.key}')">Reject</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+  });
+}
+
+function approve(withdrawId, amount, userId){
+  const userRef = db.ref('users/' + userId);
+  userRef.transaction(currentData => {
+    if(currentData === null) return currentData;
+    currentData.coins = (currentData.coins || 0) - amount;
+    return currentData;
+  });
+  db.ref('withdrawals/' + withdrawId).update({status: 'Approved'});
+  alert('Withdrawal approved!');
+}
+
+function reject(withdrawId){
+  db.ref('withdrawals/' + withdrawId).update({status: 'Rejected'});
+  alert('Withdrawal rejected!');
+}
+
+// Analytics Chart
+function loadAnalytics(){
+  db.ref('users').once('value').then(snapshot => {
+    const labels = [];
+    const coinData = [];
+    const referralData = [];
+
+    snapshot.forEach(snap => {
+      labels.push(snap.key);
+      coinData.push(snap.val().coins || 0);
+      // Referral sayısı
+      db.ref('reffers/' + snap.key).once('value').then(refSnap => {
+        referralData.push(refSnap.exists() ? Object.keys(refSnap.val()).length : 0);
+        if(coinData.length === labels.length && referralData.length === labels.length){
+          renderChart(labels, coinData, referralData);
+        }
+      });
+    });
+  });
+}
+
+function renderChart(labels, coins, referrals){
+  const ctx = document.getElementById('analyticsChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Coins', data: coins, backgroundColor: '#ffcc00' },
+        { label: 'Referrals', data: referrals, backgroundColor: '#4caf50' }
+      ]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
+}
+</script>
+
+</body>
+</html>
