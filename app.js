@@ -1,115 +1,31 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>টাকা আয় করুন - বিজ্ঞাপন দেখুন</title>
-    <script src='//libtl.com/sdk.js' data-zone='9472189' data-sdk='show_9472189'></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #4a6bff;
-            --secondary-color: #ff7d4a;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --dark-color: #1a1a2e;
-            --light-color: #f8f9fa;
-            --card-bg: #16213e;
-            --text-color: #e6e6e6;
-            --text-muted: #adb5bd;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: var(--text-color);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            padding-bottom: 70px; /* নেভিগেশন বারের জন্য স্থান */
-        }
-        
-        .container {
-            max-width: 500px;
-            width: 100%;
-            margin: 0 auto;
-            background: rgba(22, 33, 62, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            padding-bottom: 20px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .header {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            border-bottom: 5px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        .badge {
-            display: inline-block;
-            background-color: rgba(255, 255, 255, 0.2);
-            padding: 5px 12px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        
-        .user-card, .stat-card, .progress-container, .referral-section, .rate-info, .withdraw-section, .ad-status {
-            background-color: var(--card-bg);
-            margin: 15px;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .user-card {
-            display: flex;
-            align-items: center;
-        }
-        
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
-            color: white;
-            margin-right: 15px;
-        }
-        
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        
-        .stat-card {
-            text-align: center;
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "./firebase";
+import UserPanel from "./UserPanel";
+import AdminPanel from "./AdminPanel";
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    const u = tg.initDataUnsafe.user;
+    setUser(u);
+
+    const checkAdmin = async () => {
+      const adminRef = doc(db, "admins", String(u.id));
+      const snap = await getDoc(adminRef);
+      setIsAdmin(snap.exists());
+    };
+
+    checkAdmin();
+  }, []);
+
+  if (!user) return <p className="text-center mt-4">Yükleniyor...</p>;
+  return isAdmin ? <AdminPanel user={user} /> : <UserPanel user={user} />;
+}            text-align: center;
             transition: transform 0.3s ease;
         }
         
@@ -1156,4 +1072,5 @@
     </script>
 </body>
 </html>
+
 
