@@ -1,0 +1,1033 @@
+Takoni Ads - Türkçe Uygulama (Mavi-Beyan Tema)
+
+İşte Türkçe versiyonu, mavi-beyan tema ve alt kısımda 3 butonlu panel:
+
+```html
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takoni Ads - Coin Kazan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            padding-bottom: 90px; /* Alt menü için boşluk */
+        }
+        
+        .container {
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        header {
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            color: #1e3c72;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            color: #666;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        
+        .stat-box {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            flex: 1;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+            color: #1e3c72;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            color: #666;
+        }
+        
+        .coin-display {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .coin-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            background: gold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .coin-count {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #1e3c72;
+        }
+        
+        .coin-value {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            color: #666;
+        }
+        
+        .progress-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #1e3c72;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            color: white;
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .payment-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #1e3c72;
+        }
+        
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .payment-method {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .payment-method:hover {
+            background: #f0f0f0;
+        }
+        
+        .method-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .method-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .method-name {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .method-desc {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .method-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-available {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+        }
+        
+        .status-coming {
+            background: rgba(237, 137, 54, 0.2);
+            color: #ed8936;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+        
+        .nav-btn.active {
+            color: #1e3c72;
+            background: #f0f5ff;
+        }
+        
+        .nav-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .nav-btn:hover {
+            color: #1e3c72;
+        }
+        
+        .page {
+            display: none;
+            width: 100%;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .withdraw-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .withdraw-input {
+            width: 100%;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            color: #333;
+            font-size: 1rem;
+            margin: 15px 0;
+        }
+        
+        .withdraw-info {
+            background: #f0f5ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1e3c72;
+        }
+        
+        .swap-modal, .withdraw-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #1e3c72;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .swap-input, .withdraw-input {
+            width: 100%;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            color: #333;
+            font-size: 1.2rem;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .swap-rate {
+            text-align: center;
+            margin: 15px 0;
+            color: #666;
+        }
+        
+        .swap-btn, .withdraw-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .reward-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            color: #1e3c72;
+        }
+        
+        .coin-reward {
+            animation: coinReward 1s ease-out forwards;
+        }
+        
+        @keyframes coinReward {
+            0% { 
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0;
+            }
+        }
+        
+        .daily-reset {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            color: #666;
+        }
+        
+        footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            text-align: center;
+            color: #666;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .coin-count {
+                font-size: 2.5rem;
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .bottom-nav {
+                padding: 10px 0;
+            }
+            
+            .nav-btn {
+                font-size: 0.7rem;
+            }
+            
+            .nav-btn i {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Ana Sayfa -->
+    <div class="container">
+        <header>
+            <div class="logo">T</div>
+            <div>
+                <h1>Takoni Ads</h1>
+                <p class="subtitle">Reklam izle, coin kazan, ödeme al!</p>
+            </div>
+        </header>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-value" id="adsWatchedCount">0</div>
+                <div class="stat-label">İzlenen Reklam</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalEarned">₺0.00</div>
+                <div class="stat-label">Toplam Kazanç</div>
+            </div>
+        </div>
+        
+        <div class="coin-display">
+            <div class="coin-icon">🪙</div>
+            <div class="coin-count" id="coinCount">0</div>
+            <div class="coin-value" id="coinValue">₺0.00</div>
+            <p>Mevcut Coinler</p>
+        </div>
+        
+        <div class="progress-section">
+            <h2 class="progress-title">Bugünkü İlerleme</h2>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-stats">
+                <span id="adsWatched">0/5 reklam izlendi</span>
+                <span id="progressPercent">0%</span>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="watchAdBtn">
+                <i class="fas fa-tv"></i>
+                Reklam İzle
+            </button>
+            <button class="btn btn-secondary" id="swapBtn">
+                <i class="fas fa-exchange-alt"></i>
+                Coin Takas
+            </button>
+        </div>
+        
+        <div class="payment-section">
+            <h2 class="section-title"><i class="fas fa-wallet"></i> Ödeme Yöntemleri</h2>
+            <div class="payment-methods">
+                <div class="payment-method" id="bitcoinMethod">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #f2a900;">
+                            <i class="fab fa-btc"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">Bitcoin (Lightning)</div>
+                            <div class="method-desc">Min. 1000 coin</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-available">Mevcut</div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #26a17b;">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">USDT (TRC20)</div>
+                            <div class="method-desc">Min. 1000 coin</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-coming">Yakında</div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #0088cc;">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">Toncoin</div>
+                            <div class="method-desc">Min. 1000 coin</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-coming">Yakında</div>
+                </div>
+            </div>
+        </div>
+        
+        <p class="daily-reset">İlerleme her gün gece yarısı sıfırlanır</p>
+        
+        <footer>
+            <p>Takoni Ads • Telegram Mini Uygulama</p>
+        </footer>
+    </div>
+    
+    <!-- Çekme Sayfası -->
+    <div class="container page" id="withdrawPage">
+        <div class="withdraw-section">
+            <h2 class="section-title"><i class="fas fa-money-bill-wave"></i> Coin Çekme</h2>
+            
+            <div class="withdraw-info">
+                <div class="info-title">Çekim Bilgileri:</div>
+                <p>• Minimum çekim: 1000 coin</p>
+                <p>• 100 coin = ~₺0.01 (1:1 oran)</p>
+                <p>• Çekimler 24-48 saat içinde işleme alınır</p>
+            </div>
+            
+            <div class="payment-methods">
+                <div class="payment-method" id="withdrawBitcoin">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #f2a900;">
+                            <i class="fab fa-btc"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">Bitcoin (Lightning)</div>
+                            <div class="method-desc">ZBD, Wallet of Satoshi, vb.</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-available">Seç</div>
+                </div>
+                
+                <div class="payment-method">
+                    <div class="method-info">
+                        <div class="method-icon" style="background: #26a17b;">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <div class="method-name">USDT (TRC20)</div>
+                            <div class="method-desc">Yakında gelecek</div>
+                        </div>
+                    </div>
+                    <div class="method-status status-coming">Yakında</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="withdraw-section">
+            <h2 class="section-title"><i class="fas fa-history"></i> Çekim Geçmişi</h2>
+            <p style="color: #666; margin-top: 20px;">Henüz çekim yapılmamış</p>
+        </div>
+    </div>
+    
+    <!-- Takas Sayfası -->
+    <div class="container page" id="swapPage">
+        <div class="withdraw-section">
+            <h2 class="section-title"><i class="fas fa-exchange-alt"></i> Coin Takas</h2>
+            
+            <div class="withdraw-info">
+                <div class="info-title">Takas Bilgileri:</div>
+                <p>• 100 coin = ~₺0.01 (1:1 oran)</p>
+                <p>• Takas işlemi anında gerçekleşir</p>
+                <p>• Takas edilen coinler çekilebilir bakiyenize eklenir</p>
+            </div>
+            
+            <input type="number" class="withdraw-input" id="swapAmountInput" placeholder="Takas edilecek coin miktarı" min="100">
+            
+            <div id="swapResult" class="swap-rate">
+                Alacaksınız: ₺0.00
+            </div>
+            
+            <button class="withdraw-btn" id="confirmSwapBtn">Coin Takas Et</button>
+        </div>
+        
+        <div class="withdraw-section">
+            <h2 class="section-title"><i class="fas fa-chart-line"></i> Takas Geçmişi</h2>
+            <p style="color: #666; margin-top: 20px;">Henüz takas yapılmamış</p>
+        </div>
+    </div>
+    
+    <!-- Alt Navigasyon -->
+    <div class="bottom-nav">
+        <button class="nav-btn active" data-page="mainPage">
+            <i class="fas fa-home"></i>
+            Ana Sayfa
+        </button>
+        <button class="nav-btn" data-page="swapPage">
+            <i class="fas fa-exchange-alt"></i>
+            Takas
+        </button>
+        <button class="nav-btn" data-page="withdrawPage">
+            <i class="fas fa-wallet"></i>
+            Çekim
+        </button>
+    </div>
+    
+    <!-- Bitcoin Çekim Modal -->
+    <div class="withdraw-modal" id="bitcoinWithdrawModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Bitcoin Çekim</h2>
+                <button class="close-modal" id="closeBitcoinModal">&times;</button>
+            </div>
+            <p>Bitcoin Lightning adresinizi girin (ZBD, Wallet of Satoshi, vb.)</p>
+            
+            <input type="text" class="withdraw-input" id="bitcoinAddress" placeholder="bc1q... veya lnbc1...">
+            
+            <input type="number" class="withdraw-input" id="bitcoinAmount" placeholder="Çekilecek coin miktarı" min="1000">
+            
+            <div id="bitcoinResult" class="swap-rate">
+                Alacaksınız: ₺0.00
+            </div>
+            
+            <button class="withdraw-btn" id="confirmBitcoinWithdraw">Çekim Yap</button>
+            
+            <p style="margin-top: 15px; font-size: 0.9rem; color: #666;">
+                Minimum çekim: 1000 coin. Çekimler 24-48 saat içinde işleme alınır.
+            </p>
+        </div>
+    </div>
+    
+    <div class="reward-animation" id="rewardAnimation">+10 🪙</div>
+    
+    <script>
+        // Uygulama durumu
+        const appState = {
+            totalCoins: 0,
+            adsWatchedToday: 0,
+            totalAdsWatched: 0,
+            maxAdsPerDay: 5,
+            coinsPerAd: 10,
+            lastResetDate: null,
+            coinValue: 0.0001, // ₺0.01 per 100 coins
+            swappedCoins: 0,
+            userId: null
+        };
+        
+        // DOM Elementleri
+        const coinCountElement = document.getElementById('coinCount');
+        const coinValueElement = document.getElementById('coinValue');
+        const adsWatchedCountElement = document.getElementById('adsWatchedCount');
+        const totalEarnedElement = document.getElementById('totalEarned');
+        const progressBarElement = document.getElementById('progressBar');
+        const adsWatchedElement = document.getElementById('adsWatched');
+        const progressPercentElement = document.getElementById('progressPercent');
+        const watchAdBtn = document.getElementById('watchAdBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const bitcoinMethod = document.getElementById('bitcoinMethod');
+        const withdrawBitcoin = document.getElementById('withdrawBitcoin');
+        const bitcoinWithdrawModal = document.getElementById('bitcoinWithdrawModal');
+        const closeBitcoinModal = document.getElementById('closeBitcoinModal');
+        const bitcoinAddress = document.getElementById('bitcoinAddress');
+        const bitcoinAmount = document.getElementById('bitcoinAmount');
+        const bitcoinResult = document.getElementById('bitcoinResult');
+        const confirmBitcoinWithdraw = document.getElementById('confirmBitcoinWithdraw');
+        const swapAmountInput = document.getElementById('swapAmountInput');
+        const swapResult = document.getElementById('swapResult');
+        const confirmSwapBtn = document.getElementById('confirmSwapBtn');
+        const rewardAnimation = document.getElementById('rewardAnimation');
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const pages = document.querySelectorAll('.page');
+        
+        // Uygulamayı başlat
+        function initApp() {
+            loadState();
+            checkDailyReset();
+            updateUI();
+            
+            // Event listener'ları kur
+            setupEventListeners();
+        }
+        
+        // Event listener'ları kur
+        function setupEventListeners() {
+            watchAdBtn.addEventListener('click', watchAd);
+            swapBtn.addEventListener('click', showSwapPage);
+            bitcoinMethod.addEventListener('click', showSwapPage);
+            withdrawBitcoin.addEventListener('click', openBitcoinWithdrawModal);
+            closeBitcoinModal.addEventListener('click', closeBitcoinWithdrawModal);
+            bitcoinAmount.addEventListener('input', updateBitcoinResult);
+            confirmBitcoinWithdraw.addEventListener('click', processBitcoinWithdraw);
+            swapAmountInput.addEventListener('input', updateSwapResult);
+            confirmSwapBtn.addEventListener('click', processSwap);
+            
+            // Navigasyon butonları
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const pageId = this.getAttribute('data-page');
+                    showPage(pageId);
+                    
+                    // Aktif butonu güncelle
+                    navBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Modal dışına tıklama
+            window.addEventListener('click', (e) => {
+                if (e.target === bitcoinWithdrawModal) {
+                    closeBitcoinWithdrawModal();
+                }
+            });
+        }
+        
+        // Sayfa göster
+        function showPage(pageId) {
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            if (pageId === 'mainPage') {
+                document.querySelector('.container').style.display = 'block';
+            } else {
+                document.querySelector('.container').style.display = 'none';
+                document.getElementById(pageId).classList.add('active');
+            }
+        }
+        
+        // Takas sayfasını göster
+        function showSwapPage() {
+            showPage('swapPage');
+            navBtns.forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-page="swapPage"]').classList.add('active');
+        }
+        
+        // Bitcoin çekim modalını aç
+        function openBitcoinWithdrawModal() {
+            bitcoinWithdrawModal.style.display = 'flex';
+            bitcoinAddress.value = '';
+            bitcoinAmount.value = '';
+            updateBitcoinResult();
+        }
+        
+        // Bitcoin çekim modalını kapat
+        function closeBitcoinWithdrawModal() {
+            bitcoinWithdrawModal.style.display = 'none';
+        }
+        
+        // Bitcoin çekim sonucunu güncelle
+        function updateBitcoinResult() {
+            const amount = parseInt(bitcoinAmount.value) || 0;
+            const tryValue = (amount * appState.coinValue).toFixed(2);
+            bitcoinResult.textContent = `Alacaksınız: ₺${tryValue}`;
+            
+            // Miktarı doğrula
+            if (amount < 1000) {
+                bitcoinResult.textContent += ' (Minimum: 1000 coin)';
+                confirmBitcoinWithdraw.disabled = true;
+            } else if (amount > appState.totalCoins) {
+                bitcoinResult.textContent += ' (Yetersiz coin)';
+                confirmBitcoinWithdraw.disabled = true;
+            } else if (bitcoinAddress.value.length < 10) {
+                bitcoinResult.textContent += ' (Geçerli adres girin)';
+                confirmBitcoinWithdraw.disabled = true;
+            } else {
+                confirmBitcoinWithdraw.disabled = false;
+            }
+        }
+        
+        // Bitcoin çekim işlemini gerçekleştir
+        function processBitcoinWithdraw() {
+            const amount = parseInt(bitcoinAmount.value);
+            const address = bitcoinAddress.value.trim();
+            
+            if (amount < 1000) {
+                alert('Minimum çekim miktarı 1000 coindir.');
+                return;
+            }
+            
+            if (amount > appState.totalCoins) {
+                alert('Bu çekim için yeterli coininiz bulunmamaktadır.');
+                return;
+            }
+            
+            if (address.length < 10) {
+                alert('Lütfen geçerli bir Bitcoin adresi girin.');
+                return;
+            }
+            
+            // Durumu güncelle
+            appState.totalCoins -= amount;
+            
+            // LocalStorage'a kaydet
+            saveState();
+            
+            // Başarı mesajı göster
+            alert(`Çekim talebiniz alındı! ${amount.toLocaleString()} coin çekiminiz işleme alınmıştır. Bitcoin adresiniz: ${address}`);
+            
+            // Modalı kapat ve UI'ı güncelle
+            closeBitcoinWithdrawModal();
+            updateUI();
+        }
+        
+        // Takas sonucunu güncelle
+        function updateSwapResult() {
+            const amount = parseInt(swapAmountInput.value) || 0;
+            const tryValue = (amount * appState.coinValue).toFixed(2);
+            swapResult.textContent = `Alacaksınız: ₺${tryValue}`;
+            
+            // Miktarı doğrula
+            if (amount < 100) {
+                swapResult.textContent += ' (Minimum: 100 coin)';
+                confirmSwapBtn.disabled = true;
+            } else if (amount > appState.totalCoins) {
+                swapResult.textContent += ' (Yetersiz coin)';
+                confirmSwapBtn.disabled = true;
+            } else {
+                confirmSwapBtn.disabled = false;
+            }
+        }
+        
+        // Takas işlemini gerçekleştir
+        function processSwap() {
+            const amount = parseInt(swapAmountInput.value);
+            
+            if (amount < 100) {
+                alert('Minimum takas miktarı 100 coindir.');
+                return;
+            }
+            
+            if (amount > appState.totalCoins) {
+                alert('Takas için yeterli coininiz bulunmamaktadır.');
+                return;
+            }
+            
+            // Durumu güncelle
+            appState.totalCoins -= amount;
+            appState.swappedCoins += amount;
+            
+            // LocalStorage'a kaydet
+            saveState();
+            
+            // Başarı mesajı göster
+            alert(`Başarılı! ${amount.toLocaleString()} coin takas edildi. Çekilebilir bakiyenize ₺${(amount * appState.coinValue).toFixed(2)} eklendi.`);
+            
+            // UI'ı güncelle
+            updateUI();
+        }
+        
+        // LocalStorage'dan durumu yükle
+        function loadState() {
+            const savedCoins = localStorage.getItem('takoni_totalCoins');
+            const savedAdsWatched = localStorage.getItem('takoni_adsWatchedToday');
+            const savedTotalAds = localStorage.getItem('takoni_totalAdsWatched');
+            const savedResetDate = localStorage.getItem('takoni_lastResetDate');
+            const savedSwappedCoins = localStorage.getItem('takoni_swappedCoins');
+            
+            if (savedCoins) appState.totalCoins = parseInt(savedCoins);
+            if (savedAdsWatched) appState.adsWatchedToday = parseInt(savedAdsWatched);
+            if (savedTotalAds) appState.totalAdsWatched = parseInt(savedTotalAds);
+            if (savedResetDate) appState.lastResetDate = savedResetDate;
+            if (savedSwappedCoins) appState.swappedCoins = parseInt(savedSwappedCoins);
+        }
+        
+        // Durumu LocalStorage'a kaydet
+        function saveState() {
+            localStorage.setItem('takoni_totalCoins', appState.totalCoins.toString());
+            localStorage.setItem('takoni_adsWatchedToday', appState.adsWatchedToday.toString());
+            localStorage.setItem('takoni_totalAdsWatched', appState.totalAdsWatched.toString());
+            localStorage.setItem('takoni_lastResetDate', appState.lastResetDate);
+            localStorage.setItem('takoni_swappedCoins', appState.swappedCoins.toString());
+        }
+        
+        // Günlük sıfırlamayı kontrol et
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            
+            if (appState.lastResetDate !== today) {
+                appState.adsWatchedToday = 0;
+                appState.lastResetDate = today;
+                saveState();
+            }
+        }
+        
+        // UI'ı güncelle
+        function updateUI() {
+            coinCountElement.textContent = appState.totalCoins.toLocaleString('tr-TR');
+            coinValueElement.textContent = `₺${(appState.totalCoins * appState.coinValue).toFixed(2)}`;
+            adsWatchedCountElement.textContent = appState.totalAdsWatched.toLocaleString('tr-TR');
+            totalEarnedElement.textContent = `₺${(appState.swappedCoins * appState.coinValue).toFixed(2)}`;
+            
+            const progressPercent = (appState.adsWatchedToday / appState.maxAdsPerDay) * 100;
+            progressBarElement.style.width = `${progressPercent}%`;
+            
+            adsWatchedElement.textContent = `${appState.adsWatchedToday}/${appState.maxAdsPerDay} reklam izlendi`;
+            progressPercentElement.textContent = `${Math.round(progressPercent)}%`;
+            
+            // Butonu devre dışı bırak
+            watchAdBtn.disabled = appState.adsWatchedToday >= appState.maxAdsPerDay;
+            
+            if (watchAdBtn.disabled)
