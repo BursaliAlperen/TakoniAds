@@ -1,0 +1,98 @@
+{
+  "123456789": {
+    "balance": 0.015,
+    "referrals": 8,
+    "ref_code": "TAKabc123",
+    "last_ad_watch": 1700000000,
+    "ads_watched_today": 45,
+    "last_daily_reset": "2024-01-01",
+    "ton_address": "EQAbc123def456ghi789jkl012mno345pqr678stu901vwx234yz5",
+    "total_earned": 0.035,
+    "created_at": 1699999999,
+    "referred_by": null,
+    "referral_list": [
+      {
+        "user_id": "111222333",
+        "username": "john_doe",
+        "joined_at": 1700000000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "444555666",
+        "username": "jane_smith",
+        "joined_at": 1700001000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "777888999",
+        "username": "bob_wilson",
+        "joined_at": 1700002000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "222333444",
+        "username": "alice_brown",
+        "joined_at": 1700003000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "555666777",
+        "username": "charlie_davis",
+        "joined_at": 1700004000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "888999000",
+        "username": "diana_miller",
+        "joined_at": 1700005000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "333444555",
+        "username": "edward_garcia",
+        "joined_at": 1700006000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "666777888",
+        "username": "fiona_rodriguez",
+        "joined_at": 1700007000,
+        "earned_from": 0.0005
+      }
+    ],
+    "username": "main_user"
+  },
+  "111222333": {
+    "balance": 0.008,
+    "referrals": 3,
+    "ref_code": "TAKdef456",
+    "last_ad_watch": 1700000500,
+    "ads_watched_today": 32,
+    "last_daily_reset": "2024-01-01",
+    "ton_address": "UQ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP",
+    "total_earned": 0.018,
+    "created_at": 1700000000,
+    "referred_by": "123456789",
+    "referral_list": [
+      {
+        "user_id": "999000111",
+        "username": "george_martinez",
+        "joined_at": 1700003000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "111222333",
+        "username": "helen_anderson",
+        "joined_at": 1700004000,
+        "earned_from": 0.0005
+      },
+      {
+        "user_id": "444555666",
+        "username": "ivan_thomas",
+        "joined_at": 1700005000,
+        "earned_from": 0.0005
+      }
+    ],
+    "username": "john_doe"
+  }
+}
