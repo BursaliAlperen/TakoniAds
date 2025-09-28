@@ -1,4 +1,8 @@
 <?php
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Bot configuration
 $bot_token = getenv('BOT_TOKEN') ?: 'Place_Your_Token_Here';
 define('BOT_TOKEN', $bot_token);
@@ -6,7 +10,7 @@ define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
 define('USERS_FILE', 'users.json');
 define('ERROR_LOG', 'error.log');
 
-// Ensure data files exist and have proper permissions
+// Ensure data files exist
 if (!file_exists(USERS_FILE)) {
     file_put_contents(USERS_FILE, json_encode([]));
     chmod(USERS_FILE, 0666);
@@ -16,49 +20,24 @@ if (!file_exists(ERROR_LOG)) {
     chmod(ERROR_LOG, 0666);
 }
 
-// Initialize bot (clear webhook)
-function initializeBot() {
-    try {
-        file_get_contents(API_URL . 'setWebhook?url=');
-        return true;
-    } catch (Exception $e) {
-        logError("Initialization failed: " . $e->getMessage());
-        return false;
-    }
-}
-
-// Error logging
+// Simple error logging
 function logError($message) {
     $timestamp = date('Y-m-d H:i:s');
-    file_put_contents(ERROR_LOG, "[$timestamp] $message\n", FILE_APPEND);
+    file_put_contents(ERROR_LOG, "[$timestamp] $message\n", FILE_APPEND | LOCK_EX);
 }
 
-// Data management
+// Simple data management
 function loadUsers() {
-    try {
-        if (!file_exists(USERS_FILE)) {
-            file_put_contents(USERS_FILE, json_encode([]));
-            chmod(USERS_FILE, 0666);
-        }
-        $data = file_get_contents(USERS_FILE);
-        return json_decode($data, true) ?: [];
-    } catch (Exception $e) {
-        logError("Load users failed: " . $e->getMessage());
-        return [];
-    }
+    if (!file_exists(USERS_FILE)) return [];
+    $data = file_get_contents(USERS_FILE);
+    return json_decode($data, true) ?: [];
 }
 
 function saveUsers($users) {
-    try {
-        file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT));
-        return true;
-    } catch (Exception $e) {
-        logError("Save users failed: " . $e->getMessage());
-        return false;
-    }
+    return file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT)) !== false;
 }
 
-// Message sending with inline keyboard
+// Simple message sending
 function sendMessage($chat_id, $text, $keyboard = null) {
     try {
         $params = [
@@ -67,49 +46,72 @@ function sendMessage($chat_id, $text, $keyboard = null) {
             'parse_mode' => 'HTML'
         ];
 
-        if ($keyboard) {  
-            $params['reply_markup'] = json_encode([  
-                'inline_keyboard' => $keyboard  
-            ]);  
-        }  
-          
-        $url = API_URL . 'sendMessage?' . http_build_query($params);  
-        $context = stream_context_create([
-            'http' => [
-                'timeout' => 10,
-                'ignore_errors' => true
-            ]
-        ]);
-        file_get_contents($url, false, $context);  
-        return true;  
-    } catch (Exception $e) {  
-        logError("Send message failed: " . $e->getMessage());  
-        return false;  
+        if ($keyboard) {
+            $params['reply_markup'] = json_encode($keyboard);
+        }
+
+        $url = API_URL . 'sendMessage?' . http_build_query($params);
+        $context = stream_context_create(['http' => ['timeout' => 10]]);
+        $result = file_get_contents($url, false, $context);
+        return $result !== false;
+    } catch (Exception $e) {
+        logError("Send message error: " . $e->getMessage());
+        return false;
     }
 }
 
 // Main keyboard
 function getMainKeyboard() {
     return [
-        [['text' => '💰 Earn', 'callback_data' => 'earn'], ['text' => '💳 Balance', 'callback_data' => 'balance']],
-        [['text' => '🏆 Leaderboard', 'callback_data' => 'leaderboard'], ['text' => '👥 Referrals', 'callback_data' => 'referrals']],
-        [['text' => '🏧 Withdraw', 'callback_data' => 'withdraw'], ['text' => '❓ Help', 'callback_data' => 'help']]
+        'inline_keyboard' => [
+            [
+                ['text' => '💰 Earn', 'callback_data' => 'earn'],
+                ['text' => '💳 Balance', 'callback_data' => 'balance']
+            ],
+            [
+                ['text' => '📱 Watch Ads', 'callback_data' => 'watch_ads'],
+                ['text' => '🎯 Tasks', 'callback_data' => 'tasks']
+            ]
+        ]
     ];
 }
 
-// Process commands and callbacks
-function processUpdate($update) {
-    $users = loadUsers();
+// Process webhook
+function handleWebhook() {
+    try {
+        $input = file_get_contents('php://input');
+        $update = json_decode($input, true);
+        
+        if (!$update) {
+            echo "No update data";
+            return;
+        }
 
-    if (isset($update['message'])) {  
-        $chat_id = $update['message']['chat']['id'];  
-        $text = trim($update['message']['text'] ?? '');  
-          
-        // Create new user if doesn't exist  
-        if (!isset($users[$chat_id])) {  
-            $users[$chat_id] = [  
-                'balance' => 0,  
-                'last_earn' => 0,  
+        // Simple response for testing
+        if (isset($update['message']['text'])) {
+            $chat_id = $update['message']['chat']['id'];
+            $text = $update['message']['text'];
+            
+            if (strpos($text, '/start') === 0) {
+                sendMessage($chat_id, "🚀 Bot is working! Use buttons below.", getMainKeyboard());
+            }
+        }
+        
+        echo "OK";
+        
+    } catch (Exception $e) {
+        logError("Webhook error: " . $e->getMessage());
+        echo "ERROR: " . $e->getMessage();
+    }
+}
+
+// Handle request
+if (php_sapi_name() === 'cli') {
+    echo "Bot running in CLI mode\n";
+} else {
+    handleWebhook();
+}
+?>                'last_earn' => 0,  
                 'referrals' => 0,  
                 'ref_code' => substr(md5($chat_id . time()), 0, 8),  
                 'referred_by' => null  
