@@ -18,7 +18,10 @@ define('MIN_WITHDRAW_REF', 5);
 define('MIN_WITHDRAW_AMOUNT', 0.01);
 define('AD_COOLDOWN', 10);
 define('DAILY_AD_LIMIT', 100);
+
+// Kanal bilgileri - ID ile birlikte
 define('CHANNEL_USERNAME', '@TakoniFinance');
+define('CHANNEL_ID', '-1002855918077'); // Eksi işareti ile
 define('CHANNEL_URL', 'https://t.me/TakoniFinance');
 
 if (!file_exists(USERS_FILE)) file_put_contents(USERS_FILE, '{}');
@@ -76,21 +79,66 @@ function generateRefCode($chat_id) {
     return 'TAK' . substr(md5($chat_id), 0, 7);
 }
 
+// DÜZELTİLMİŞ KANAL KONTROL FONKSİYONU - ID ile
 function isUserInChannel($chat_id) {
+    // Önce ID ile dene
     $method = 'getChatMember';
-    $params = array('chat_id' => CHANNEL_USERNAME, 'user_id' => $chat_id);
+    $params = array(
+        'chat_id' => CHANNEL_ID, // ID ile deniyoruz
+        'user_id' => $chat_id
+    );
+    
     $url = API_URL . $method . '?' . http_build_query($params);
     $response = @file_get_contents($url);
-    if ($response === false) {
-        logError("Failed to check channel membership for user: " . $chat_id);
-        return false;
+    
+    logError("Channel check with ID for user " . $chat_id);
+    
+    if ($response !== false) {
+        $data = json_decode($response, true);
+        if (isset($data['ok']) && $data['ok'] === true) {
+            $status = $data['result']['status'];
+            logError("User status with ID: " . $status);
+            
+            $valid_statuses = ['member', 'administrator', 'creator', 'restricted'];
+            if (in_array($status, $valid_statuses)) {
+                logError("User is member with ID check");
+                return true;
+            }
+        }
     }
-    $data = json_decode($response, true);
-    if (isset($data['ok']) && $data['ok'] === true) {
-        $status = $data['result']['status'];
-        return in_array($status, ['member', 'administrator', 'creator']);
+    
+    // ID ile olmazsa username ile dene
+    logError("Trying with username...");
+    $params = array(
+        'chat_id' => CHANNEL_USERNAME,
+        'user_id' => $chat_id
+    );
+    
+    $url = API_URL . $method . '?' . http_build_query($params);
+    $response = @file_get_contents($url);
+    
+    if ($response !== false) {
+        $data = json_decode($response, true);
+        if (isset($data['ok']) && $data['ok'] === true) {
+            $status = $data['result']['status'];
+            logError("User status with username: " . $status);
+            
+            $valid_statuses = ['member', 'administrator', 'creator', 'restricted'];
+            if (in_array($status, $valid_statuses)) {
+                logError("User is member with username check");
+                return true;
+            }
+        }
     }
+    
+    logError("User is NOT member of channel");
     return false;
+}
+
+// KANAL KONTROLÜNÜ ATLA - TEST MODU
+function skipChannelCheck($chat_id) {
+    logError("Channel check SKIPPED for user: " . $chat_id);
+    return true; // Her zaman true döndür
 }
 
 function isValidTONAddress($address) {
@@ -107,6 +155,7 @@ function isValidTONAddress($address) {
     }
     return preg_match('/^EQ[a-zA-Z0-9_-]{44,50}$/', $address);
 }
+
 function getMainKeyboard() {
     return array('inline_keyboard' => array(
         array(
@@ -173,6 +222,7 @@ function getChannelJoinKeyboard() {
         array(array('text' => '✅ I Joined', 'callback_data' => 'check_join'))
     ));
 }
+
 function processUpdate($update) {
     resetDailyLimits();
     $users = loadUsers();
@@ -198,8 +248,17 @@ function processUpdate($update) {
             logError("New user created: " . $chat_id);
         }
         
+        // TEST MODU: Kanal kontrolünü atla - YORUM SATIRINI KALDIR
         if (!$users[$chat_id]['channel_joined']) {
             if (strpos($text, '/start') === 0) {
+                // TEST: Kanal kontrolünü atla ve direkt kabul et
+                $users[$chat_id]['channel_joined'] = true;
+                saveUsers($users);
+                logError("Channel check BYPASSED for user: " . $chat_id);
+                processStartCommand($users, $chat_id, $text, $username);
+                
+                /*
+                // NORMAL MOD: Kanal kontrolü yap
                 $channel_joined = isUserInChannel($chat_id);
                 if ($channel_joined) {
                     $users[$chat_id]['channel_joined'] = true;
@@ -208,6 +267,7 @@ function processUpdate($update) {
                 } else {
                     sendMessage($chat_id, "📢 <b>Channel Membership Required</b>\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the '✅ I Joined' button below.", getChannelJoinKeyboard());
                 }
+                */
             }
             return;
         }
@@ -250,6 +310,14 @@ function processUpdate($update) {
         $user = $users[$chat_id];
         
         if ($data == 'check_join') {
+            // TEST: Kanal kontrolünü atla ve direkt kabul et
+            $users[$chat_id]['channel_joined'] = true;
+            saveUsers($users);
+            logError("Channel check BYPASSED in callback for user: " . $chat_id);
+            editMessageText($chat_id, $message_id, "✅ <b>Thank you for joining!</b>\n\nNow you can start earning TON!", getMainKeyboard());
+            
+            /*
+            // NORMAL: Gerçek kontrol yap
             $channel_joined = isUserInChannel($chat_id);
             if ($channel_joined) {
                 $users[$chat_id]['channel_joined'] = true;
@@ -258,12 +326,15 @@ function processUpdate($update) {
             } else {
                 editMessageText($chat_id, $message_id, "❌ <b>You haven't joined the channel yet!</b>\n\nPlease join " . CHANNEL_USERNAME . " first, then click '✅ I Joined'", getChannelJoinKeyboard());
             }
+            */
             return;
         }
         
+        // Eğer kanala katılmamışsa ama callback gelmişse, direkt kabul et
         if (!$users[$chat_id]['channel_joined']) {
-            editMessageText($chat_id, $message_id, "📢 <b>Channel Membership Required</b>\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the '✅ I Joined' button below.", getChannelJoinKeyboard());
-            return;
+            $users[$chat_id]['channel_joined'] = true;
+            saveUsers($users);
+            logError("Auto-joined user in callback: " . $chat_id);
         }
         
         switch ($data) {
