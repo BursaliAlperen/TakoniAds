@@ -1,3 +1,6 @@
+PHP syntax hatası var. İşte düzeltilmiş index.php:
+
+```php
 <?php
 // Enable all errors
 error_reporting(E_ALL);
@@ -255,15 +258,15 @@ function processUpdate($update) {
         }
         
         if (strpos($text, '/start') === 0) {
-            $ref_code = explode(' ', $text)[1] ?? null;
+            $ref_code_param = explode(' ', $text)[1] ?? null;
             $user = $users[$chat_id];
             
             // Handle referral registration
-            if ($ref_code && $ref_code !== $user['ref_code'] && !isset($user['referred_by'])) {
+            if ($ref_code_param && $ref_code_param !== $user['ref_code'] && !isset($user['referred_by'])) {
                 $referrer_found = false;
                 
                 foreach ($users as $id => $u) {
-                    if (isset($u['ref_code']) && $u['ref_code'] === $ref_code && $id != $chat_id) {
+                    if (isset($u['ref_code']) && $u['ref_code'] === $ref_code_param && $id != $chat_id) {
                         // Register referral
                         $users[$chat_id]['referred_by'] = $id;
                         $users[$id]['referrals'] = ($users[$id]['referrals'] ?? 0) + 1;
@@ -508,4 +511,116 @@ function processUpdate($update) {
                     $response = "❌ <b>TON Address Not Set</b>\n\n";
                     $response .= "Please set your TON address first before withdrawing.";
                 } elseif ($referrals < MIN_WITHDRAW_REF) {
-                    $response = "❌ <b>Insuffic
+                    $response = "❌ <b>Insufficient Referrals</b>\n\n";
+                    $response .= "You need " . MIN_WITHDRAW_REF . " referrals to withdraw.\n";
+                    $response .= "Current: {$referrals}/" . MIN_WITHDRAW_REF;
+                } elseif ($balance < MIN_WITHDRAW_AMOUNT) {
+                    $response = "❌ <b>Insufficient Balance</b>\n\n";
+                    $response .= "You need at least " . MIN_WITHDRAW_AMOUNT . " TON to withdraw.\n";
+                    $response .= "Current: " . number_format($balance, 6) . " TON";
+                } else {
+                    // Process withdrawal
+                    $users[$chat_id]['pending_withdrawal'] = $balance;
+                    $users[$chat_id]['balance'] = 0;
+                    
+                    $response = "✅ <b>Withdrawal Submitted!</b>\n\n";
+                    $response .= "💰 <b>Amount:</b> " . number_format($balance, 6) . " TON\n";
+                    $response .= "🔗 <b>TON Address:</b>\n";
+                    $response .= "<code>{$ton_address}</code>\n\n";
+                    $response .= "⏳ <b>Status:</b> Processing\n";
+                    $response .= "📞 Our team will process your withdrawal within 24 hours.";
+                    
+                    saveUsers($users);
+                }
+                
+                editMessageText($chat_id, $message_id, $response, [
+                    'inline_keyboard' => [
+                        [['text' => '⬅️ Back to Main', 'callback_data' => 'main_menu']]
+                    ]
+                ]);
+                break;
+                
+            case 'main_menu':
+                $response = "🎮 <b>Main Menu</b>\n\nWelcome back! Choose an option below:";
+                editMessageText($chat_id, $message_id, $response, getMainKeyboard());
+                break;
+        }
+        
+        saveUsers($users);
+    }
+    
+    // Handle web app data (from mini app) - AUTOMATIC REWARD
+    elseif (isset($update['web_app_data'])) {
+        $web_app_data = $update['web_app_data'];
+        $chat_id = $web_app_data['user']['id'];
+        $data = json_decode($web_app_data['data'], true);
+        
+        logError("Web app data from {$chat_id}: " . $web_app_data['data']);
+        
+        if ($data && $data['action'] === 'ad_watched' && $data['verified'] === true) {
+            $users = loadUsers();
+            
+            if (!isset($users[$chat_id])) {
+                $ref_code = generateRefCode($chat_id);
+                $users[$chat_id] = [
+                    'balance' => 0,
+                    'referrals' => 0,
+                    'ref_code' => $ref_code,
+                    'last_ad_watch' => 0,
+                    'ton_address' => '',
+                    'pending_withdrawal' => 0,
+                    'total_earned' => 0,
+                    'created_at' => time()
+                ];
+            }
+            
+            $last_watch = $users[$chat_id]['last_ad_watch'] ?? 0;
+            $current_time = time();
+            
+            // Check cooldown (5 minutes)
+            if ($current_time - $last_watch < 300) {
+                $remaining = 300 - ($current_time - $last_watch);
+                $minutes = ceil($remaining / 60);
+                $response = "⏳ <b>Please wait {$minutes} minutes</b> before watching another ad!";
+            } else {
+                // Add TON reward automatically
+                $users[$chat_id]['balance'] += AD_REWARD;
+                $users[$chat_id]['total_earned'] = ($users[$chat_id]['total_earned'] ?? 0) + AD_REWARD;
+                $users[$chat_id]['last_ad_watch'] = $current_time;
+                $new_balance = $users[$chat_id]['balance'];
+                
+                $response = "🎉 <b>Ad Completed Successfully!</b>\n\n";
+                $response .= "✅ You earned <b>" . AD_REWARD . " TON</b>!\n";
+                $response .= "💰 New balance: <b>" . number_format($new_balance, 6) . " TON</b>\n\n";
+                $response .= "🔄 You can watch another ad in 5 minutes.";
+                
+                saveUsers($users);
+            }
+            
+            sendMessage($chat_id, $response, getMainKeyboard());
+        }
+    }
+}
+
+// Main webhook handler
+$input = file_get_contents('php://input');
+$update = json_decode($input, true);
+
+if ($update) {
+    processUpdate($update);
+    http_response_code(200);
+    echo "OK";
+} else {
+    // Serve mini app if no update
+    if (isset($_GET['mini_app'])) {
+        header('Content-Type: text/html');
+        readfile('index.html');
+    } else {
+        http_response_code(400);
+        echo "No data received";
+    }
+}
+?>
+```
+
+Bu düzeltilmiş versiyonda tüm syntax hataları giderildi. Şimdi çalışacaktır! 🚀
