@@ -44,7 +44,7 @@ function loadUsers() {
 }
 
 function saveUsers($users) {
-    $result = @file_get_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT));
+    $result = @file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT));
     return $result !== false;
 }
 
@@ -482,4 +482,159 @@ function processUpdate($update) {
                 if ($balance < MIN_WITHDRAW_AMOUNT) {
                     $errors[] = "❌ Minimum withdrawal: " . MIN_WITHDRAW_AMOUNT . " TON";
                 }
-                if ($referrals < MIN_WITHDRAW_REF) {t</div
+                if ($referrals < MIN_WITHDRAW_REF) {
+                    $needed = MIN_WITHDRAW_REF - $referrals;
+                    $errors[] = "❌ Minimum " . MIN_WITHDRAW_REF . " referrals needed (missing: " . $needed . ")";
+                }
+                if (!$ton_address) {
+                    $errors[] = "❌ TON address not set";
+                }
+                
+                if (empty($errors)) {
+                    $response .= "✅ <b>Ready to withdraw!</b>\n";
+                    $response .= "💡 Click 'Submit Withdrawal' to request your TON.";
+                    editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(true));
+                } else {
+                    $response .= "🚫 <b>Withdrawal Requirements:</b>\n";
+                    foreach ($errors as $error) {
+                        $response .= $error . "\n";
+                    }
+                    editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(false));
+                }
+                break;
+                
+            case 'enter_ton_address':
+                $users[$chat_id]['awaiting_ton_address'] = true;
+                saveUsers($users);
+                editMessageText($chat_id, $message_id, "🔗 <b>Enter TON Wallet Address</b>\n\nPlease send your TON wallet address:");
+                break;
+                
+            case 'save_ton_address':
+                if (isset($users[$chat_id]['ton_address_temp'])) {
+                    $users[$chat_id]['ton_address'] = $users[$chat_id]['ton_address_temp'];
+                    unset($users[$chat_id]['ton_address_temp']);
+                    saveUsers($users);
+                    
+                    $response = "✅ <b>TON Address Saved Successfully!</b>\n\n";
+                    $response .= "🔗 Your TON address:\n";
+                    $response .= "<code>" . $users[$chat_id]['ton_address'] . "</code>\n\n";
+                    $response .= "You can now submit withdrawal requests.";
+                    editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(true));
+                } else {
+                    editMessageText($chat_id, $message_id, "❌ No address to save. Please enter your TON address first.", getWithdrawKeyboard(false));
+                }
+                break;
+                
+            case 'submit_withdrawal':
+                $balance = $user['balance'];
+                $ton_address = $user['ton_address'];
+                $referrals = $user['referrals'];
+                
+                if ($balance < MIN_WITHDRAW_AMOUNT) {
+                    $response = "❌ <b>Insufficient Balance</b>\n\nMinimum withdrawal: " . MIN_WITHDRAW_AMOUNT . " TON";
+                    editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(true));
+                } 
+                elseif ($referrals < MIN_WITHDRAW_REF) {
+                    $needed = MIN_WITHDRAW_REF - $referrals;
+                    $response = "❌ <b>Insufficient Referrals</b>\n\nMinimum referrals: " . MIN_WITHDRAW_REF . "\nYou need " . $needed . " more";
+                    editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(true));
+                }
+                elseif (!$ton_address) {
+                    $response = "❌ <b>TON Address Not Set</b>\n\nPlease set your TON address first.";
+                    editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(false));
+                }
+                else {
+                    $users[$chat_id]['balance'] = 0;
+                    saveUsers($users);
+                    
+                    $response = "✅ <b>Withdrawal Request Submitted!</b>\n\n";
+                    $response .= "💰 <b>Amount:</b> " . number_format($balance, 6) . " TON\n";
+                    $response .= "👥 <b>Referrals:</b> " . $referrals . "/" . MIN_WITHDRAW_REF . " ✅\n";
+                    $response .= "🔗 <b>Address:</b> <code>" . $ton_address . "</code>\n\n";
+                    $response .= "⏰ <b>Processing time:</b> 24-48 hours\n";
+                    $response .= "📢 You will be notified when sent.";
+                    editMessageText($chat_id, $message_id, $response, getMainKeyboard());
+                }
+                break;
+                
+            case 'main_menu':
+                $ads_today = isset($user['ads_watched_today']) ? $user['ads_watched_today'] : 0;
+                $ads_remaining = DAILY_AD_LIMIT - $ads_today;
+                
+                $response = "🚀 <b>TAKONI ADS</b>\n\n";
+                $response .= "💰 Earn TON by watching ads\n";
+                $response .= "👥 Invite friends for bonuses\n";
+                $response .= "🏧 Withdraw to your wallet\n\n";
+                $response .= "📊 <b>Daily Progress:</b>\n";
+                $response .= "• Watched today: <b>" . $ads_today . "/" . DAILY_AD_LIMIT . "</b> ads\n";
+                $response .= "• Remaining: <b>" . $ads_remaining . "</b> ads\n\n";
+                $response .= "⚠️ <b>Withdrawal Requirement:</b>\n";
+                $response .= "• Minimum <b>" . MIN_WITHDRAW_REF . " referrals</b> needed";
+                editMessageText($chat_id, $message_id, $response, getMainKeyboard());
+                break;
+        }
+    }
+    
+    // Web app data processing
+    if (isset($update['web_app_data'])) {
+        $web_app_data = $update['web_app_data'];
+        $chat_id = $web_app_data['user_id'];
+        $data = json_decode($web_app_data['data'], true);
+        
+        logError("Web app data from " . $chat_id . ": " . $web_app_data['data']);
+        
+        $users = loadUsers();
+        if (!isset($users[$chat_id])) {
+            return;
+        }
+        
+        $user = $users[$chat_id];
+        $current_time = time();
+        $ads_today = isset($user['ads_watched_today']) ? $user['ads_watched_today'] : 0;
+        
+        // Günlük limit kontrolü
+        if ($ads_today >= DAILY_AD_LIMIT) {
+            sendMessage($chat_id, "❌ <b>Daily Limit Reached!</b>\n\nYou have reached the daily limit of " . DAILY_AD_LIMIT . " ads.\nPlease come back tomorrow!");
+            return;
+        }
+        
+        // Cooldown kontrolü
+        if ($current_time - $user['last_ad_watch'] < AD_COOLDOWN) {
+            $remaining = AD_COOLDOWN - ($current_time - $user['last_ad_watch']);
+            sendMessage($chat_id, "⏰ Please wait " . $remaining . " seconds before watching another ad.");
+            return;
+        }
+        
+        // Reklam ödülü ver
+        $users[$chat_id]['balance'] += AD_REWARD;
+        $users[$chat_id]['total_earned'] += AD_REWARD;
+        $users[$chat_id]['last_ad_watch'] = $current_time;
+        $users[$chat_id]['ads_watched_today'] = $ads_today + 1;
+        
+        saveUsers($users);
+        
+        $ads_remaining = DAILY_AD_LIMIT - ($ads_today + 1);
+        
+        $response = "🎉 <b>Ad Watched Successfully!</b>\n\n";
+        $response .= "💰 You earned: <b>" . AD_REWARD . " TON</b>\n";
+        $response .= "💳 New balance: <b>" . number_format($users[$chat_id]['balance'], 6) . " TON</b>\n\n";
+        $response .= "📊 <b>Daily Progress:</b>\n";
+        $response .= "• Watched today: <b>" . ($ads_today + 1) . "/" . DAILY_AD_LIMIT . "</b> ads\n";
+        $response .= "• Remaining: <b>" . $ads_remaining . "</b> ads\n\n";
+        $response .= "🔄 Ready for next ad in " . AD_COOLDOWN . " seconds";
+        
+        sendMessage($chat_id, $response, getEarnKeyboard());
+    }
+}
+
+// Get update from Telegram
+$input = file_get_contents('php://input');
+if ($input) {
+    $update = json_decode($input, true);
+    if ($update) {
+        processUpdate($update);
+    }
+}
+
+echo "🤖 TAKONI ADS BOT IS RUNNING | " . date('Y-m-d H:i:s');
+?>
