@@ -1,1 +1,16 @@
-
+{
+  "123456789": {
+    "balance": 0,
+    "referrals": 0,
+    "ref_code": "TAKabc123",
+    "last_ad_watch": 0,
+    "ads_watched_today": 0,
+    "last_daily_reset": "2024-01-01",
+    "ton_address": "",
+    "total_earned": 0,
+    "created_at": 1700000000,
+    "referred_by": null,
+    "referral_list": [],
+    "username": "example_user"
+  }
+}
