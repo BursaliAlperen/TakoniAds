@@ -1,110 +1,3 @@
-<?php
-// Enable all errors
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Bot configuration
-$bot_token = getenv('BOT_TOKEN');
-if (!$bot_token) {
-    http_response_code(500);
-    die("❌ BOT_TOKEN not set");
-}
-
-define('BOT_TOKEN', $bot_token);
-define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
-define('USERS_FILE', 'users.json');
-define('ERROR_LOG', 'error.log');
-
-// TON Rewards
-define('AD_REWARD', 0.0001);
-define('REF_REWARD', 0.0005);
-define('MIN_WITHDRAW_REF', 5);
-define('MIN_WITHDRAW_AMOUNT', 0.01);
-define('AD_COOLDOWN', 10);
-define('DAILY_AD_LIMIT', 100);
-
-// Channel configuration
-define('CHANNEL_USERNAME', '@TakoniFinance');
-define('CHANNEL_URL', 'https://t.me/TakoniFinance');
-
-// Language texts
-$lang = array(
-    'en' => array(
-        'welcome' => "🚀 <b>Welcome to TAKONI ADS!</b>\n\n",
-        'welcome_ref' => "🎉 <b>Welcome via Referral!</b>\n\nYou joined using @%s's referral link!\n\n",
-        'earn_info' => "💰 <b>Earn TON</b> by watching ads\n👥 <b>Invite friends</b> for bonus TON\n🏧 <b>Withdraw</b> to TON wallet\n\n",
-        'your_ref_code' => "🔗 <b>Your referral code:</b>\n<code>%s</code>\n\n",
-        'rewards' => "📊 <b>Rewards:</b>\n• Watch Ad: <b>" . AD_REWARD . " TON</b>\n• Per Referral: <b>" . REF_REWARD . " TON</b>\n\n",
-        'daily_limit' => "⚠️ <b>Daily Limit:</b>\n• Maximum <b>" . DAILY_AD_LIMIT . " ads</b> per day\n\n",
-        'withdraw_req' => "⚠️ <b>Withdrawal Requirement:</b>\n• Minimum <b>" . MIN_WITHDRAW_REF . " referrals</b> needed",
-        'channel_required' => "📢 <b>Channel Membership Required</b>\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the '✅ I Joined' button below.",
-        'not_joined' => "❌ <b>You haven't joined the channel yet!</b>\n\nPlease join " . CHANNEL_USERNAME . " first, then click '✅ I Joined'",
-        'joined_success' => "✅ <b>Thank you for joining!</b>\n\nNow you can start earning TON!",
-        'earn_title' => "💰 <b>Earn TON</b>\n\n",
-        'earn_instructions' => "📱 <b>Watch Ads & Earn " . AD_REWARD . " TON Each</b>\n\n🎬 How to earn:\n1. Click 'Watch Ad Now' button\n2. Watch the advertisement completely\n3. Get " . AD_REWARD . " TON automatically!\n\n⏰ Cooldown: " . AD_COOLDOWN . " seconds between ads\n\n",
-        'daily_progress' => "📊 <b>Daily Progress:</b>\n• Watched today: <b>%d/%d</b> ads\n• Remaining: <b>%d</b> ads\n\n",
-        'balance_stats' => "💰 <b>Balance Stats:</b>\n• Current: <b>%s TON</b>\n• Highest: <b>%s TON</b>\n• Total Earned: <b>%s TON</b>\n\n",
-        'balance_title' => "💳 <b>Your Balance</b>\n\n",
-        'balance_details' => "💰 Available: <b>%s TON</b>\n🏆 Highest Balance: <b>%s TON</b>\n📈 Total Earned: <b>%s TON</b>\n👥 Referrals: <b>%d</b>\n\n",
-        'ref_title' => "👥 <b>Your Referrals</b>\n\n",
-        'ref_stats' => "📊 <b>Statistics:</b>\n• Total Referrals: <b>%d</b>\n• Earned from Referrals: <b>%s TON</b>\n• Your Referral Code: <code>%s</code>\n\n",
-        'ref_instructions' => "💡 <b>How to invite:</b>\nShare your referral link and earn " . REF_REWARD . " TON for each friend who joins!\n\n",
-        'withdraw_title' => "🏧 <b>Withdraw TON</b>\n\n",
-        'withdraw_requirements' => "📋 <b>Requirements:</b>\n• Minimum " . MIN_WITHDRAW_REF . " referrals\n• Minimum " . MIN_WITHDRAW_AMOUNT . " TON balance\n\n",
-        'withdraw_stats' => "📊 <b>Your Stats:</b>\n• Referrals: <b>%d/%d</b>\n• Balance: <b>%s/%s TON</b>\n\n",
-        'withdraw_address' => "💳 <b>Your TON Address:</b>\n%s\n\n",
-        'no_address' => "❌ <b>No TON address set</b>\n\nPlease set your TON wallet address first.",
-        'enter_address' => "💳 <b>Enter TON Address</b>\n\nPlease send your TON wallet address now:",
-        'invalid_address' => "❌ <b>Invalid TON Address</b>\n\nPlease check your address and try again. Make sure it's a valid TON wallet address.",
-        'address_saved' => "✅ <b>TON Address Saved!</b>\n\nYour withdrawal address has been updated.",
-        'withdraw_success' => "✅ <b>Withdrawal Request Submitted!</b>\n\nYour request for %s TON has been received and will be processed within 24 hours.",
-        'insufficient_refs' => "❌ <b>Insufficient Referrals</b>\n\nYou need at least %d referrals to withdraw. You have %d.",
-        'insufficient_balance' => "❌ <b>Insufficient Balance</b>\n\nMinimum withdrawal amount is %s TON. You have %s TON.",
-        'new_ref' => "🎉 <b>New Referral!</b>\n\n👤 New user @%s joined using your referral link!\n💰 You earned: <b>" . REF_REWARD . " TON</b>\n👥 Total referrals: <b>%d</b>\n💳 New balance: <b>%s TON</b>"
-    ),
-    'tr' => array(
-        'welcome' => "🚀 <b>TAKONI ADS'e Hoş Geldin!</b>\n\n",
-        'welcome_ref' => "🎉 <b>Referans ile Hoş Geldin!</b>\n\n@%s'nin referans linki ile katıldın!\n\n",
-        'earn_info' => "💰 <b>TON Kazan</b> - reklam izleyerek\n👥 <b>Arkadaşlarını davet et</b> - bonus TON kazan\n🏧 <b>Çekim yap</b> - TON cüzdanına\n\n",
-        'your_ref_code' => "🔗 <b>Referans kodun:</b>\n<code>%s</code>\n\n",
-        'rewards' => "📊 <b>Ödüller:</b>\n• Reklam İzle: <b>" . AD_REWARD . " TON</b>\n• Her Referans: <b>" . REF_REWARD . " TON</b>\n\n",
-        'daily_limit' => "⚠️ <b>Günlük Limit:</b>\n• Günlük maksimum <b>" . DAILY_AD_LIMIT . " reklam</b>\n\n",
-        'withdraw_req' => "⚠️ <b>Çekim Gereksinimi:</b>\n• Minimum <b>" . MIN_WITHDRAW_REF . " referans</b> gerekli",
-        'channel_required' => "📢 <b>Kanal Üyeliği Gerekli</b>\n\nBu botu kullanmak için resmi kanalımıza katılmalısın:\n" . CHANNEL_USERNAME . "\n\nKatıldıktan sonra aşağıdaki '✅ Katıldım' butonuna tıkla.",
-        'not_joined' => "❌ <b>Henüz kanala katılmadın!</b>\n\nLütfen önce " . CHANNEL_USERNAME . " katıl, sonra '✅ Katıldım' butonuna tıkla",
-        'joined_success' => "✅ <b>Katıldığın için teşekkürler!</b>\n\nŞimdi TON kazanmaya başlayabilirsin!",
-        'earn_title' => "💰 <b>TON Kazan</b>\n\n",
-        'earn_instructions' => "📱 <b>Reklam İzle & Her Seferinde " . AD_REWARD . " TON Kazan</b>\n\n🎬 Nasıl kazanılır:\n1. 'Reklam İzle' butonuna tıkla\n2. Reklamı tamamen izle\n3. Otomatik olarak " . AD_REWARD . " TON kazan!\n\n⏰ Bekleme süresi: reklamlar arası " . AD_COOLDOWN . " saniye\n\n",
-        'daily_progress' => "📊 <b>Günlük Durum:</b>\n• Bugün izlenen: <b>%d/%d</b> reklam\n• Kalan: <b>%d</b> reklam\n\n",
-        'balance_stats' => "💰 <b>Bakiye İstatistikleri:</b>\n• Mevcut: <b>%s TON</b>\n• En Yüksek: <b>%s TON</b>\n• Toplam Kazanç: <b>%s TON</b>\n\n",
-        'balance_title' => "💳 <b>Bakiyen</b>\n\n",
-        'balance_details' => "💰 Mevcut: <b>%s TON</b>\n🏆 En Yüksek Bakiye: <b>%s TON</b>\n📈 Toplam Kazanç: <b>%s TON</b>\n👥 Referanslar: <b>%d</b>\n\n",
-        'ref_title' => "👥 <b>Referansların</b>\n\n",
-        'ref_stats' => "📊 <b>İstatistikler:</b>\n• Toplam Referans: <b>%d</b>\n• Referanslardan Kazanç: <b>%s TON</b>\n• Referans Kodun: <code>%s</code>\n\n",
-        'ref_instructions' => "💡 <b>Nasıl davet edilir:</b>\nReferans linkini paylaş ve katılan her arkadaş için " . REF_REWARD . " TON kazan!\n\n",
-        'withdraw_title' => "🏧 <b>TON Çek</b>\n\n",
-        'withdraw_requirements' => "📋 <b>Gereksinimler:</b>\n• Minimum " . MIN_WITHDRAW_REF . " referans\n• Minimum " . MIN_WITHDRAW_AMOUNT . " TON bakiye\n\n",
-        'withdraw_stats' => "📊 <b>İstatistiklerin:</b>\n• Referanslar: <b>%d/%d</b>\n• Bakiye: <b>%s/%s TON</b>\n\n",
-        'withdraw_address' => "💳 <b>TON Adresin:</b>\n%s\n\n",
-        'no_address' => "❌ <b>TON adresi ayarlanmadı</b>\n\nLütfen önce TON cüzdan adresinizi ayarlayın.",
-        'enter_address' => "💳 <b>TON Adresi Gir</b>\n\nLütfen TON cüzdan adresinizi şimdi gönderin:",
-        'invalid_address' => "❌ <b>Geçersiz TON Adresi</b>\n\nLütfen adresinizi kontrol edin ve tekrar deneyin. Geçerli bir TON cüzdan adresi olduğundan emin olun.",
-        'address_saved' => "✅ <b>TON Adresi Kaydedildi!</b>\n\nÇekim adresiniz güncellendi.",
-        'withdraw_success' => "✅ <b>Çekim Talebi Alındı!</b>\n\n%s TON çekim talebiniz alındı ve 24 saat içinde işleme alınacak.",
-        'insufficient_refs' => "❌ <b>Yetersiz Referans</b>\n\nÇekim yapmak için en az %d referans gerekiyor. Sizde %d referans var.",
-        'insufficient_balance' => "❌ <b>Yetersiz Bakiye</b>\n\nMinimum çekim miktarı %s TON. Sizde %s TON var.",
-        'new_ref' => "🎉 <b>Yeni Referans!</b>\n\n👤 @%s kullanıcısı senin referans linkinle katıldı!\n💰 Kazandın: <b>" . REF_REWARD . " TON</b>\n👥 Toplam referans: <b>%d</b>\n💳 Yeni bakiye: <b>%s TON</b>"
-    ),
-    'ru' => array(
-        'welcome' => "🚀 <b>Добро пожаловать в TAKONI ADS!</b>\n\n",
-        'welcome_ref' => "🎉 <b>Добро пожаловать по реферальной ссылке!</b>\n\nВы присоединились по ссылке @%s!\n\n",
-        'earn_info' => "💰 <b>Зарабатывайте TON</b> - просматривая рекламу\n👥 <b>Приглашайте друзей</b> - получайте бонусные TON\n🏧 <b>Выводите</b> - на TON кошелек\n\n",
-        'your_ref_code' => "🔗 <b>Ваш реферальный код:</b>\n<code>%s</code>\n\n",
-        'rewards' => "📊 <b>Награды:</b>\n• Просмотр рекламы: <b>" . AD_REWARD . " TON</b>\n• За реферала: <b>" . REF_REWARD . " TON</b>\n\n",
-        'daily_limit' => "⚠️ <b>Дневной лимит:</b>\n• Максимум <b>" . DAILY_AD_LIMIT . " реклам</b> в день\n\n",
-        'withdraw_req' => "⚠️ <b>Требования для вывода:</b>\n• Минимум <b>" . MIN_WITHDRAW_REF . " рефералов</b> необходимо",
-        'channel_required' => "📢 <b>Требуется участие в канале</b>\n\nДля использования этого бота вы должны присоединиться к нашему официальному каналу:\n" . CHANNEL_USERNAME . "\n\nПосле присоединения нажмите кнопку '✅ Я вступил' ниже.",
-        'not_joined' => "❌ <b>Вы еще не присоединились к каналу!</b>\n\nПожалуйста, сначала присоединитесь к " . CHANNEL_USERNAME . ", затем нажмите '✅ Я вступил'",
         'joined_success' => "✅ <b>Спасибо за присоединение!</b>\n\nТеперь вы можете начать зарабатывать TON!",
         'earn_title' => "💰 <b>Заработать TON</b>\n\n",
         'earn_instructions' => "📱 <b>Смотрите рекламу и зарабатывайте " . AD_REWARD . " TON за каждую</b>\n\n🎬 Как заработать:\n1. Нажмите кнопку 'Смотреть рекламу'\n2. Просмотрите рекламу полностью\n3. Получите " . AD_REWARD . " TON автоматически!\n\n⏰ Перерыв: " . AD_COOLDOWN . " секунд между рекламой\n\n",
@@ -540,7 +433,7 @@ function processUpdate($update) {
                 'last_ad_watch' => 0,
                 'ads_watched_today' => 0,
                 'last_daily_reset' => date('Y-m-d'),
-                'ton_address' => '',
+                'ton_address' => ''
                 'total_earned' => 0,
                 'created_at' => time(),
                 'referred_by' => null,
