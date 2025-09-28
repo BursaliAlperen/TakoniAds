@@ -17,11 +17,9 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
-# Fix permissions for Render
-RUN mkdir -p /var/www/html && \
-    touch /var/www/html/users.json /var/www/html/error.log && \
-    chmod 666 /var/www/html/users.json /var/www/html/error.log && \
-    chown -R www-data:www-data /var/www/html
+# Create data files with proper permissions (simplified for Render)
+RUN touch users.json error.log
+RUN chmod 666 users.json error.log
 
 # Expose port
 EXPOSE 80
