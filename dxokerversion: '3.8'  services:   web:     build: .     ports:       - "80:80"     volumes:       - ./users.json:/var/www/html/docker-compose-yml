@@ -1,13 +1,26 @@
 version: '3.8'
-
 services:
-  web:
+  bot:
     build: .
-    ports:
-      - "80:80"
-    volumes:
-      - ./users.json:/var/www/html/users.json
-      - ./error.log:/var/www/html/error.log
+    depends_on:
+      - db
     environment:
-      - BOT_TOKEN=${BOT_TOKEN}
-    restart: unless-stopped
+      - BOT_TOKEN=your_bot_token_here
+      - BOT_USERNAME=takoniAdsBot
+      - CHANNEL_USERNAME=@TakoniFinance
+      - CHANNEL_ID=-1002855918077
+      - CHANNEL_URL=https://t.me/TakoniFinance
+      - WEBAPP_URL=https://takoniads.onrender.com/webapp.html
+      - DB_DSN=mysql:host=db;port=3306;dbname=botdb
+      - DB_USER=root
+      - DB_PASS=mysqlpassword
+      - AD_ZONE_ID=3305
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=botdb
+      - MYSQL_ROOT_PASSWORD=mysqlpassword
+    volumes:
+      - mysqldata:/var/lib/mysql
+volumes:
+  mysqldata:
