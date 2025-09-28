@@ -19,10 +19,13 @@ define('MIN_WITHDRAW_AMOUNT', 0.01);
 define('AD_COOLDOWN', 10);
 define('DAILY_AD_LIMIT', 100);
 
-// Kanal bilgileri - ID ile birlikte
+// Kanal bilgileri
 define('CHANNEL_USERNAME', '@TakoniFinance');
-define('CHANNEL_ID', '-1002855918077'); // Eksi işareti ile
+define('CHANNEL_ID', '-1002855918077');
 define('CHANNEL_URL', 'https://t.me/TakoniFinance');
+
+// Bot kullanıcı adı
+define('BOT_USERNAME', 'takoniAdsBot');
 
 if (!file_exists(USERS_FILE)) file_put_contents(USERS_FILE, '{}');
 if (!file_exists(ERROR_LOG)) file_put_contents(ERROR_LOG, '');
@@ -79,81 +82,59 @@ function generateRefCode($chat_id) {
     return 'TAK' . substr(md5($chat_id), 0, 7);
 }
 
-// DÜZELTİLMİŞ KANAL KONTROL FONKSİYONU - ID ile
+// Basitleştirilmiş kanal kontrolü
 function isUserInChannel($chat_id) {
-    // Önce ID ile dene
     $method = 'getChatMember';
     $params = array(
-        'chat_id' => CHANNEL_ID, // ID ile deniyoruz
+        'chat_id' => CHANNEL_ID,
         'user_id' => $chat_id
     );
     
     $url = API_URL . $method . '?' . http_build_query($params);
     $response = @file_get_contents($url);
     
-    logError("Channel check with ID for user " . $chat_id);
+    if ($response === false) return false;
     
-    if ($response !== false) {
-        $data = json_decode($response, true);
-        if (isset($data['ok']) && $data['ok'] === true) {
-            $status = $data['result']['status'];
-            logError("User status with ID: " . $status);
-            
-            $valid_statuses = ['member', 'administrator', 'creator', 'restricted'];
-            if (in_array($status, $valid_statuses)) {
-                logError("User is member with ID check");
-                return true;
-            }
-        }
+    $data = json_decode($response, true);
+    if (isset($data['ok']) && $data['ok'] === true) {
+        $status = $data['result']['status'];
+        return in_array($status, ['member', 'administrator', 'creator', 'restricted']);
     }
     
-    // ID ile olmazsa username ile dene
-    logError("Trying with username...");
-    $params = array(
-        'chat_id' => CHANNEL_USERNAME,
-        'user_id' => $chat_id
-    );
-    
-    $url = API_URL . $method . '?' . http_build_query($params);
-    $response = @file_get_contents($url);
-    
-    if ($response !== false) {
-        $data = json_decode($response, true);
-        if (isset($data['ok']) && $data['ok'] === true) {
-            $status = $data['result']['status'];
-            logError("User status with username: " . $status);
-            
-            $valid_statuses = ['member', 'administrator', 'creator', 'restricted'];
-            if (in_array($status, $valid_statuses)) {
-                logError("User is member with username check");
-                return true;
-            }
-        }
-    }
-    
-    logError("User is NOT member of channel");
     return false;
 }
 
-// KANAL KONTROLÜNÜ ATLA - TEST MODU
-function skipChannelCheck($chat_id) {
-    logError("Channel check SKIPPED for user: " . $chat_id);
-    return true; // Her zaman true döndür
-}
-
+// Geliştirilmiş TON adres doğrulama
 function isValidTONAddress($address) {
     $address = trim($address);
+    
+    // Tüm TON adres formatları
     $patterns = array(
         '/^EQ[0-9a-zA-Z_-]{48}$/',
         '/^UQ[0-9a-zA-Z_-]{48}$/',
         '/^Ef[0-9a-zA-Z_-]{48}$/',
         '/^Uf[0-9a-zA-Z_-]{48}$/',
         '/^0:[0-9a-fA-F]{64}$/',
+        '/^[0-9a-zA-Z_-]{48}$/', // Sadece 48 karakter
     );
+    
     foreach ($patterns as $pattern) {
-        if (preg_match($pattern, $address)) return true;
+        if (preg_match($pattern, $address)) {
+            return true;
+        }
     }
-    return preg_match('/^EQ[a-zA-Z0-9_-]{44,50}$/', $address);
+    
+    // User-friendly format
+    if (preg_match('/^EQ[a-zA-Z0-9_-]{44,50}$/', $address)) {
+        return true;
+    }
+    
+    // UQ formatı için
+    if (preg_match('/^UQ[a-zA-Z0-9_-]{44,50}$/', $address)) {
+        return true;
+    }
+    
+    return false;
 }
 
 function getMainKeyboard() {
@@ -235,6 +216,40 @@ function processUpdate($update) {
         
         logError("Message from " . $chat_id . ": " . $text);
         
+        // Herhangi bir / komutu gelirse ana menüyü aç
+        if (strpos($text, '/') === 0) {
+            // Kullanıcı yoksa oluştur
+            if (!isset($users[$chat_id])) {
+                $ref_code = generateRefCode($chat_id);
+                $users[$chat_id] = array(
+                    'balance' => 0, 'referrals' => 0, 'ref_code' => $ref_code,
+                    'last_ad_watch' => 0, 'ads_watched_today' => 0, 'last_daily_reset' => date('Y-m-d'),
+                    'ton_address' => '', 'total_earned' => 0, 'created_at' => time(),
+                    'referred_by' => null, 'referral_list' => array(), 'username' => $username,
+                    'max_balance' => 0, 'channel_joined' => false
+                );
+                saveUsers($users);
+            }
+            
+            // Kanal kontrolü
+            if (!$users[$chat_id]['channel_joined']) {
+                $channel_joined = isUserInChannel($chat_id);
+                if ($channel_joined) {
+                    $users[$chat_id]['channel_joined'] = true;
+                    saveUsers($users);
+                    // Ana menüyü aç
+                    showMainMenu($chat_id, $users[$chat_id]);
+                } else {
+                    sendMessage($chat_id, "📢 <b>Channel Membership Required</b>\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the '✅ I Joined' button below.", getChannelJoinKeyboard());
+                }
+                return;
+            }
+            
+            // Ana menüyü aç
+            showMainMenu($chat_id, $users[$chat_id]);
+            return;
+        }
+        
         if (!isset($users[$chat_id])) {
             $ref_code = generateRefCode($chat_id);
             $users[$chat_id] = array(
@@ -248,17 +263,9 @@ function processUpdate($update) {
             logError("New user created: " . $chat_id);
         }
         
-        // TEST MODU: Kanal kontrolünü atla - YORUM SATIRINI KALDIR
+        // Kanal kontrolü
         if (!$users[$chat_id]['channel_joined']) {
             if (strpos($text, '/start') === 0) {
-                // TEST: Kanal kontrolünü atla ve direkt kabul et
-                $users[$chat_id]['channel_joined'] = true;
-                saveUsers($users);
-                logError("Channel check BYPASSED for user: " . $chat_id);
-                processStartCommand($users, $chat_id, $text, $username);
-                
-                /*
-                // NORMAL MOD: Kanal kontrolü yap
                 $channel_joined = isUserInChannel($chat_id);
                 if ($channel_joined) {
                     $users[$chat_id]['channel_joined'] = true;
@@ -267,7 +274,6 @@ function processUpdate($update) {
                 } else {
                     sendMessage($chat_id, "📢 <b>Channel Membership Required</b>\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the '✅ I Joined' button below.", getChannelJoinKeyboard());
                 }
-                */
             }
             return;
         }
@@ -276,15 +282,34 @@ function processUpdate($update) {
             processStartCommand($users, $chat_id, $text, $username);
         } elseif (isset($users[$chat_id]['awaiting_ton_address'])) {
             $ton_address = trim($text);
+            
+            // Geliştirilmiş TON adres kontrolü
             if (isValidTONAddress($ton_address)) {
                 $users[$chat_id]['ton_address_temp'] = $ton_address;
                 unset($users[$chat_id]['awaiting_ton_address']);
                 saveUsers($users);
-                $response = "🔗 <b>TON Address Received</b>\n\n✅ <b>Valid TON Address</b>\n\nAddress: <code>" . $ton_address . "</code>\n\nClick 'Save Address' to confirm:";
+                
+                $response = "🔗 <b>TON Address Received</b>\n\n";
+                $response .= "✅ <b>Valid TON Address</b>\n\n";
+                $response .= "Address: <code>" . $ton_address . "</code>\n\n";
+                $response .= "Click 'Save Address' to confirm:";
+                
                 sendMessage($chat_id, $response, getSaveAddressKeyboard());
             } else {
-                sendMessage($chat_id, "❌ <b>Invalid TON Address</b>\n\nPlease check your address and try again.");
+                $response = "❌ <b>Invalid TON Address</b>\n\n";
+                $response .= "Please check your address and try again.\n\n";
+                $response .= "📍 <b>Valid TON Address Examples:</b>\n";
+                $response .= "• <code>EQDhG2TjEqX_iNGuOdS_SP2GpvwOxMVupxf5mvMAKIid46HS</code>\n";
+                $response .= "• <code>UQDhG2TjEqX_iNGuOdS_SP2GpvwOxMVupxf5mvMAKIid46HS</code>\n";
+                $response .= "• <code>0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef</code>\n\n";
+                $response .= "📍 <b>Your address:</b> <code>" . htmlspecialchars($ton_address) . "</code>\n";
+                $response .= "📍 <b>Length:</b> " . strlen($ton_address) . " characters";
+                
+                sendMessage($chat_id, $response);
             }
+        } else {
+            // Bilinmeyen mesaj için ana menüyü göster
+            showMainMenu($chat_id, $users[$chat_id]);
         }
     } elseif (isset($update['callback_query'])) {
         $callback = $update['callback_query'];
@@ -310,50 +335,25 @@ function processUpdate($update) {
         $user = $users[$chat_id];
         
         if ($data == 'check_join') {
-            // TEST: Kanal kontrolünü atla ve direkt kabul et
-            $users[$chat_id]['channel_joined'] = true;
-            saveUsers($users);
-            logError("Channel check BYPASSED in callback for user: " . $chat_id);
-            editMessageText($chat_id, $message_id, "✅ <b>Thank you for joining!</b>\n\nNow you can start earning TON!", getMainKeyboard());
-            
-            /*
-            // NORMAL: Gerçek kontrol yap
             $channel_joined = isUserInChannel($chat_id);
             if ($channel_joined) {
                 $users[$chat_id]['channel_joined'] = true;
                 saveUsers($users);
-                editMessageText($chat_id, $message_id, "✅ <b>Thank you for joining!</b>\n\nNow you can start earning TON!", getMainKeyboard());
+                showMainMenu($chat_id, $users[$chat_id]);
             } else {
                 editMessageText($chat_id, $message_id, "❌ <b>You haven't joined the channel yet!</b>\n\nPlease join " . CHANNEL_USERNAME . " first, then click '✅ I Joined'", getChannelJoinKeyboard());
             }
-            */
             return;
         }
         
-        // Eğer kanala katılmamışsa ama callback gelmişse, direkt kabul et
         if (!$users[$chat_id]['channel_joined']) {
-            $users[$chat_id]['channel_joined'] = true;
-            saveUsers($users);
-            logError("Auto-joined user in callback: " . $chat_id);
+            editMessageText($chat_id, $message_id, "📢 <b>Channel Membership Required</b>\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the '✅ I Joined' button below.", getChannelJoinKeyboard());
+            return;
         }
         
         switch ($data) {
             case 'main_menu':
-                $user = $users[$chat_id];
-                $welcome = "🚀 <b>Welcome to TAKONI ADS!</b>\n\n";
-                $welcome .= "💰 <b>Earn TON</b> by watching ads\n";
-                $welcome .= "👥 <b>Invite friends</b> for bonus TON\n";
-                $welcome .= "🏧 <b>Withdraw</b> to TON wallet\n\n";
-                $welcome .= "🔗 <b>Your referral code:</b>\n";
-                $welcome .= "<code>" . $user['ref_code'] . "</code>\n\n";
-                $welcome .= "📊 <b>Rewards:</b>\n";
-                $welcome .= "• Watch Ad: <b>" . AD_REWARD . " TON</b>\n";
-                $welcome .= "• Per Referral: <b>" . REF_REWARD . " TON</b>\n\n";
-                $welcome .= "⚠️ <b>Daily Limit:</b>\n";
-                $welcome .= "• Maximum <b>" . DAILY_AD_LIMIT . " ads</b> per day\n\n";
-                $welcome .= "⚠️ <b>Withdrawal Requirement:</b>\n";
-                $welcome .= "• Minimum <b>" . MIN_WITHDRAW_REF . " referrals</b> needed";
-                editMessageText($chat_id, $message_id, $welcome, getMainKeyboard());
+                showMainMenu($chat_id, $user);
                 break;
                 
             case 'earn':
@@ -419,7 +419,7 @@ function processUpdate($update) {
             case 'enter_ton_address':
                 $users[$chat_id]['awaiting_ton_address'] = true;
                 saveUsers($users);
-                sendMessage($chat_id, "💳 <b>Enter TON Address</b>\n\nPlease send your TON wallet address now:");
+                sendMessage($chat_id, "💳 <b>Enter TON Address</b>\n\nPlease send your TON wallet address now:\n\n📍 <b>Examples:</b>\n• <code>EQDhG2TjEqX_iNGuOdS_SP2GpvwOxMVupxf5mvMAKIid46HS</code>\n• <code>UQDhG2TjEqX_iNGuOdS_SP2GpvwOxMVupxf5mvMAKIid46HS</code>");
                 break;
                 
             case 'save_ton_address':
@@ -454,12 +454,31 @@ function processUpdate($update) {
                 break;
                 
             case 'share_referral':
-                $ref_link = "https://t.me/" . $callback['message']['chat']['username'] . "?start=" . $user['ref_code'];
+                $ref_link = "https://t.me/" . BOT_USERNAME . "?start=" . $user['ref_code'];
                 $response = "📤 <b>Your Referral Link:</b>\n\n" . $ref_link . "\n\nShare this link with your friends!";
                 editMessageText($chat_id, $message_id, $response, getReferralsKeyboard());
                 break;
         }
     }
+}
+
+// Ana menüyü gösteren fonksiyon
+function showMainMenu($chat_id, $user) {
+    $welcome = "🚀 <b>Welcome to TAKONI ADS!</b>\n\n";
+    $welcome .= "💰 <b>Earn TON</b> by watching ads\n";
+    $welcome .= "👥 <b>Invite friends</b> for bonus TON\n";
+    $welcome .= "🏧 <b>Withdraw</b> to TON wallet\n\n";
+    $welcome .= "🔗 <b>Your referral code:</b>\n";
+    $welcome .= "<code>" . $user['ref_code'] . "</code>\n\n";
+    $welcome .= "📊 <b>Rewards:</b>\n";
+    $welcome .= "• Watch Ad: <b>" . AD_REWARD . " TON</b>\n";
+    $welcome .= "• Per Referral: <b>" . REF_REWARD . " TON</b>\n\n";
+    $welcome .= "⚠️ <b>Daily Limit:</b>\n";
+    $welcome .= "• Maximum <b>" . DAILY_AD_LIMIT . " ads</b> per day\n\n";
+    $welcome .= "⚠️ <b>Withdrawal Requirement:</b>\n";
+    $welcome .= "• Minimum <b>" . MIN_WITHDRAW_REF . " referrals</b> needed";
+    
+    sendMessage($chat_id, $welcome, getMainKeyboard());
 }
 
 function processStartCommand(&$users, $chat_id, $text, $username) {
@@ -519,20 +538,7 @@ function processStartCommand(&$users, $chat_id, $text, $username) {
         }
     }
     
-    $welcome .= "💰 <b>Earn TON</b> by watching ads\n";
-    $welcome .= "👥 <b>Invite friends</b> for bonus TON\n";
-    $welcome .= "🏧 <b>Withdraw</b> to TON wallet\n\n";
-    $welcome .= "🔗 <b>Your referral code:</b>\n";
-    $welcome .= "<code>" . $users[$chat_id]['ref_code'] . "</code>\n\n";
-    $welcome .= "📊 <b>Rewards:</b>\n";
-    $welcome .= "• Watch Ad: <b>" . AD_REWARD . " TON</b>\n";
-    $welcome .= "• Per Referral: <b>" . REF_REWARD . " TON</b>\n\n";
-    $welcome .= "⚠️ <b>Daily Limit:</b>\n";
-    $welcome .= "• Maximum <b>" . DAILY_AD_LIMIT . " ads</b> per day\n\n";
-    $welcome .= "⚠️ <b>Withdrawal Requirement:</b>\n";
-    $welcome .= "• Minimum <b>" . MIN_WITHDRAW_REF . " referrals</b> needed";
-    
-    sendMessage($chat_id, $welcome, getMainKeyboard());
+    showMainMenu($chat_id, $users[$chat_id]);
 }
 
 $input = file_get_contents('php://input');
