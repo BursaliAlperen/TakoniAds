@@ -60,8 +60,7 @@ $lang = array(
         'withdraw_success' => "✅ <b>Withdrawal Request Submitted!</b>\n\nYour request for %s TON has been received and will be processed within 24 hours.",
         'insufficient_refs' => "❌ <b>Insufficient Referrals</b>\n\nYou need at least %d referrals to withdraw. You have %d.",
         'insufficient_balance' => "❌ <b>Insufficient Balance</b>\n\nMinimum withdrawal amount is %s TON. You have %s TON.",
-        'new_ref' => "🎉 <b>New Referral!</b>\n\n👤 New user @%s joined using your referral link!\n💰 You earned: <b>" . REF_REWARD . " TON</b>\n👥 Total referrals: <b>%d</b>\n💳 New balance: <b>%s TON</b>",
-        'history' => "📜 <b>Referral History (Last 7 Days)</b>\n\n%s"
+        'new_ref' => "🎉 <b>New Referral!</b>\n\n👤 New user @%s joined using your referral link!\n💰 You earned: <b>" . REF_REWARD . " TON</b>\n👥 Total referrals: <b>%d</b>\n💳 New balance: <b>%s TON</b>"
     ),
     'tr' => array(
         'welcome' => "🚀 <b>TAKONI ADS'e Hoş Geldin!</b>\n\n",
@@ -94,8 +93,7 @@ $lang = array(
         'withdraw_success' => "✅ <b>Çekim Talebi Alındı!</b>\n\n%s TON çekim talebiniz alındı ve 24 saat içinde işleme alınacak.",
         'insufficient_refs' => "❌ <b>Yetersiz Referans</b>\n\nÇekim yapmak için en az %d referans gerekiyor. Sizde %d referans var.",
         'insufficient_balance' => "❌ <b>Yetersiz Bakiye</b>\n\nMinimum çekim miktarı %s TON. Sizde %s TON var.",
-        'new_ref' => "🎉 <b>Yeni Referans!</b>\n\n👤 @%s kullanıcısı senin referans linkinle katıldı!\n💰 Kazandın: <b>" . REF_REWARD . " TON</b>\n👥 Toplam referans: <b>%d</b>\n💳 Yeni bakiye: <b>%s TON</b>",
-        'history' => "📜 <b>Referans Geçmişi (Son 7 Gün)</b>\n\n%s"
+        'new_ref' => "🎉 <b>Yeni Referans!</b>\n\n👤 @%s kullanıcısı senin referans linkinle katıldı!\n💰 Kazandın: <b>" . REF_REWARD . " TON</b>\n👥 Toplam referans: <b>%d</b>\n💳 Yeni bakiye: <b>%s TON</b>"
     ),
     'ru' => array(
         'welcome' => "🚀 <b>Добро пожаловать в TAKONI ADS!</b>\n\n",
@@ -112,178 +110,6 @@ $lang = array(
         'earn_instructions' => "📱 <b>Смотрите рекламу и зарабатывайте " . AD_REWARD . " TON за каждую</b>\n\n🎬 Как заработать:\n1. Нажмите кнопку 'Смотреть рекламу'\n2. Просмотрите рекламу полностью\n3. Получите " . AD_REWARD . " TON автоматически!\n\n⏰ Перерыв: " . AD_COOLDOWN . " секунд между рекламой\n\n",
         'daily_progress' => "📊 <b>Дневной прогресс:</b>\n• Просмотрено сегодня: <b>%d/%d</b> реклам\n• Осталось: <b>%d</b> реклам\n\n",
         'balance_stats' => "💰 <b>Статистика баланса:</b>\n• Текущий: <b>%s TON</b>\n• Наивысший: <b>%s TON</b>\n• Всего заработано: <b>%s TON</b>\n\n",
-        'balance_title' => "💳 <b>Ваш баланс</b>\n\n",
-        'balance_details' => "💰 Доступно: <b>%s TON</b>\n🏆 Наивысший баланс: <b>%s TON</b>\n📈 Всего заработано: <b>%s TON</b>\n👥 Рефералы: <b>%d</b>\n\n",
-        'ref_title' => "👥 <b>Ваши рефералы</b>\n\n",
-        'ref_stats' => "📊 <b>Статистика:</b>\n• Всего рефералов: <b>%d</b>\n• Заработано с рефералов: <b>%s TON</b>\n• Ваш реферальный код: <code>%s</code>\n\n",
-        'ref_instructions' => "💡 <b>Как приглашать:</b>\nПоделитесь своей реферальной ссылкой и зарабатывайте " . REF_REWARD . " TON за каждого друга, который присоединится!\n\n",
-        'withdraw_title' => "🏧 <b>Вывод TON</b>\n\n",
-        'withdraw_requirements' => "📋 <b>Требования:</b>\n• Минимум " . MIN_WITHDRAW_REF . " рефералов\n• Минимум " . MIN_WITHDRAW_AMOUNT . " TON на балансе\n\n",
-        'withdraw_stats' => "📊 <b>Ваша статистика:</b>\n• Рефералы: <b>%d/%d</b>\n• Баланс: <b>%s/%s TON</b>\n\n",
-        'withdraw_address' => "💳 <b>Ваш TON адрес:</b>\n%s\n\n",
-        'no_address' => "❌ <b>TON адрес не установлен</b>\n\nПожалуйста, сначала установите адрес вашего TON кошелька.",
-        'enter_address' => "💳 <b>Введите TON адрес</b>\n\nПожалуйста, отправьте адрес вашего TON кошелька сейчас:",
-        'invalid_address' => "❌ <b>Неверный TON адрес</b>\n\nПожалуйста, проверьте ваш адрес и попробуйте снова. Убедитесь, что это действительный TON адрес кошелька.",
-        'address_saved' => "✅ <b>TON адрес сохранен!</b>\n\nВаш адрес для вывода обновлен.",
-        'withdraw_success' => "✅ <b>Запрос на вывод отправлен!</b>\n\nВаш запрос на вывод %s TON получен и будет обработан в течение 24 часов.",
-        'insufficient_refs' => "❌ <b>Недостаточно рефералов</b>\n\nВам нужно как минимум %d рефералов для вывода. У вас %d.",
-        'insufficient_balance' => "❌ <b>Недостаточно средств</b>\n\nМинимальная сумма вывода %s TON. У вас %s TON.",
-        'new_ref' => "🎉 <b>Новый реферал!</b>\n\n👤 Новый пользователь @%s присоединился по вашей реферальной ссылке!\n💰 Вы заработали: <b>" . REF_REWARD . " TON</b>\n👥 Всего рефералов: <b>%d</b>\n💳 Новый баланс: <b>%s TON</b>",
-        'history' => "📜 <b>История рефералов (Последние 7 дней)</b>\n\n%s"
-    ),
-    'hi' => array(
-        'welcome' => "🚀 <b>TAKONI ADS में आपका स्वागत है!</b>\n\n",
-        'welcome_ref' => "🎉 <b>रेफरल के माध्यम से स्वागत है!</b>\n\nआप @%s के रेफरल लिंक से जुड़े!\n\n",
-        'earn_info' => "💰 <b>TON कमाएं</b> - विज्ञापन देखकर\n👥 <b>दोस्तों को आमंत्रित करें</b> - बोनस TON पाएं\n🏧 <b>निकासी करें</b> - TON वॉलेट में\n\n",
-        'your_ref_code' => "🔗 <b>आपका रेफरल कोड:</b>\n<code>%s</code>\n\n",
-        'rewards' => "📊 <b>पुरस्कार:</b>\n• विज्ञापन देखें: <b>" . AD_REWARD . " TON</b>\n• प्रति रेफरल: <b>" . REF_REWARD . " TON</b>\n\n",
-        'daily_limit' => "⚠️ <b>दैनिक सीमा:</b>\n• प्रतिदिन अधिकतम <b>" . DAILY_AD_LIMIT . " विज्ञापन</b>\n\n",
-        'withdraw_req' => "⚠️ <b>निकासी आवश्यकता:</b>\n• न्यूनतम <b>" . MIN_WITHDRAW_REF . " रेफरल</b> आवश्यक",
-        'channel_required' => "📢 <b>चैनल सदस्यता आवश्यक</b>\n\nइस बॉट का उपयोग करने के लिए, आपको हमारे आधिकारिक चैनल से जुड़ना होगा:\n" . CHANNEL_USERNAME . "\n\nजुड़ने के बाद, नीचे '✅ मैं शामिल हो गया' बटन पर क्लिक करें।",
-        'not_joined' => "❌ <b>आप अभी तक चैनल से नहीं जुड़े हैं!</b>\n\nकृपया पहले " . CHANNEL_USERNAME . " से जुड़ें, फिर '✅ मैं शामिल हो गया' बटन पर क्लिक करें",
-        'joined_success' => "✅ <b>जुड़ने के लिए धन्यवाद!</b>\n\nअब आप TON कमाना शुरू कर सकते हैं!",
-        'earn_title' => "💰 <b>TON कमाएं</b>\n\n",
-        'earn_instructions' => "📱 <b>विज्ञापन देखें और प्रत्येक से " . AD_REWARD . " TON कमाएं</b>\n\n🎬 कैसे कमाएं:\n1. 'विज्ञापन देखें' बटन पर क्लिक करें\n2. विज्ञापन को पूरी तरह देखें\n3. स्वचालित रूप से " . AD_REWARD . " TON प्राप्त करें!\n\n⏰ कोल्डाउन: विज्ञापनों के बीच " . AD_COOLDOWN . " सेकंड\n\n",
-        'daily_progress' => "📊 <b>दैनिक प्रगति:</b>\n• आज देखे गए: <b>%d/%d</b> विज्ञापन\n• शेष: <b>%d</b> विज्ञापन\n\n",
-        'balance_stats' => "💰 <b>बैलेंस स्टैटिस्टिक्स:</b>\n• वर्तमान: <b>%s TON</b>\n• उच्चतम: <b>%s TON</b>\n• कुल कमाया: <b>%s TON</b>\n\n",
-        'balance_title' => "💳 <b>आपका बैलेंस</b>\n\n",
-        'balance_details' => "💰 उपलब्ध: <b>%s TON</b>\n🏆 उच्चतम बैलेंस: <b>%s TON</b>\n📈 कुल कमाया: <b>%s TON</b>\n👥 रेफरल: <b>%d</b>\n\n",
-        'ref_title' => "👥 <b>आपके रेफरल</b>\n\n",
-        'ref_stats' => "📊 <b>आँकड़े:</b>\n• कुल रेफरल: <b>%d</b>\n• रेफरल से कमाया: <b>%s TON</b>\n• आपका रेफरल कोड: <code>%s</code>\n\n",
-        'ref_instructions' => "💡 <b>कैसे आमंत्रित करें:</b>\nअपना रेफरल लिंक साझा करें और जुड़ने वाले प्रत्येक मित्र के लिए " . REF_REWARD . " TON कमाएं!\n\n",
-        'withdraw_title' => "🏧 <b>TON निकासी</b>\n\n",
-        'withdraw_requirements' => "📋 <b>आवश्यकताएँ:</b>\n• न्यूनतम " . MIN_WITHDRAW_REF . " रेफरल\n• न्यूनतम " . MIN_WITHDRAW_AMOUNT . " TON बैलेंस\n\n",
-        'withdraw_stats' => "📊 <b>आपके आँकड़े:</b>\n• रेफरल: <b>%d/%d</b>\n• बैलेंस: <b>%s/%s TON</b>\n\n",
-        'withdraw_address' => "💳 <b>आपका TON पता:</b>\n%s\n\n",
-        'no_address' => "❌ <b>TON पता सेट नहीं है</b>\n\nकृपया पहले अपना TON वॉलेट पता सेट करें।",
-        'enter_address' => "💳 <b>TON पता दर्ज करें</b>\n\nकृपया अब अपना TON वॉलेट पता भेजें:",
-        'invalid_address' => "❌ <b>अमान्य TON पता</b>\n\nकृपया अपना पता जांचें और पुनः प्रयास करें। सुनिश्चित करें कि यह एक मान्य TON वॉलेट पता है।",
-        'address_saved' => "✅ <b>TON पता सहेजा गया!</b>\n\nआपका निकासी पता अपडेट किया गया है।",
-        'withdraw_success' => "✅ <b>निकासी अनुरोध सबमिट किया गया!</b>\n\n%s TON के आपके अनुरोध को प्राप्त कर लिया गया है और 24 घंटों के भीतर संसाधित किया जाएगा।",
-        'insufficient_refs' => "❌ <b>अपर्याप्त रेफरल</b>\n\nनिकासी के लिए आपको कम से कम %d रेफरल की आवश्यकता है। आपके पास %d हैं।",
-        'insufficient_balance' => "❌ <b>अपर्याप्त बैलेंस</b>\n\nन्यूनतम निकासी राशि %s TON है। आपके पास %s TON है।",
-        'new_ref' => "🎉 <b>नया रेफरल!</b>\n\n👤 नया उपयोगकर्ता @%s आपके रेफरल लिंक से जुड़ा!\n💰 आपने कमाया: <b>" . REF_REWARD . " TON</b>\n👥 कुल रेफरल: <b>%d</b>\n💳 नया बैलेंस: <b>%s TON</b>",
-        'history' => "📜 <b>रेफरल इतिहास (पिछले 7 दिन)</b>\n\n%s"
-    )
-);
-
-// Initialize files
-if (!file_exists(USERS_FILE)) {
-    file_put_contents(USERS_FILE, '{}');
-}
-if (!file_exists(ERROR_LOG)) {
-    file_put_contents(ERROR_LOG, '');
-}
-
-function logError($message) {
-    @file_put_contents(ERROR_LOG, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
-}
-
-function loadUsers() {
-    if (!file_exists(USERS_FILE)) {
-        return array();
-    }
-    $data = @file_get_contents(USERS_FILE);
-    if ($data === false) {
-        return array();
-    }
-    $users = json_decode($data, true);
-    return is_array($users) ? $users : array();
-}
-
-function saveUsers($users) {
-    $result = @file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT));
-    return $result !== false;
-}
-
-function resetDailyLimits() {
-    $users = loadUsers();
-    $today = date('Y-m-d');
-    $reset_count = 0;
-    
-    foreach ($users as $chat_id => $user) {
-        $last_reset = isset($user['last_daily_reset']) ? $user['last_daily_reset'] : '';
-        if ($last_reset !== $today) {
-            $users[$chat_id]['ads_watched_today'] = 0;
-            $users[$chat_id]['last_daily_reset'] = $today;
-            $reset_count++;
-        }
-    }
-    
-    if ($reset_count > 0) {
-        saveUsers($users);
-        logError("Daily limits reset for " . $reset_count . " users");
-    }
-}
-
-function sendMessage($chat_id, $text, $keyboard = null, $language = 'en') {
-    global $lang;
-    
-    $params = array(
-        'chat_id' => $chat_id,
-        'text' => $text,
-        'parse_mode' => 'HTML'
-    );
-    
-    if ($keyboard) {
-        $params['reply_markup'] = json_encode($keyboard);
-    }
-    
-    $url = API_URL . 'sendMessage?' . http_build_query($params);
-    $result = @file_get_contents($url);
-    return $result !== false;
-}
-
-function editMessageText($chat_id, $message_id, $text, $keyboard = null, $language = 'en') {
-    $params = array(
-        'chat_id' => $chat_id,
-        'message_id' => $message_id,
-        'text' => $text,
-        'parse_mode' => 'HTML'
-    );
-    
-    if ($keyboard) {
-        $params['reply_markup'] = json_encode($keyboard);
-    }
-    
-    $url = API_URL . 'editMessageText?' . http_build_query($params);
-    $result = @file_get_contents($url);
-    return $result !== false;
-}
-
-function generateRefCode($chat_id) {
-    return 'TAK' . substr(md5($chat_id), 0, 7);
-}
-
-// KANAL KONTROL FONKSİYONU
-function isUserInChannel($chat_id) {
-    $method = 'getChatMember';
-    $params = array(
-        'chat_id' => CHANNEL_USERNAME,
-        'user_id' => $chat_id
-    );
-    
-    $url = API_URL . $method . '?' . http_build_query($params);
-    $response = @file_get_contents($url);
-    
-    if ($response === false) {
-        logError("Failed to check channel membership for user: " . $chat_id);
-        return false;
-    }
-    
-    $data = json_decode($response, true);
-    
-    if (isset($data['ok']) && $data['ok'] === true) {
-        $status = $data['result']['status'];
-        return in_array($status, ['member', 'administrator', 'creator']);
-    }
-    
-    return false;
-}
-
-function isValidTONAddress($address) {
-    $address = trim($address);
-    logError("Checking TON         'balance_stats' => "💰 <b>Статистика баланса:</b>\n• Текущий: <b>%s TON</b>\n• Наивысший: <b>%s TON</b>\n• Всего заработано: <b>%s TON</b>\n\n",
         'balance_title' => "💳 <b>Ваш баланс</b>\n\n",
         'balance_details' => "💰 Доступно: <b>%s TON</b>\n🏆 Наивысший баланс: <b>%s TON</b>\n📈 Всего заработано: <b>%s TON</b>\n👥 Рефералы: <b>%d</b>\n\n",
         'ref_title' => "👥 <b>Ваши рефералы</b>\n\n",
@@ -387,8 +213,6 @@ function resetDailyLimits() {
 }
 
 function sendMessage($chat_id, $text, $keyboard = null) {
-    global $lang;
-    
     $params = array(
         'chat_id' => $chat_id,
         'text' => $text,
@@ -459,32 +283,24 @@ function isValidTONAddress($address) {
     
     // Tüm TON adres formatları
     $patterns = array(
-        '/^EQ[0-9a-zA-Z_-]{44,48}$/i',
-        '/^UQ[0-9a-zA-Z_-]{44,48}$/i',
-        '/^Ef[0-9a-zA-Z_-]{44,48}$/i',
-        '/^Uf[0-9a-zA-Z_-]{44,48}$/i',
-        '/^0:[0-9a-fA-F]{64}$/i',
-        '/^[0-9a-zA-Z_-]{48}$/i',
+        '/^EQ[0-9a-zA-Z_-]{48}$/', // EQ ile başlayan 48 karakter
+        '/^UQ[0-9a-zA-Z_-]{48}$/', // UQ ile başlayan 48 karakter
+        '/^Ef[0-9a-zA-Z_-]{48}$/', // Ef ile başlayan 48 karakter
+        '/^Uf[0-9a-zA-Z_-]{48}$/', // Uf ile başlayan 48 karakter
+        '/^0:[0-9a-fA-F]{64}$/',   // Raw format
     );
     
     foreach ($patterns as $pattern) {
         if (preg_match($pattern, $address)) {
-            logError("Valid TON address detected with pattern: " . $pattern);
             return true;
         }
     }
     
-    if (preg_match('/^EQ[a-zA-Z0-9_-]{44,48}$/i', $address)) {
-        logError("Valid EQ TON address detected");
+    // User-friendly format kontrolü (EQabc...xyz)
+    if (preg_match('/^EQ[a-zA-Z0-9_-]{44,50}$/', $address)) {
         return true;
     }
     
-    if (preg_match('/^UQ[a-zA-Z0-9_-]{44,48}$/i', $address)) {
-        logError("Valid UQ TON address detected");
-        return true;
-    }
-    
-    logError("Invalid TON address: " . $address);
     return false;
 }
 
@@ -504,8 +320,6 @@ function getLanguageKeyboard() {
 }
 
 function getChannelJoinKeyboard($lang_code = 'en') {
-    global $lang;
-    
     return array(
         'inline_keyboard' => array(
             array(
@@ -894,6 +708,19 @@ function processUpdate($update) {
                 
                 $response = sprintf($lang[$user_lang]['withdraw_success'], number_format($withdraw_amount, 6));
                 editMessageText($chat_id, $message_id, $response, getMainKeyboard($user_lang));
+                break;
+                
+            case 'share_referral':
+                $ref_link = "https://t.me/" . $callback['message']['chat']['username'] . "?start=" . $user['ref_code'];
+                $share_text = $user_lang == 'tr' ? 
+                    "🚀 TON kazanmak için bu botu kullan!\n\n" . $ref_link :
+                    "🚀 Use this bot to earn TON!\n\n" . $ref_link;
+                
+                $response = $user_lang == 'tr' ? 
+                    "📤 <b>Referans Linkiniz:</b>\n\n" . $ref_link . "\n\nBu linki arkadaşlarınızla paylaşın!" :
+                    "📤 <b>Your Referral Link:</b>\n\n" . $ref_link . "\n\nShare this link with your friends!";
+                
+                editMessageText($chat_id, $message_id, $response, getReferralsKeyboard($user_lang));
                 break;
         }
     }
