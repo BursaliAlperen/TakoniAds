@@ -1,8 +1,6 @@
 {
-    "name": "telegram-bot/TakoniAds-bot",
-    "description": "Simple Telegram Bot for Render",
-    "type": "project",
-    "require": {
-        "php": ">=8.0"
-    }
+  "name": "takoni-ads-bot",
+  "require": {
+    "php": "^8.3"
+  }
 }
