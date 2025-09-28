@@ -1,43 +1,3 @@
-İşte düzeltilmiş kodlar! TON miktarları azaltıldı, permission hataları düzeltildi ve referral bildirimi anlık çalışıyor:
-
-🔧 Düzeltilmiş Dockerfile (Permission fix)
-
-```dockerfile
-FROM php:8.2-apache
-
-# Install required extensions
-RUN docker-php-ext-install mysqli pdo pdo_mysql
-
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
-
-# Enable error reporting
-RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/php.ini
-RUN echo "display_errors = On" >> /usr/local/etc/php/php.ini
-RUN echo "log_errors = On" >> /usr/local/etc/php/php.ini
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy application files
-COPY . .
-
-# Fix permissions for Render
-RUN mkdir -p /var/www/html && \
-    touch /var/www/html/users.json /var/www/html/error.log && \
-    chmod 666 /var/www/html/users.json /var/www/html/error.log && \
-    chown -R www-data:www-data /var/www/html
-
-# Expose port
-EXPOSE 80
-
-# Start Apache
-CMD ["apache2-foreground"]
-```
-
-🔧 Düzeltilmiş index.php (TON miktarları + referral fix)
-
-```php
 <?php
 // Enable all errors
 error_reporting(E_ALL);
@@ -87,10 +47,10 @@ define('USERS_FILE', 'users.json');
 define('ERROR_LOG', 'error.log');
 
 // TON Rewards - UPDATED AMOUNTS
-define('AD_REWARD', 0.0001); // 0.0001 TON per ad (reduced)
-define('REF_REWARD', 0.0005); // 0.0005 TON per referral (reduced)
+define('AD_REWARD', 0.0001); // 0.0001 TON per ad
+define('REF_REWARD', 0.0005); // 0.0005 TON per referral
 define('MIN_WITHDRAW_REF', 5); // Minimum 5 referrals to withdraw
-define('MIN_WITHDRAW_AMOUNT', 0.001); // Minimum 0.001 TON to withdraw (reduced)
+define('MIN_WITHDRAW_AMOUNT', 0.01); // Minimum 0.01 TON to withdraw (UPDATED)
 define('AD_COOLDOWN', 10); // 10 seconds cooldown between ads
 
 // Initialize files with proper error handling
@@ -687,37 +647,3 @@ if ($update) {
     }
 }
 ?>
-```
-
-🎯 DÜZELTMELER:
-
-1. TON Miktarları:
-
-· 📺 Reklam ödülü: 0.001 → 0.0001 TON
-· 👥 Referral ödülü: 0.002 → 0.0005 TON
-· 💰 Minimum çekim: 0.01 → 0.001 TON
-
-2. Permission Hataları:
-
-· ✅ @file_put_contents ile safe file operations
-· ✅ chmod kontrolü eklendi
-· ✅ Dockerfile'da permission fix
-
-3. Referral Bildirimi FIX:
-
-· ✅ saveUsers($users) hemen çağrılıyor
-· ✅ Anlık bakiye güncellemesi
-· ✅ Referral sayısı anlık artıyor
-
-4. Error Handling:
-
-· ✅ is_writable() kontrolü
-· ✅ Safe log writing
-· ✅ Permission check before file operations
-
-Artık:
-
-· ✅ Permission hataları giderildi
-· ✅ Referral bildirimi anlık çalışıyor
-· ✅ Bakiye gerçek zamanlı güncelleniyor
-· ✅ TON miktarları düşürüldü 🚀
