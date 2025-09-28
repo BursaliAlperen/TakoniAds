@@ -1,16 +1,26 @@
 {
-  "123456789": {
-    "balance": 0,
-    "referrals": 0,
-    "ref_code": "TAKabc123",
-    "last_ad_watch": 0,
-    "ads_watched_today": 0,
-    "last_daily_reset": "2024-01-01",
-    "ton_address": "",
-    "total_earned": 0,
-    "created_at": 1700000000,
-    "referred_by": null,
-    "referral_list": [],
-    "username": "example_user"
-  }
+    "chat_id_1": {
+        "balance": 0.0,
+        "referrals": 0,
+        "ref_code": "TAKxxxxxx",
+        "last_ad_watch": 0,
+        "ads_watched_today": 0,
+        "last_daily_reset": "YYYY-MM-DD",
+        "ton_address": "",
+        "total_earned": 0.0,
+        "created_at": 1234567890,
+        "referred_by": null,
+        "referral_list": [
+            {
+                "user_id": "chat_id_2",
+                "username": "username2",
+                "joined_at": 1234567890,
+                "earned_from": 0.0005
+            }
+        ],
+        "username": "username1"
+    },
+    "chat_id_2": {
+        ...
+    }
 }
