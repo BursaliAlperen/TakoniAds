@@ -158,7 +158,7 @@ function getMainKeyboard() {
 }
 
 function getEarnKeyboard() {
-    $webapp_url = "https://takoniads.onrender.com/webapp.html";
+    $webapp_url = "https://takoniads.onrender.com/webapp.html"; // Update to your actual URL
     return [
         'inline_keyboard' => [
             [['text' => '📱 Watch Ad (' . AD_REWARD . ' TON)', 'web_app' => ['url' => $webapp_url]]],
@@ -213,6 +213,56 @@ function processUpdate($update) {
     resetDailyLimits();
     $db = initDatabase();
     
+    // Handle Web App data (ad completion)
+    if (isset($update['message']['web_app_data'])) {
+        $chat_id = $update['message']['chat']['id'];
+        $web_app_data = json_decode($update['message']['web_app_data']['data'], true);
+        
+        logError("Web app data from $chat_id: " . json_encode($web_app_data));
+        
+        if ($web_app_data['action'] === 'ad_completed' && isset($web_app_data['chat_id'], $web_app_data['reward'])) {
+            $stmt = $db->prepare("SELECT * FROM users WHERE chat_id = ?");
+            $stmt->execute([$chat_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user) {
+                $current_time = time();
+                $ads_today = $user['ads_watched_today'] ?? 0;
+                $last_ad_watch = $user['last_ad_watch'] ?? 0;
+                
+                if ($ads_today >= DAILY_AD_LIMIT) {
+                    sendMessage($chat_id, "❌ You've reached the daily ad limit (" . DAILY_AD_LIMIT . "). Try again tomorrow!", getMainKeyboard());
+                    return;
+                }
+                
+                if ($current_time - $last_ad_watch < AD_COOLDOWN) {
+                    sendMessage($chat_id, "⏳ Please wait " . (AD_COOLDOWN - ($current_time - $last_ad_watch)) . " seconds before watching another ad.", getMainKeyboard());
+                    return;
+                }
+                
+                $db->beginTransaction();
+                try {
+                    $new_balance = $user['balance'] + AD_REWARD;
+                    $new_total_earned = $user['total_earned'] + AD_REWARD;
+                    $new_ads_watched = $ads_today + 1;
+                    
+                    $db->prepare("UPDATE users SET balance = ?, total_earned = ?, ads_watched_today = ?, last_ad_watch = ? WHERE chat_id = ?")
+                       ->execute([$new_balance, $new_total_earned, $new_ads_watched, $current_time, $chat_id]);
+                    
+                    $db->commit();
+                    sendMessage($chat_id, "✅ Ad watched! You earned " . AD_REWARD . " TON. New balance: " . number_format($new_balance, 6) . " TON", getEarnKeyboard());
+                    logError("Ad reward credited to $chat_id: " . AD_REWARD . " TON");
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    logError("Ad reward error for $chat_id: " . $e->getMessage());
+                    sendMessage($chat_id, "❌ Failed to credit ad reward. Please try again.", getMainKeyboard());
+                }
+            }
+        }
+        return;
+    }
+    
+    // Handle text messages
     if (isset($update['message'])) {
         $message = $update['message'];
         $chat_id = $message['chat']['id'];
@@ -441,4 +491,61 @@ function processUpdate($update) {
                 sendMessage($chat_id, "💳 Please enter your TON wallet address:");
                 break;
                 
-            case 'save_ton_add
+            case 'save_ton_address':
+                $stmt = $db->prepare("SELECT ton_address_temp FROM users WHERE chat_id = ?");
+                $stmt->execute([$chat_id]);
+                $temp_address = $stmt->fetchColumn();
+                
+                if ($temp_address) {
+                    $db->prepare("UPDATE users SET ton_address = ?, ton_address_temp = NULL WHERE chat_id = ?")
+                       ->execute([$temp_address, $chat_id]);
+                    sendMessage($chat_id, "✅ TON address saved successfully! You can change it anytime from the Withdraw menu.", getMainKeyboard());
+                } else {
+                    sendMessage($chat_id, "❌ No address provided. Please enter your TON address again.", getMainKeyboard());
+                }
+                break;
+                
+            case 'submit_withdrawal':
+                $balance = $user['balance'] ?? 0;
+                $referrals = $user['referrals'] ?? 0;
+                $ton_address = $user['ton_address'] ?? '';
+                
+                if ($balance >= MIN_WITHDRAW_AMOUNT && $referrals >= MIN_WITHDRAW_REF && $ton_address) {
+                    $db->beginTransaction();
+                    try {
+                        $db->prepare("UPDATE users SET balance = 0 WHERE chat_id = ?")
+                           ->execute([$chat_id]);
+                        $db->commit();
+                        $response = "🏧 <b>Withdrawal Requested!</b>\n\nAmount: <b>" . number_format($balance, 6) . " TON</b>\nTo: <code>$ton_address</code>\n\nYour withdrawal will be processed soon.";
+                        sendMessage($chat_id, $response, getMainKeyboard());
+                        logError("Withdrawal requested by $chat_id: $balance TON to $ton_address");
+                    } catch (Exception $e) {
+                        $db->rollBack();
+                        logError("Withdrawal error: " . $e->getMessage());
+                        sendMessage($chat_id, "❌ Withdrawal failed. Please try again later.", getMainKeyboard());
+                    }
+                } else {
+                    $response = "❌ Cannot process withdrawal:\n";
+                    if ($balance < MIN_WITHDRAW_AMOUNT) $response .= "• Balance too low (min: " . MIN_WITHDRAW_AMOUNT . " TON)\n";
+                    if ($referrals < MIN_WITHDRAW_REF) $response .= "• Need " . (MIN_WITHDRAW_REF - $referrals) . " more referrals\n";
+                    if (!$ton_address) $response .= "• No TON address set";
+                    sendMessage($chat_id, $response, getWithdrawKeyboard($ton_address !== ''));
+                }
+                break;
+                
+            case 'main_menu':
+                $response = "🚀 <b>TAKONI ADS</b>\n\n💰 Earn TON by watching ads\n👥 Invite friends for bonus TON\n🏧 Withdraw to your TON wallet\n\nSelect an option below:";
+                editMessageText($chat_id, $message_id, $response, getMainKeyboard());
+                break;
+        }
+    }
+}
+
+// Handle incoming webhook
+$update = json_decode(file_get_contents('php://input'), true);
+if ($update) {
+    processUpdate($update);
+} else {
+    http_response_code(200);
+    echo "OK";
+}
