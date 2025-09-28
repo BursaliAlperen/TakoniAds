@@ -3,8 +3,35 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Simple test for web access
+if (isset($_GET['test'])) {
+    echo "🚀 Bot Server is Working!\n\n";
+    
+    // Test file permissions
+    $files = ['users.json', 'error.log'];
+    foreach ($files as $file) {
+        if (!file_exists($file)) {
+            file_put_contents($file, $file === 'users.json' ? '{}' : '');
+        }
+        $writable = is_writable($file) ? '✅ writable' : '❌ NOT writable';
+        echo "📁 $file: $writable\n";
+    }
+    
+    // Test bot token
+    $bot_token = getenv('BOT_TOKEN');
+    echo "🤖 Bot Token: " . ($bot_token ? '✅ SET' : '❌ NOT SET') . "\n";
+    
+    exit;
+}
+
 // Bot configuration
-$bot_token = getenv('BOT_TOKEN') ?: 'Place_Your_Token_Here';
+$bot_token = getenv('BOT_TOKEN');
+if (!$bot_token) {
+    http_response_code(500);
+    echo "❌ BOT_TOKEN environment variable is not set";
+    exit;
+}
+
 define('BOT_TOKEN', $bot_token);
 define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
 define('USERS_FILE', 'users.json');
@@ -12,25 +39,26 @@ define('ERROR_LOG', 'error.log');
 
 // Ensure data files exist
 if (!file_exists(USERS_FILE)) {
-    file_put_contents(USERS_FILE, json_encode([]));
-    chmod(USERS_FILE, 0666);
+    file_put_contents(USERS_FILE, '{}');
 }
 if (!file_exists(ERROR_LOG)) {
     file_put_contents(ERROR_LOG, '');
-    chmod(ERROR_LOG, 0666);
 }
 
 // Simple error logging
 function logError($message) {
     $timestamp = date('Y-m-d H:i:s');
-    file_put_contents(ERROR_LOG, "[$timestamp] $message\n", FILE_APPEND | LOCK_EX);
+    file_put_contents(ERROR_LOG, "[$timestamp] $message\n", FILE_APPEND);
 }
 
 // Simple data management
 function loadUsers() {
-    if (!file_exists(USERS_FILE)) return [];
+    if (!file_exists(USERS_FILE)) {
+        return [];
+    }
     $data = file_get_contents(USERS_FILE);
-    return json_decode($data, true) ?: [];
+    $users = json_decode($data, true);
+    return is_array($users) ? $users : [];
 }
 
 function saveUsers($users) {
@@ -51,7 +79,13 @@ function sendMessage($chat_id, $text, $keyboard = null) {
         }
 
         $url = API_URL . 'sendMessage?' . http_build_query($params);
-        $context = stream_context_create(['http' => ['timeout' => 10]]);
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+        
         $result = file_get_contents($url, false, $context);
         return $result !== false;
     } catch (Exception $e) {
@@ -71,45 +105,76 @@ function getMainKeyboard() {
             [
                 ['text' => '📱 Watch Ads', 'callback_data' => 'watch_ads'],
                 ['text' => '🎯 Tasks', 'callback_data' => 'tasks']
+            ],
+            [
+                ['text' => '🏆 Leaderboard', 'callback_data' => 'leaderboard'],
+                ['text' => '👥 Referrals', 'callback_data' => 'referrals']
             ]
         ]
     ];
 }
 
-// Process webhook
+// Process webhook update
+function processUpdate($update) {
+    $users = loadUsers();
+
+    if (isset($update['message'])) {
+        $chat_id = $update['message']['chat']['id'];
+        $text = $update['message']['text'] ?? '';
+
+        // Initialize user if not exists
+        if (!isset($users[$chat_id])) {
+            $users[$chat_id] = [
+                'balance' => 0,
+                'referrals' => 0,
+                'ref_code' => substr(md5($chat_id . time()), 0, 8)
+            ];
+        }
+
+        if (strpos($text, '/start') === 0) {
+            $welcome_msg = "🎉 Welcome to Earning Bot!\n\n";
+            $welcome_msg .= "💰 Earn points by completing tasks\n";
+            $welcome_msg .= "📱 Watch ads for rewards\n";
+            $welcome_msg .= "👥 Invite friends for bonuses\n\n";
+            $welcome_msg .= "Your referral code: <b>{$users[$chat_id]['ref_code']}</b>";
+            
+            sendMessage($chat_id, $welcome_msg, getMainKeyboard());
+        }
+        
+        saveUsers($users);
+    }
+}
+
+// Webhook handler
 function handleWebhook() {
     try {
         $input = file_get_contents('php://input');
         $update = json_decode($input, true);
         
-        if (!$update) {
-            echo "No update data";
+        if (json_last_error() !== JSON_ERROR_NONE || !$update) {
+            http_response_code(400);
+            echo "Invalid JSON";
             return;
         }
 
-        // Simple response for testing
-        if (isset($update['message']['text'])) {
-            $chat_id = $update['message']['chat']['id'];
-            $text = $update['message']['text'];
-            
-            if (strpos($text, '/start') === 0) {
-                sendMessage($chat_id, "🚀 Bot is working! Use buttons below.", getMainKeyboard());
-            }
-        }
-        
+        processUpdate($update);
+        http_response_code(200);
         echo "OK";
         
     } catch (Exception $e) {
         logError("Webhook error: " . $e->getMessage());
-        echo "ERROR: " . $e->getMessage();
+        http_response_code(500);
+        echo "Server Error";
     }
 }
 
 // Handle request
 if (php_sapi_name() === 'cli') {
-    echo "Bot running in CLI mode\n";
+    echo "🤖 Bot running in CLI mode\n";
 } else {
     handleWebhook();
+}
+?>    handleWebhook();
 }
 ?>                'last_earn' => 0,  
                 'referrals' => 0,  
