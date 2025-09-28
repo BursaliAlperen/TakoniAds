@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watch Ad - Earn 0.001 TON</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>TAKONI ADS - Watch Ads & Earn TON</title>
     <style>
         * {
             margin: 0;
@@ -16,100 +15,197 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         .container {
             background: white;
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             max-width: 400px;
             width: 100%;
+            text-align: center;
         }
         
         .logo {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 2.5em;
+            margin-bottom: 10px;
         }
         
         h1 {
             color: #333;
             margin-bottom: 10px;
-            font-size: 24px;
+            font-size: 1.5em;
         }
         
         .subtitle {
             color: #666;
             margin-bottom: 30px;
-            font-size: 16px;
+            font-size: 0.9em;
         }
         
-        .ad-container {
+        .reward-info {
             background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            border: 2px dashed #ddd;
-        }
-        
-        .ad-video {
-            width: 100%;
-            height: 200px;
-            background: #2c3e50;
+            padding: 15px;
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
-            margin-bottom: 15px;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
         }
         
-        .ad-progress {
-            width: 100%;
-            height: 6px;
-            background: #ecf0f1;
-            border-radius: 3px;
-            margin: 15px 0;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #e74c3c, #e67e22);
-            width: 0%;
-            transition: width 1s linear;
-        }
-        
-        .countdown {
-            font-size: 18px;
+        .reward-amount {
+            font-size: 1.8em;
             font-weight: bold;
-            color: #e74c3c;
-            margin: 15px 0;
+            color: #28a745;
+            margin: 10px 0;
         }
         
         .watch-button {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             padding: 15px 30px;
-            font-size: 18px;
+            font-size: 1.1em;
             border-radius: 50px;
             cursor: pointer;
-            margin: 10px 0;
             width: 100%;
-            transition: all 0.3s ease;
-            font-weight: bold;
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
+        .watch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .watch-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .cooldown {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎬</div>
+        <h1>TAKONI ADS</h1>
+        <div class="subtitle">Watch Ads & Earn TON Crypto</div>
+        
+        <div class="reward-info">
+            <div>Earn per Ad:</div>
+            <div class="reward-amount">0.0001 TON</div>
+            <div>Complete the ad to receive reward</div>
+        </div>
+        
+        <button class="watch-button" id="watchAdBtn" onclick="watchAd()">
+            🎥 WATCH AD & EARN TON
+        </button>
+        
+        <div id="cooldownInfo" class="cooldown" style="display: none;"></div>
+        <div id="statusMessage" class="status"></div>
+    </div>
+
+    <script>
+        function watchAd() {
+            const btn = document.getElementById('watchAdBtn');
+            const status = document.getElementById('statusMessage');
+            
+            // Disable button during ad
+            btn.disabled = true;
+            btn.textContent = '🔄 LOADING AD...';
+            status.textContent = '';
+            status.className = 'status';
+            
+            // Add Giga ad script
+            const script = document.createElement('script');
+            script.src = 'https://ad.gigapub.tech/script?id=3305';
+            document.head.appendChild(script);
+            
+            // Show ad after script loads
+            script.onload = function() {
+                if (typeof window.showGiga === 'function') {
+                    window.showGiga()
+                        .then(() => {
+                            status.textContent = '✅ Ad completed! Reward will be added to your balance.';
+                            status.className = 'status success';
+                            btn.textContent = '🎥 WATCH AD & EARN TON';
+                            
+                            // Start cooldown
+                            startCooldown(10); // 10 seconds cooldown
+                        })
+                        .catch(e => {
+                            status.textContent = '❌ Ad was not completed. Please try again.';
+                            status.className = 'status error';
+                            btn.textContent = '🎥 WATCH AD & EARN TON';
+                            btn.disabled = false;
+                            console.error('Ad error:', e);
+                        });
+                } else {
+                    status.textContent = '❌ Ad service not available. Please try again later.';
+                    status.className = 'status error';
+                    btn.textContent = '🎥 WATCH AD & EARN TON';
+                    btn.disabled = false;
+                }
+            };
+            
+            script.onerror = function() {
+                status.textContent = '❌ Failed to load ad. Please check your connection.';
+                status.className = 'status error';
+                btn.textContent = '🎥 WATCH AD & EARN TON';
+                btn.disabled = false;
+            };
+        }
+
+        function startCooldown(seconds) {
+            const btn = document.getElementById('watchAdBtn');
+            const cooldownInfo = document.getElementById('cooldownInfo');
+            let timeLeft = seconds;
+            
+            cooldownInfo.style.display = 'block';
+            
+            const countdown = setInterval(() => {
+                cooldownInfo.textContent = `⏰ Next ad available in ${timeLeft} seconds...`;
+                timeLeft--;
+                
+                if (timeLeft < 0) {
+                    clearInterval(countdown);
+                    cooldownInfo.style.display = 'none';
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>        
         .watch-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
