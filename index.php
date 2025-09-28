@@ -15,13 +15,14 @@ define('CHANNEL_USERNAME', getenv('CHANNEL_USERNAME') ?: '@TakoniFinance');
 define('CHANNEL_ID', getenv('CHANNEL_ID') ?: '-1002855918077');
 define('CHANNEL_URL', getenv('CHANNEL_URL') ?: 'https://t.me/TakoniFinance');
 define('BOT_USERNAME', getenv('BOT_USERNAME') ?: 'takoniAdsBot');
-define('WEBAPP_URL', getenv('WEBAPP_URL') ?: 'https://yourdomain.com/webapp.html');
+define('WEBAPP_URL', getenv('WEBAPP_URL') ?: 'https://takoniads.onrender.com/webapp.html');
+define('AD_ZONE_ID', getenv('AD_ZONE_ID') ?: '123456');
 
 // Initialize bot
 function initializeBot() {
     try {
         file_get_contents(API_URL . 'setWebhook?url=');
-        $db = new Database(); // Triggers DB initialization
+        $db = new Database();
         return true;
     } catch (Exception $e) {
         logError("Initialization failed: " . $e->getMessage());
@@ -170,7 +171,7 @@ function processStartCommand($chat_id, $text, $username) {
         return;
     }
 
-    $db->updateUser($chat_id, ['channel_joined' => true]);
+    $db->updateUser($chat_id, ['channel_joined' => 1]);
 
     $parts = explode(' ', $text);
     if (count($parts) > 1) {
@@ -259,7 +260,7 @@ function processCallbackQuery($callback) {
             if ($user['total_referrals'] < MIN_WITHDRAW_REF || $user['balance'] < MIN_WITHDRAW_AMOUNT) {
                 $msg = "🏧 Withdraw\nRequirements not met. Need 5 refs and 1 TON.";
             } elseif (!$user['ton_address']) {
-                $db->updateUser($chat_id, ['awaiting_ton_address' => true]);
+                $db->updateUser($chat_id, ['awaiting_ton_address' => 1]);
                 $msg = "Please send your TON address.";
             } else {
                 $amount = $user['balance'];
@@ -290,7 +291,7 @@ function processUpdate($update) {
         $user = $db->getUser($chat_id);
         if ($user['awaiting_ton_address']) {
             if (isValidTONAddress($text)) {
-                $db->updateUser($chat_id, ['ton_address' => $text, 'awaiting_ton_address' => false]);
+                $db->updateUser($chat_id, ['ton_address' => $text, 'awaiting_ton_address' => 0]);
                 sendMessage($chat_id, "✅ TON address set: $text");
             } else {
                 sendMessage($chat_id, "Invalid TON address. Try again.");
@@ -349,7 +350,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['chat_id'])) {
         ]);
 
         $db->addAdWatch($chat_id, AD_REWARD);
-        $db->addTransaction($chat_id, 'ad_watch', AD_REWARD, 'Ad watch reward');
+        $db->addTransaction($chat_id, 'ad_watch', AD_REWARD, "Ad watch reward via Monetag Zone ID " . AD_ZONE_ID);
+        logError("Ad reward granted to user $chat_id via Monetag Zone ID " . AD_ZONE_ID . ": +$AD_REWARD TON");
 
         echo json_encode([
             'success' => true,
