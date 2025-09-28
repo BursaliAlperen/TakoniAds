@@ -333,8 +333,6 @@ function getChannelJoinKeyboard($lang_code = 'en') {
 }
 
 function getMainKeyboard($lang_code = 'en') {
-    global $lang;
-    
     return array(
         'inline_keyboard' => array(
             array(
@@ -353,7 +351,6 @@ function getMainKeyboard($lang_code = 'en') {
 }
 
 function getEarnKeyboard($lang_code = 'en') {
-    global $lang;
     $webapp_url = "https://takoniads.onrender.com/webapp.html";
     
     return array(
@@ -372,8 +369,6 @@ function getEarnKeyboard($lang_code = 'en') {
 }
 
 function getBalanceKeyboard($lang_code = 'en') {
-    global $lang;
-    
     return array(
         'inline_keyboard' => array(
             array(
@@ -390,8 +385,6 @@ function getBalanceKeyboard($lang_code = 'en') {
 }
 
 function getReferralsKeyboard($lang_code = 'en') {
-    global $lang;
-    
     return array(
         'inline_keyboard' => array(
             array(
@@ -408,8 +401,6 @@ function getReferralsKeyboard($lang_code = 'en') {
 }
 
 function getWithdrawKeyboard($has_address = false, $lang_code = 'en') {
-    global $lang;
-    
     if ($has_address) {
         return array(
             'inline_keyboard' => array(
@@ -439,8 +430,6 @@ function getWithdrawKeyboard($has_address = false, $lang_code = 'en') {
 }
 
 function getSaveAddressKeyboard($lang_code = 'en') {
-    global $lang;
-    
     return array(
         'inline_keyboard' => array(
             array(
@@ -838,4 +827,4 @@ if ($update) {
     http_response_code(400);
     die('Invalid update');
 }
-?>
+?> 
