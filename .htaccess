@@ -1,6 +1,15 @@
 RewriteEngine On
 
-# Handle all requests through index.php
+# Tüm istekleri index.php'ye yönlendir
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . index.php [L]
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Dosya izinlerini düzelt
+<Files "*.json">
+    Require all granted
+</Files>
+
+<Files "*.log">
+    Require all granted
+</Files>
