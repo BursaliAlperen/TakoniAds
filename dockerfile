@@ -8,7 +8,9 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    sqlite3 \
+    libsqlite3-dev \
+    && docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -19,11 +21,10 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Create necessary files and set permissions
-RUN mkdir -p /var/www/html && \
-    touch /var/www/html/users.json && \
+# Create SQLite database and error log, set permissions
+RUN touch /var/www/html/bot.db && \
     touch /var/www/html/error.log && \
-    chmod 664 /var/www/html/users.json /var/www/html/error.log && \
+    chmod 664 /var/www/html/bot.db /var/www/html/error.log && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html
 
