@@ -38,13 +38,19 @@
             display: none;
             margin-top: 20px;
         }
+        #status {
+            font-size: 16px;
+            margin-top: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>TAKONI ADS</h1>
-    <p>Watch the ad below to earn 0.0001 TON!</p>
-    <button onclick="watchAd()">Watch Ad</button>
+    <p>Watch the ad to earn 0.0001 TON!</p>
+    <button id="watchAdButton" onclick="watchAd()">Watch Ad</button>
     <p id="error-message" class="error"></p>
+    <p id="status"></p>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
@@ -67,49 +73,47 @@
             return;
         }
 
+        const watchAdButton = document.getElementById('watchAdButton');
+        const status = document.getElementById('status');
+
         function watchAd() {
             try {
-                // Simulate ad watching (replace with actual ad logic)
+                // Disable button to prevent multiple clicks
+                watchAdButton.disabled = true;
+                watchAdButton.style.opacity = '0.6';
+
+                // Simulate ad watching (5-second delay as an example)
+                status.style.display = 'block';
+                status.innerText = 'Watching ad... Please wait.';
+                
                 setTimeout(() => {
-                    // Send ad completion data to the bot
-                    tg.sendData(JSON.stringify({
-                        action: 'ad_completed',
-                        chat_id: user.id,
-                        reward: 0.0001
-                    }));
-                    // Show confirmation
-                    alert('Ad watched! 0.0001 TON credited to your balance.');
-                    // Close Web App
-                    tg.close();
-                }, 2000); // Simulate 2-second ad
+                    // Verify ad completion (simulated)
+                    status.innerText = 'Ad completed! Verifying...';
+                    
+                    setTimeout(() => {
+                        // Send ad completion data to the bot
+                        tg.sendData(JSON.stringify({
+                            action: 'ad_completed',
+                            chat_id: user.id,
+                            reward: 0.0001
+                        }));
+                        // Show redirect message
+                        status.innerText = 'You are redirecting for the reward';
+                        
+                        // Close Web App after a short delay
+                        setTimeout(() => tg.close(), 2000);
+                    }, 1000); // 1-second verification delay
+                }, 5000); // 5-second ad duration
             } catch (e) {
                 document.getElementById('error-message').style.display = 'block';
                 document.getElementById('error-message').innerText = 'Error: ' + e.message;
+                watchAdButton.disabled = false;
+                watchAdButton.style.opacity = '1';
             }
         }
     </script>
 </body>
-</html>                    clearInterval(countdown);
-                    cooldownInfo.style.display = 'none';
-                    btn.disabled = false;
-                }
-            }, 1000);
-        }
-    </script>
-</body>
-</html>        
-        .watch-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
-        }
-        
-        .watch-button:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .verify-button {
+</html>        .verify-button {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
             border: none;
