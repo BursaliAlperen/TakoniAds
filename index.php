@@ -75,6 +75,7 @@ define('AD_COOLDOWN', 10); // 10 seconds cooldown between ads
 // Required channel
 define('REQUIRED_CHANNEL', '@TakoniFinance'); // Zorunlu kanal
 define('CHANNEL_URL', 'https://t.me/TakoniFinance');
+define('NOTIFICATION_CHANNEL', '@TakoniFinance'); // Ödeme bildirimleri için kanal
 
 function logError($message) {
     // Safe error logging with permission check
@@ -132,6 +133,32 @@ function sendMessage($chat_id, $text, $keyboard = null) {
         
     } catch (Exception $e) {
         logError("Send message failed: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Send notification to channel
+function sendChannelNotification($text) {
+    try {
+        $params = [
+            'chat_id' => NOTIFICATION_CHANNEL,
+            'text' => $text,
+            'parse_mode' => 'HTML'
+        ];
+        
+        $url = API_URL . 'sendMessage?' . http_build_query($params);
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+        
+        $result = @file_get_contents($url, false, $context);
+        return $result !== false;
+        
+    } catch (Exception $e) {
+        logError("Channel notification failed: " . $e->getMessage());
         return false;
     }
 }
@@ -330,7 +357,8 @@ function processUpdate($update) {
                 'pending_withdrawal' => 0,
                 'total_earned' => 0,
                 'created_at' => time(),
-                'channel_verified' => false
+                'channel_verified' => false,
+                'withdrawal_history' => []
             ];
             saveUsers($users);
         }
@@ -350,7 +378,7 @@ function processUpdate($update) {
                 return;
             }
             
-            // Handle referral registration
+            // Handle referral registration - FIXED REFERRAL SYSTEM
             if ($ref_code_param && $ref_code_param !== $user['ref_code'] && !isset($user['referred_by'])) {
                 $referrer_found = false;
                 
@@ -448,7 +476,8 @@ function processUpdate($update) {
                 'pending_withdrawal' => 0,
                 'total_earned' => 0,
                 'created_at' => time(),
-                'channel_verified' => false
+                'channel_verified' => false,
+                'withdrawal_history' => []
             ];
             saveUsers($users);
         }
@@ -520,290 +549,4 @@ function processUpdate($update) {
                 $response .= "🔗 <b>Your TON Address:</b>\n";
                 $response .= "<code>" . ($user['ton_address'] ?: 'Not set') . "</code>";
                 
-                editMessageText($chat_id, $message_id, $response, getBalanceKeyboard());
-                break;
-                
-            case 'referrals':
-                // Check channel verification
-                if (!$user['channel_verified']) {
-                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
-                    $response .= "Please verify your channel membership first.";
-                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
-                    break;
-                }
-                
-                $ref_code = $user['ref_code'] ?? 'N/A';
-                $referrals = $user['referrals'] ?? 0;
-                $ref_earnings = $referrals * REF_REWARD;
-                
-                $response = "👥 <b>Referral System</b>\n\n";
-                $response .= "🔗 <b>Your Permanent Referral Code:</b>\n";
-                $response .= "<code>{$ref_code}</code>\n\n";
-                $response .= "📊 <b>Statistics:</b>\n";
-                $response .= "• Total Referrals: <b>{$referrals}</b>\n";
-                $response .= "• Referral Earnings: <b>" . number_format($ref_earnings, 6) . " TON</b>\n\n";
-                $response .= "💰 <b>Bonus:</b> " . REF_REWARD . " TON per referral\n\n";
-                $response .= "📤 <b>Share this link:</b>\n";
-                $response .= "<code>https://t.me/takoniAdsBot?start={$ref_code}</code>\n\n";
-                $response .= "👥 <b>How it works:</b>\n";
-                $response .= "1. Share your referral link\n";
-                $response .= "2. Friend joins using your link\n";
-                $response .= "3. You get " . REF_REWARD . " TON instantly!";
-                
-                editMessageText($chat_id, $message_id, $response, getReferralsKeyboard());
-                break;
-                
-            case 'share_referral':
-                // Check channel verification
-                if (!$user['channel_verified']) {
-                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
-                    $response .= "Please verify your channel membership first.";
-                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
-                    break;
-                }
-                
-                $ref_code = $user['ref_code'] ?? 'N/A';
-                $share_text = urlencode("🚀 Join TAKONI ADS and earn TON coins by watching ads! Use my referral code: {$ref_code} - https://t.me/takoniAdsBot?start={$ref_code}");
-                $share_url = "https://t.me/share/url?url=https://t.me/takoniAdsBot&text={$share_text}";
-                
-                $response = "📤 <b>Share Referral</b>\n\n";
-                $response .= "Click the button below to share your referral link on Telegram!";
-                
-                $share_keyboard = [
-                    'inline_keyboard' => [
-                        [
-                            ['text' => '📱 Share on Telegram', 'url' => $share_url]
-                        ],
-                        [
-                            ['text' => '⬅️ Back to Referrals', 'callback_data' => 'referrals']
-                        ]
-                    ]
-                ];
-                
-                editMessageText($chat_id, $message_id, $response, $share_keyboard);
-                break;
-                
-            case 'withdraw':
-                // Check channel verification
-                if (!$user['channel_verified']) {
-                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
-                    $response .= "Please verify your channel membership first.";
-                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
-                    break;
-                }
-                
-                $balance = $user['balance'] ?? 0;
-                $referrals = $user['referrals'] ?? 0;
-                $ton_address = $user['ton_address'] ?? 'Not set';
-                
-                $response = "🏧 <b>Withdraw TON</b>\n\n";
-                $response .= "💰 <b>Available Balance:</b> " . number_format($balance, 6) . " TON\n";
-                $response .= "👥 <b>Your Referrals:</b> {$referrals}/" . MIN_WITHDRAW_REF . "\n";
-                $response .= "🔗 <b>Your TON Address:</b>\n";
-                $response .= "<code>{$ton_address}</code>\n\n";
-                
-                // Check requirements
-                $can_withdraw = true;
-                $requirements = [];
-                
-                if ($referrals < MIN_WITHDRAW_REF) {
-                    $can_withdraw = false;
-                    $requirements[] = "❌ Need " . (MIN_WITHDRAW_REF - $referrals) . " more referrals";
-                }
-                
-                if ($balance < MIN_WITHDRAW_AMOUNT) {
-                    $can_withdraw = false;
-                    $needed = MIN_WITHDRAW_AMOUNT - $balance;
-                    $requirements[] = "❌ Need " . number_format($needed, 6) . " more TON";
-                }
-                
-                if (empty($ton_address) || $ton_address === 'Not set') {
-                    $can_withdraw = false;
-                    $requirements[] = "❌ TON address not set";
-                }
-                
-                if ($can_withdraw) {
-                    $response .= "✅ <b>All requirements met!</b>\n\n";
-                    $response .= "You can submit your withdrawal request.";
-                } else {
-                    $response .= "📋 <b>Withdrawal Requirements:</b>\n";
-                    $response .= "• Minimum " . MIN_WITHDRAW_REF . " referrals\n";
-                    $response .= "• Minimum " . MIN_WITHDRAW_AMOUNT . " TON balance\n";
-                    $response .= "• TON address must be set\n\n";
-                    $response .= "❌ <b>Missing Requirements:</b>\n";
-                    $response .= implode("\n", $requirements);
-                }
-                
-                editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard());
-                break;
-                
-            case 'enter_ton_address':
-                // Check channel verification
-                if (!$user['channel_verified']) {
-                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
-                    $response .= "Please verify your channel membership first.";
-                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
-                    break;
-                }
-                
-                $response = "🔗 <b>Enter TON Address</b>\n\n";
-                $response .= "Please send your TON wallet address as a message.\n\n";
-                $response .= "📍 <b>Format:</b> EQ... or UQ... (TON wallet address)\n\n";
-                $response .= "⚠️ <b>Warning:</b> Make sure the address is correct!";
-                
-                // Store state for next message
-                $users[$chat_id]['awaiting_ton_address'] = true;
-                saveUsers($users);
-                
-                editMessageText($chat_id, $message_id, $response, [
-                    'inline_keyboard' => [
-                        [['text' => '⬅️ Back to Withdraw', 'callback_data' => 'withdraw']]
-                    ]
-                ]);
-                break;
-                
-            case 'submit_withdrawal':
-                // Check channel verification
-                if (!$user['channel_verified']) {
-                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
-                    $response .= "Please verify your channel membership first.";
-                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
-                    break;
-                }
-                
-                $balance = $user['balance'] ?? 0;
-                $referrals = $user['referrals'] ?? 0;
-                $ton_address = $user['ton_address'] ?? '';
-                
-                // Validate requirements
-                if (empty($ton_address)) {
-                    $response = "❌ <b>TON Address Not Set</b>\n\n";
-                    $response .= "Please set your TON address first before withdrawing.";
-                } elseif ($referrals < MIN_WITHDRAW_REF) {
-                    $response = "❌ <b>Insufficient Referrals</b>\n\n";
-                    $response .= "You need " . MIN_WITHDRAW_REF . " referrals to withdraw.\n";
-                    $response .= "Current: {$referrals}/" . MIN_WITHDRAW_REF;
-                } elseif ($balance < MIN_WITHDRAW_AMOUNT) {
-                    $response = "❌ <b>Insufficient Balance</b>\n\n";
-                    $response .= "You need at least " . MIN_WITHDRAW_AMOUNT . " TON to withdraw.\n";
-                    $response .= "Current: " . number_format($balance, 6) . " TON";
-                } else {
-                    // Process withdrawal
-                    $users[$chat_id]['pending_withdrawal'] = $balance;
-                    $users[$chat_id]['balance'] = 0;
-                    
-                    $response = "✅ <b>Withdrawal Submitted!</b>\n\n";
-                    $response .= "💰 <b>Amount:</b> " . number_format($balance, 6) . " TON\n";
-                    $response .= "🔗 <b>TON Address:</b>\n";
-                    $response .= "<code>{$ton_address}</code>\n\n";
-                    $response .= "⏳ <b>Status:</b> Processing\n";
-                    $response .= "📞 Our team will process your withdrawal within 24 hours.";
-                    
-                    saveUsers($users);
-                }
-                
-                editMessageText($chat_id, $message_id, $response, [
-                    'inline_keyboard' => [
-                        [['text' => '⬅️ Back to Main', 'callback_data' => 'main_menu']]
-                    ]
-                ]);
-                break;
-                
-            case 'main_menu':
-                // Check channel verification
-                if (!$user['channel_verified']) {
-                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
-                    $response .= "Please verify your channel membership first.";
-                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
-                    break;
-                }
-                
-                $response = "🎮 <b>Main Menu</b>\n\nWelcome back! Choose an option below:";
-                editMessageText($chat_id, $message_id, $response, getMainKeyboard());
-                break;
-        }
-    }
-    
-    // Handle web app data (from mini app) - AUTOMATIC REWARD
-    elseif (isset($update['web_app_data'])) {
-        $web_app_data = $update['web_app_data'];
-        $chat_id = $web_app_data['user']['id'];
-        $data = json_decode($web_app_data['data'], true);
-        
-        logError("Web app data from {$chat_id}: " . $web_app_data['data']);
-        
-        if ($data && $data['action'] === 'ad_watched' && $data['verified'] === true) {
-            $users = loadUsers();
-            
-            if (!isset($users[$chat_id])) {
-                $ref_code = generateRefCode($chat_id);
-                $users[$chat_id] = [
-                    'balance' => 0,
-                    'referrals' => 0,
-                    'ref_code' => $ref_code,
-                    'last_ad_watch' => 0,
-                    'ton_address' => '',
-                    'pending_withdrawal' => 0,
-                    'total_earned' => 0,
-                    'created_at' => time(),
-                    'channel_verified' => false
-                ];
-            }
-            
-            // Check channel verification for ad watching
-            if (!$users[$chat_id]['channel_verified']) {
-                $response = "🔒 <b>Channel Verification Required</b>\n\n";
-                $response .= "Please verify your channel membership first to watch ads.";
-                sendMessage($chat_id, $response, getChannelVerificationKeyboard());
-                return;
-            }
-            
-            $last_watch = $users[$chat_id]['last_ad_watch'] ?? 0;
-            $current_time = time();
-            
-            // Check cooldown (10 seconds)
-            if ($current_time - $last_watch < AD_COOLDOWN) {
-                $remaining = AD_COOLDOWN - ($current_time - $last_watch);
-                $response = "⏳ <b>Please wait {$remaining} seconds</b> before watching another ad!";
-            } else {
-                // Add TON reward automatically
-                $old_balance = $users[$chat_id]['balance'];
-                $users[$chat_id]['balance'] += AD_REWARD;
-                $users[$chat_id]['total_earned'] = ($users[$chat_id]['total_earned'] ?? 0) + AD_REWARD;
-                $users[$chat_id]['last_ad_watch'] = $current_time;
-                $new_balance = $users[$chat_id]['balance'];
-                
-                logError("User {$chat_id} earned " . AD_REWARD . " TON. Old: {$old_balance}, New: {$new_balance}");
-                
-                $response = "🎉 <b>Ad Completed Successfully!</b>\n\n";
-                $response .= "✅ You earned <b>" . AD_REWARD . " TON</b>!\n";
-                $response .= "💰 New balance: <b>" . number_format($new_balance, 6) . " TON</b>\n\n";
-                $response .= "🔄 You can watch another ad in " . AD_COOLDOWN . " seconds.";
-                
-                saveUsers($users);
-            }
-            
-            sendMessage($chat_id, $response, getMainKeyboard());
-        }
-    }
-}
-
-// Main webhook handler
-$input = file_get_contents('php://input');
-$update = json_decode($input, true);
-
-if ($update) {
-    processUpdate($update);
-    http_response_code(200);
-    echo "OK";
-} else {
-    // Serve mini app if no update
-    if (isset($_GET['mini_app'])) {
-        header('Content-Type: text/html');
-        readfile('index.html');
-    } else {
-        http_response_code(400);
-        echo "No data received";
-    }
-}
-?>
+                editMessageText
