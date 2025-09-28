@@ -3,6 +3,24 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Fix file permissions on every request for Render
+if (!file_exists('users.json')) {
+    @file_put_contents('users.json', '{}');
+    @chmod('users.json', 0666);
+}
+if (!file_exists('error.log')) {
+    @file_put_contents('error.log', '');
+    @chmod('error.log', 0666);
+}
+
+// Ensure files are writable
+if (file_exists('users.json') && !is_writable('users.json')) {
+    @chmod('users.json', 0666);
+}
+if (file_exists('error.log') && !is_writable('error.log')) {
+    @chmod('error.log', 0666);
+}
+
 // Simple debug page
 if (isset($_GET['debug'])) {
     echo "🤖 BOT SERVER STATUS\n\n";
@@ -11,6 +29,7 @@ if (isset($_GET['debug'])) {
     foreach ($files as $file) {
         if (!file_exists($file)) {
             file_put_contents($file, $file === 'users.json' ? '{}' : '');
+            chmod($file, 0666);
         }
         echo "📁 $file: " . (is_writable($file) ? '✅ OK' : '❌ NOT WRITABLE') . "\n";
     }
@@ -46,28 +65,16 @@ define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
 define('USERS_FILE', 'users.json');
 define('ERROR_LOG', 'error.log');
 
-// TON Rewards - UPDATED AMOUNTS
+// TON Rewards
 define('AD_REWARD', 0.0001); // 0.0001 TON per ad
 define('REF_REWARD', 0.0005); // 0.0005 TON per referral
 define('MIN_WITHDRAW_REF', 5); // Minimum 5 referrals to withdraw
-define('MIN_WITHDRAW_AMOUNT', 0.01); // Minimum 0.01 TON to withdraw (UPDATED)
+define('MIN_WITHDRAW_AMOUNT', 0.01); // Minimum 0.01 TON to withdraw
 define('AD_COOLDOWN', 10); // 10 seconds cooldown between ads
 
-// Initialize files with proper error handling
-if (!file_exists(USERS_FILE)) {
-    @file_put_contents(USERS_FILE, '{}');
-}
-if (!file_exists(ERROR_LOG)) {
-    @file_put_contents(ERROR_LOG, '');
-}
-
-// Fix file permissions on first run
-if (file_exists(USERS_FILE) && !is_writable(USERS_FILE)) {
-    @chmod(USERS_FILE, 0666);
-}
-if (file_exists(ERROR_LOG) && !is_writable(ERROR_LOG)) {
-    @chmod(ERROR_LOG, 0666);
-}
+// Required channel
+define('REQUIRED_CHANNEL', '@TakoniFinance'); // Zorunlu kanal
+define('CHANNEL_URL', 'https://t.me/TakoniFinance');
 
 function logError($message) {
     // Safe error logging with permission check
@@ -160,9 +167,56 @@ function editMessageText($chat_id, $message_id, $text, $keyboard = null) {
     }
 }
 
+// Check if user is member of required channel
+function isChannelMember($chat_id) {
+    try {
+        $params = [
+            'chat_id' => REQUIRED_CHANNEL,
+            'user_id' => $chat_id
+        ];
+        
+        $url = API_URL . 'getChatMember?' . http_build_query($params);
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+        
+        $result = @file_get_contents($url, false, $context);
+        $data = json_decode($result, true);
+        
+        if ($data && $data['ok']) {
+            $status = $data['result']['status'];
+            // 'member', 'administrator', 'creator' are considered as members
+            return in_array($status, ['member', 'administrator', 'creator']);
+        }
+        
+        return false;
+        
+    } catch (Exception $e) {
+        logError("Channel check failed: " . $e->getMessage());
+        return false;
+    }
+}
+
 // Generate unique referral code based on user ID (always the same)
 function generateRefCode($chat_id) {
     return 'TAK' . substr(md5($chat_id), 0, 7);
+}
+
+// Channel verification keyboard
+function getChannelVerificationKeyboard() {
+    return [
+        'inline_keyboard' => [
+            [
+                ['text' => '📢 Join Channel', 'url' => CHANNEL_URL]
+            ],
+            [
+                ['text' => '✅ I Joined', 'callback_data' => 'check_channel']
+            ]
+        ]
+    ];
 }
 
 // Main menu keyboard
@@ -275,7 +329,8 @@ function processUpdate($update) {
                 'ton_address' => '',
                 'pending_withdrawal' => 0,
                 'total_earned' => 0,
-                'created_at' => time()
+                'created_at' => time(),
+                'channel_verified' => false
             ];
             saveUsers($users);
         }
@@ -284,7 +339,18 @@ function processUpdate($update) {
             $ref_code_param = explode(' ', $text)[1] ?? null;
             $user = $users[$chat_id];
             
-            // Handle referral registration - FIXED
+            // Check channel membership first
+            if (!$user['channel_verified']) {
+                $channel_message = "🔒 <b>Channel Verification Required</b>\n\n";
+                $channel_message .= "To use this bot, you must join our official channel:\n";
+                $channel_message .= "📢 <b>" . REQUIRED_CHANNEL . "</b>\n\n";
+                $channel_message .= "Please join the channel and click 'I Joined' to verify.";
+                
+                sendMessage($chat_id, $channel_message, getChannelVerificationKeyboard());
+                return;
+            }
+            
+            // Handle referral registration
             if ($ref_code_param && $ref_code_param !== $user['ref_code'] && !isset($user['referred_by'])) {
                 $referrer_found = false;
                 
@@ -381,7 +447,8 @@ function processUpdate($update) {
                 'ton_address' => '',
                 'pending_withdrawal' => 0,
                 'total_earned' => 0,
-                'created_at' => time()
+                'created_at' => time(),
+                'channel_verified' => false
             ];
             saveUsers($users);
         }
@@ -389,7 +456,35 @@ function processUpdate($update) {
         $user = $users[$chat_id];
         
         switch ($data) {
+            case 'check_channel':
+                // Check if user joined the channel
+                if (isChannelMember($chat_id)) {
+                    $users[$chat_id]['channel_verified'] = true;
+                    saveUsers($users);
+                    
+                    $response = "✅ <b>Verification Successful!</b>\n\n";
+                    $response .= "Thank you for joining our channel!\n";
+                    $response .= "You can now use all features of the bot.";
+                    
+                    editMessageText($chat_id, $message_id, $response, getMainKeyboard());
+                } else {
+                    $response = "❌ <b>Verification Failed</b>\n\n";
+                    $response .= "We couldn't verify that you joined the channel.\n";
+                    $response .= "Please make sure you've joined and try again.";
+                    
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                }
+                break;
+                
             case 'earn':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $response = "💰 <b>Earn TON</b>\n\n";
                 $response .= "📱 <b>Watch Ads & Earn " . AD_REWARD . " TON Each</b>\n\n";
                 $response .= "🎬 How to earn:\n";
@@ -403,6 +498,14 @@ function processUpdate($update) {
                 break;
                 
             case 'balance':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $balance = $user['balance'] ?? 0;
                 $referrals = $user['referrals'] ?? 0;
                 $total_earned = $user['total_earned'] ?? $balance;
@@ -421,6 +524,14 @@ function processUpdate($update) {
                 break;
                 
             case 'referrals':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $ref_code = $user['ref_code'] ?? 'N/A';
                 $referrals = $user['referrals'] ?? 0;
                 $ref_earnings = $referrals * REF_REWARD;
@@ -443,6 +554,14 @@ function processUpdate($update) {
                 break;
                 
             case 'share_referral':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $ref_code = $user['ref_code'] ?? 'N/A';
                 $share_text = urlencode("🚀 Join TAKONI ADS and earn TON coins by watching ads! Use my referral code: {$ref_code} - https://t.me/takoniAdsBot?start={$ref_code}");
                 $share_url = "https://t.me/share/url?url=https://t.me/takoniAdsBot&text={$share_text}";
@@ -465,6 +584,14 @@ function processUpdate($update) {
                 break;
                 
             case 'withdraw':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $balance = $user['balance'] ?? 0;
                 $referrals = $user['referrals'] ?? 0;
                 $ton_address = $user['ton_address'] ?? 'Not set';
@@ -511,6 +638,14 @@ function processUpdate($update) {
                 break;
                 
             case 'enter_ton_address':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $response = "🔗 <b>Enter TON Address</b>\n\n";
                 $response .= "Please send your TON wallet address as a message.\n\n";
                 $response .= "📍 <b>Format:</b> EQ... or UQ... (TON wallet address)\n\n";
@@ -528,6 +663,14 @@ function processUpdate($update) {
                 break;
                 
             case 'submit_withdrawal':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $balance = $user['balance'] ?? 0;
                 $referrals = $user['referrals'] ?? 0;
                 $ton_address = $user['ton_address'] ?? '';
@@ -567,6 +710,14 @@ function processUpdate($update) {
                 break;
                 
             case 'main_menu':
+                // Check channel verification
+                if (!$user['channel_verified']) {
+                    $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                    $response .= "Please verify your channel membership first.";
+                    editMessageText($chat_id, $message_id, $response, getChannelVerificationKeyboard());
+                    break;
+                }
+                
                 $response = "🎮 <b>Main Menu</b>\n\nWelcome back! Choose an option below:";
                 editMessageText($chat_id, $message_id, $response, getMainKeyboard());
                 break;
@@ -594,8 +745,17 @@ function processUpdate($update) {
                     'ton_address' => '',
                     'pending_withdrawal' => 0,
                     'total_earned' => 0,
-                    'created_at' => time()
+                    'created_at' => time(),
+                    'channel_verified' => false
                 ];
+            }
+            
+            // Check channel verification for ad watching
+            if (!$users[$chat_id]['channel_verified']) {
+                $response = "🔒 <b>Channel Verification Required</b>\n\n";
+                $response .= "Please verify your channel membership first to watch ads.";
+                sendMessage($chat_id, $response, getChannelVerificationKeyboard());
+                return;
             }
             
             $last_watch = $users[$chat_id]['last_ad_watch'] ?? 0;
