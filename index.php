@@ -49,11 +49,7 @@ function loadUsers() {
 
 function saveUsers($users) {
     $result = @file_put_contents(USERS_FILE, json_encode($users, JSON_PRETTY_PRINT));
-    if ($result === false) {
-        logError("Failed to save users data");
-        return false;
-    }
-    return true;
+    return $result !== false;
 }
 
 function resetDailyLimits() {
@@ -113,22 +109,28 @@ function generateRefCode($chat_id) {
     return 'TAK' . substr(md5($chat_id), 0, 7);
 }
 
-// TON Adresi Doğrulama Fonksiyonu
+// GELİŞMİŞ TON ADRES DOĞRULAMA
 function isValidTONAddress($address) {
     $address = trim($address);
     
-    // TON adres formatları
+    // Tüm TON adres formatları
     $patterns = array(
-        '/^EQ[0-9a-zA-Z]{48}$/', // EQ ile başlayan 48 karakter
-        '/^UQ[0-9a-zA-Z]{48}$/', // UQ ile başlayan 48 karakter
-        '/^Ef[0-9a-zA-Z]{48}$/', // Ef ile başlayan 48 karakter (bounceable)
-        '/^Uf[0-9a-zA-Z]{48}$/', // Uf ile başlayan 48 karakter (bounceable)
+        '/^EQ[0-9a-zA-Z_-]{48}$/', // EQ ile başlayan 48 karakter
+        '/^UQ[0-9a-zA-Z_-]{48}$/', // UQ ile başlayan 48 karakter
+        '/^Ef[0-9a-zA-Z_-]{48}$/', // Ef ile başlayan 48 karakter
+        '/^Uf[0-9a-zA-Z_-]{48}$/', // Uf ile başlayan 48 karakter
+        '/^0:[0-9a-fA-F]{64}$/',   // Raw format
     );
     
     foreach ($patterns as $pattern) {
         if (preg_match($pattern, $address)) {
             return true;
         }
+    }
+    
+    // User-friendly format kontrolü (EQabc...xyz)
+    if (preg_match('/^EQ[a-zA-Z0-9_-]{44,50}$/', $address)) {
+        return true;
     }
     
     return false;
@@ -283,7 +285,7 @@ function processUpdate($update) {
             $user = $users[$chat_id];
             $welcome = "🚀 <b>Welcome to TAKONI ADS!</b>\n\n";
             
-            // REFERANS KONTROLÜ
+            // REFERANS KONTROLÜ - GELİŞMİŞ VERSİYON
             if ($ref_code_param && $ref_code_param !== $user['ref_code'] && !isset($user['referred_by'])) {
                 logError("Referral code detected: " . $ref_code_param);
                 
@@ -291,6 +293,7 @@ function processUpdate($update) {
                 $referrer_id = null;
                 $referrer_username = '';
                 
+                // Tüm kullanıcılarda referans kodunu ara
                 foreach ($users as $id => $u) {
                     if (isset($u['ref_code']) && $u['ref_code'] === $ref_code_param && $id != $chat_id) {
                         $referrer_found = true;
@@ -304,15 +307,16 @@ function processUpdate($update) {
                 if ($referrer_found && $referrer_id) {
                     logError("Processing referral for referrer: " . $referrer_id);
                     
-                    // Yeni kullanıcıyı güncelle
+                    // Yeni kullanıcıyı güncelle - referans aldığını işaretle
                     $users[$chat_id]['referred_by'] = $referrer_id;
                     $users[$chat_id]['username'] = $username;
                     
-                    // Referans vereni güncelle
+                    // Referans vereni güncelle - referans sayısını ve bakiyeyi artır
                     $current_referrals = isset($users[$referrer_id]['referrals']) ? $users[$referrer_id]['referrals'] : 0;
                     $current_balance = isset($users[$referrer_id]['balance']) ? $users[$referrer_id]['balance'] : 0;
                     $current_total_earned = isset($users[$referrer_id]['total_earned']) ? $users[$referrer_id]['total_earned'] : 0;
                     
+                    // REFERANS SAYISINI +1 ARTIR
                     $users[$referrer_id]['referrals'] = $current_referrals + 1;
                     $users[$referrer_id]['balance'] = $current_balance + REF_REWARD;
                     $users[$referrer_id]['total_earned'] = $current_total_earned + REF_REWARD;
@@ -329,6 +333,7 @@ function processUpdate($update) {
                         'earned_from' => REF_REWARD
                     );
                     
+                    // Verileri kaydet
                     if (saveUsers($users)) {
                         logError("Referral saved successfully - Referrer: " . $referrer_id . " now has " . $users[$referrer_id]['referrals'] . " referrals");
                         
@@ -379,7 +384,7 @@ function processUpdate($update) {
         } elseif (isset($users[$chat_id]['awaiting_ton_address'])) {
             $ton_address = trim($text);
             
-            // TON ADRESİ DOĞRULAMA
+            // GELİŞMİŞ TON ADRES DOĞRULAMA
             if (isValidTONAddress($ton_address)) {
                 $users[$chat_id]['ton_address_temp'] = $ton_address;
                 unset($users[$chat_id]['awaiting_ton_address']);
@@ -393,15 +398,13 @@ function processUpdate($update) {
                 sendMessage($chat_id, $response, getSaveAddressKeyboard());
             } else {
                 $response = "❌ <b>Invalid TON Address</b>\n\n";
-                $response .= "Please enter a valid TON wallet address.\n\n";
-                $response .= "📍 <b>Valid TON Address Formats:</b>\n";
-                $response .= "• <code>EQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n";
-                $response .= "• <code>UQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n";
-                $response .= "• <code>Efxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n";
-                $response .= "• <code>Ufxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n\n";
+                $response .= "The address you entered is not a valid TON wallet address.\n\n";
+                $response .= "📍 <b>Valid TON Address Examples:</b>\n";
+                $response .= "• <code>EQAbc123def456ghi789jkl012mno345pqr678stu901vwx234yz5</code>\n";
+                $response .= "• <code>UQ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP</code>\n\n";
                 $response .= "📍 <b>Where to find your TON address?</b>\n";
-                $response .= "• @wallet bot\n• Tonkeeper app\n• Trust Wallet\n• MyTonWallet\n\n";
-                $response .= "Please try again:";
+                $response .= "• @wallet bot (Telegram)\n• Tonkeeper app\n• Trust Wallet\n• MyTonWallet\n\n";
+                $response .= "Please copy your TON address correctly and try again:";
                 
                 sendMessage($chat_id, $response);
             }
@@ -582,13 +585,11 @@ function processUpdate($update) {
                 
                 $response = "🔗 <b>Enter TON Wallet Address</b>\n\n";
                 $response .= "Please send your TON wallet address.\n\n";
-                $response .= "📍 <b>Valid TON Address Formats:</b>\n";
-                $response .= "• <code>EQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n";
-                $response .= "• <code>UQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n";
-                $response .= "• <code>Efxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n";
-                $response .= "• <code>Ufxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>\n\n";
+                $response .= "📍 <b>Valid TON Address Examples:</b>\n";
+                $response .= "• <code>EQAbc123def456ghi789jkl012mno345pqr678stu901vwx234yz5</code>\n";
+                $response .= "• <code>UQ1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP</code>\n\n";
                 $response .= "📍 <b>Where to find your TON address?</b>\n";
-                $response .= "• @wallet bot\n• Tonkeeper app\n• Trust Wallet\n• MyTonWallet";
+                $response .= "• @wallet bot (Telegram)\n• Tonkeeper app\n• Trust Wallet\n• MyTonWallet";
                 
                 editMessageText($chat_id, $message_id, $response);
                 break;
