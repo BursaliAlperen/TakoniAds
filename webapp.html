@@ -5,111 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TAKONI ADS</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0; /* Light background to avoid black screen */
+            color: #333;
+            margin: 0;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #005f8a;
+        }
+        .error {
+            color: red;
+            display: none;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>TAKONI ADS</h1>
     <p>Watch the ad below to earn 0.0001 TON!</p>
     <button onclick="watchAd()">Watch Ad</button>
+    <p id="error-message" class="error"></p>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
+        // Ensure Telegram Web App is available
+        if (typeof window.Telegram.WebApp === 'undefined') {
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-message').innerText = 'Error: Telegram Web App not loaded. Please open this in Telegram.';
+            return;
+        }
+
+        // Initialize Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Get user info
+        const user = tg.initDataUnsafe.user;
+        if (!user) {
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-message').innerText = 'Error: User not authenticated.';
+            return;
+        }
+
         function watchAd() {
-            alert("Ad watched! 0.0001 TON credited to your balance.");
-            // In production, integrate with Telegram Web App API to notify bot
-            window.Telegram.WebApp.close();
+            try {
+                // Simulate ad watching (replace with actual ad logic)
+                setTimeout(() => {
+                    // Send ad completion data to the bot
+                    tg.sendData(JSON.stringify({
+                        action: 'ad_completed',
+                        chat_id: user.id,
+                        reward: 0.0001
+                    }));
+                    // Show confirmation
+                    alert('Ad watched! 0.0001 TON credited to your balance.');
+                    // Close Web App
+                    tg.close();
+                }, 2000); // Simulate 2-second ad
+            } catch (e) {
+                document.getElementById('error-message').style.display = 'block';
+                document.getElementById('error-message').innerText = 'Error: ' + e.message;
+            }
         }
     </script>
 </body>
-</html>            font-size: 0.9em;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="logo">🎬</div>
-        <h1>TAKONI ADS</h1>
-        <div class="subtitle">Watch Ads & Earn TON Crypto</div>
-        
-        <div class="reward-info">
-            <div>Earn per Ad:</div>
-            <div class="reward-amount">0.0001 TON</div>
-            <div>Complete the ad to receive reward</div>
-        </div>
-        
-        <button class="watch-button" id="watchAdBtn" onclick="watchAd()">
-            🎥 WATCH AD & EARN TON
-        </button>
-        
-        <div id="cooldownInfo" class="cooldown" style="display: none;"></div>
-        <div id="statusMessage" class="status"></div>
-    </div>
-
-    <script>
-        function watchAd() {
-            const btn = document.getElementById('watchAdBtn');
-            const status = document.getElementById('statusMessage');
-            
-            // Disable button during ad
-            btn.disabled = true;
-            btn.textContent = '🔄 LOADING AD...';
-            status.textContent = '';
-            status.className = 'status';
-            
-            // Add Giga ad script
-            const script = document.createElement('script');
-            script.src = 'https://ad.gigapub.tech/script?id=3305';
-            document.head.appendChild(script);
-            
-            // Show ad after script loads
-            script.onload = function() {
-                if (typeof window.showGiga === 'function') {
-                    window.showGiga()
-                        .then(() => {
-                            status.textContent = '✅ Ad completed! Reward will be added to your balance.';
-                            status.className = 'status success';
-                            btn.textContent = '🎥 WATCH AD & EARN TON';
-                            
-                            // Start cooldown
-                            startCooldown(10); // 10 seconds cooldown
-                        })
-                        .catch(e => {
-                            status.textContent = '❌ Ad was not completed. Please try again.';
-                            status.className = 'status error';
-                            btn.textContent = '🎥 WATCH AD & EARN TON';
-                            btn.disabled = false;
-                            console.error('Ad error:', e);
-                        });
-                } else {
-                    status.textContent = '❌ Ad service not available. Please try again later.';
-                    status.className = 'status error';
-                    btn.textContent = '🎥 WATCH AD & EARN TON';
-                    btn.disabled = false;
-                }
-            };
-            
-            script.onerror = function() {
-                status.textContent = '❌ Failed to load ad. Please check your connection.';
-                status.className = 'status error';
-                btn.textContent = '🎥 WATCH AD & EARN TON';
-                btn.disabled = false;
-            };
-        }
-
-        function startCooldown(seconds) {
-            const btn = document.getElementById('watchAdBtn');
-            const cooldownInfo = document.getElementById('cooldownInfo');
-            let timeLeft = seconds;
-            
-            cooldownInfo.style.display = 'block';
-            
-            const countdown = setInterval(() => {
-                cooldownInfo.textContent = `⏰ Next ad available in ${timeLeft} seconds...`;
-                timeLeft--;
-                
-                if (timeLeft < 0) {
-                    clearInterval(countdown);
+</html>                    clearInterval(countdown);
                     cooldownInfo.style.display = 'none';
                     btn.disabled = false;
                 }
