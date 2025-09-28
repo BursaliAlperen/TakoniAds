@@ -28,42 +28,55 @@ if (!file_exists(ERROR_LOG)) {
     file_put_contents(ERROR_LOG, '', LOCK_EX);
 }
 
-// Initialize SQLite database
+// Initialize SQLite database with optimization
 function initDatabase() {
     try {
         $db = new PDO('sqlite:' . DB_FILE);
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         
+        // Optimize PRAGMA settings
+        $db->exec("PRAGMA journal_mode=WAL;");
+        $db->exec("PRAGMA synchronous=NORMAL;");
+        $db->exec("PRAGMA cache_size=-10000;"); // 10MB cache
+        $db->exec("PRAGMA auto_vacuum=1;");
+
+        // Create tables with indexes
         $db->exec("
             CREATE TABLE IF NOT EXISTS users (
                 chat_id BIGINT PRIMARY KEY,
-                balance DECIMAL(10,6) DEFAULT 0,
+                balance DECIMAL(8,4) DEFAULT 0,
                 referrals INTEGER DEFAULT 0,
                 ref_code VARCHAR(10) UNIQUE,
                 last_ad_watch INTEGER DEFAULT 0,
                 ads_watched_today INTEGER DEFAULT 0,
                 last_daily_reset VARCHAR(10),
                 ton_address VARCHAR(255),
-                total_earned DECIMAL(10,6) DEFAULT 0,
+                total_earned DECIMAL(8,4) DEFAULT 0,
                 created_at INTEGER,
                 referred_by BIGINT,
-                username VARCHAR(255),
+                username VARCHAR(50),
                 awaiting_ton_address BOOLEAN DEFAULT 0,
                 ton_address_temp VARCHAR(255)
             )
         ");
+        $db->exec("CREATE INDEX IF NOT EXISTS idx_chat_id ON users(chat_id);");
+        $db->exec("CREATE INDEX IF NOT EXISTS idx_ref_code ON users(ref_code);");
+
         $db->exec("
             CREATE TABLE IF NOT EXISTS referral_list (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 referrer_id BIGINT,
                 referred_id BIGINT,
-                username VARCHAR(255),
+                username VARCHAR(50),
                 joined_at INTEGER,
-                earned_from DECIMAL(10,6),
+                earned_from DECIMAL(8,4),
                 FOREIGN KEY (referrer_id) REFERENCES users(chat_id),
                 FOREIGN KEY (referred_id) REFERENCES users(chat_id)
             )
         ");
+        $db->exec("CREATE INDEX IF NOT EXISTS idx_referrer_id ON referral_list(referrer_id);");
+        $db->exec("CREATE INDEX IF NOT EXISTS idx_referred_id ON referral_list(referred_id);");
+
         return $db;
     } catch (Exception $e) {
         logError("Database init error: " . $e->getMessage());
@@ -75,18 +88,30 @@ function logError($message) {
     file_put_contents(ERROR_LOG, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND | LOCK_EX);
 }
 
-function loadUsers() {
-    $db = initDatabase();
-    $stmt = $db->query("SELECT * FROM users");
-    $users = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $users[$row['chat_id']] = $row;
+function loadUsers($db, $chat_id = null) {
+    if (extension_loaded('apcu')) {
+        $cache_key = $chat_id ? "user_$chat_id" : "all_users";
+        $users = apcu_fetch($cache_key);
+        if ($users === false) {
+            $stmt = $db->query("SELECT * FROM users");
+            $users = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $users[$row['chat_id']] = $row;
+            }
+            apcu_store($cache_key, $users, 300); // 5 dakika önbellek
+        }
+        return $chat_id ? ($users[$chat_id] ?? null) : $users;
+    } else {
+        $stmt = $db->query("SELECT * FROM users");
+        $users = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $users[$row['chat_id']] = $row;
+        }
+        return $chat_id ? ($users[$chat_id] ?? null) : $users;
     }
-    return $users;
 }
 
-function saveUser($chat_id, $data) {
-    $db = initDatabase();
+function saveUser($db, $chat_id, $data) {
     $stmt = $db->prepare("
         INSERT OR REPLACE INTO users (
             chat_id, balance, referrals, ref_code, last_ad_watch, ads_watched_today,
@@ -101,58 +126,42 @@ function saveUser($chat_id, $data) {
     return $stmt->execute($data);
 }
 
-function resetDailyLimits() {
-    $db = initDatabase();
+function resetDailyLimits($db) {
     $today = date('Y-m-d');
     $stmt = $db->query("SELECT chat_id, last_daily_reset FROM users WHERE last_daily_reset != '$today'");
     $users_to_reset = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    foreach ($users_to_reset as $user) {
-        $db->prepare("UPDATE users SET ads_watched_today = 0, last_daily_reset = ? WHERE chat_id = ?")
-           ->execute([$today, $user['chat_id']]);
-    }
-    
-    if (!empty($users_to_reset)) {
-        logError("Daily limits reset for " . count($users_to_reset) . " users");
+    $db->beginTransaction();
+    try {
+        foreach ($users_to_reset as $user) {
+            $db->prepare("UPDATE users SET ads_watched_today = 0, last_daily_reset = ? WHERE chat_id = ?")
+               ->execute([$today, $user['chat_id']]);
+        }
+        $db->commit();
+        if (!empty($users_to_reset)) {
+            logError("Daily limits reset for " . count($users_to_reset) . " users");
+        }
+    } catch (Exception $e) {
+        $db->rollBack();
+        logError("Daily limits reset error: " . $e->getMessage());
     }
 }
 
 function sendMessage($chat_id, $text, $keyboard = null) {
-    $params = [
-        'chat_id' => $chat_id,
-        'text' => $text,
-        'parse_mode' => 'HTML'
-    ];
-    
-    if ($keyboard) {
-        $params['reply_markup'] = json_encode($keyboard);
-    }
-    
+    $params = ['chat_id' => $chat_id, 'text' => $text, 'parse_mode' => 'HTML'];
+    if ($keyboard) $params['reply_markup'] = json_encode($keyboard);
     $url = API_URL . 'sendMessage?' . http_build_query($params);
     $result = @file_get_contents($url);
-    if ($result === false) {
-        logError("Failed to send message to $chat_id");
-    }
+    if ($result === false) logError("Failed to send message to $chat_id");
     return $result !== false;
 }
 
 function editMessageText($chat_id, $message_id, $text, $keyboard = null) {
-    $params = [
-        'chat_id' => $chat_id,
-        'message_id' => $message_id,
-        'text' => $text,
-        'parse_mode' => 'HTML'
-    ];
-    
-    if ($keyboard) {
-        $params['reply_markup'] = json_encode($keyboard);
-    }
-    
+    $params = ['chat_id' => $chat_id, 'message_id' => $message_id, 'text' => $text, 'parse_mode' => 'HTML'];
+    if ($keyboard) $params['reply_markup'] = json_encode($keyboard);
     $url = API_URL . 'editMessageText?' . http_build_query($params);
     $result = @file_get_contents($url);
-    if ($result === false) {
-        logError("Failed to edit message for $chat_id, message_id: $message_id");
-    }
+    if ($result === false) logError("Failed to edit message for $chat_id, message_id: $message_id");
     return $result !== false;
 }
 
@@ -170,7 +179,7 @@ function getMainKeyboard() {
 }
 
 function getEarnKeyboard() {
-    $webapp_url = "https://takoniads.onrender.com/webapp.html"; // Update to your actual URL
+    $webapp_url = "https://takoniads.onrender.com/webapp.html";
     return [
         'inline_keyboard' => [
             [['text' => '📱 Watch Ad (' . AD_REWARD . ' TON)', 'web_app' => ['url' => $webapp_url]]],
@@ -207,9 +216,7 @@ function getWithdrawKeyboard($has_address = false) {
             [['text' => '⬅️ Back to Main', 'callback_data' => 'main_menu']]
         ]
     ];
-    if ($has_address) {
-        $keyboard['inline_keyboard'][0][] = ['text' => '🔄 Change Address', 'callback_data' => 'enter_ton_address'];
-    }
+    if ($has_address) $keyboard['inline_keyboard'][0][] = ['text' => '🔄 Change Address', 'callback_data' => 'enter_ton_address'];
     return $keyboard;
 }
 
@@ -222,8 +229,8 @@ function getSaveAddressKeyboard() {
 }
 
 function processUpdate($update) {
-    resetDailyLimits();
     $db = initDatabase();
+    resetDailyLimits($db);
     
     // Handle Web App data (ad completion)
     if (isset($update['message']['web_app_data'])) {
@@ -239,10 +246,7 @@ function processUpdate($update) {
         logError("Web app data from $chat_id: " . json_encode($web_app_data));
         
         if (isset($web_app_data['action']) && $web_app_data['action'] === 'ad_completed' && isset($web_app_data['chat_id'], $web_app_data['reward'])) {
-            $stmt = $db->prepare("SELECT * FROM users WHERE chat_id = ?");
-            $stmt->execute([$chat_id]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+            $user = loadUsers($db, $chat_id);
             if ($user) {
                 $current_time = time();
                 $ads_today = $user['ads_watched_today'] ?? 0;
@@ -252,7 +256,6 @@ function processUpdate($update) {
                     sendMessage($chat_id, "❌ You've reached the daily ad limit (" . DAILY_AD_LIMIT . "). Try again tomorrow!", getMainKeyboard());
                     return;
                 }
-                
                 if ($current_time - $last_ad_watch < AD_COOLDOWN) {
                     sendMessage($chat_id, "⏳ Please wait " . (AD_COOLDOWN - ($current_time - $last_ad_watch)) . " seconds before watching another ad.", getMainKeyboard());
                     return;
@@ -288,10 +291,7 @@ function processUpdate($update) {
         $username = $message['chat']['username'] ?? 'Unknown';
         
         logError("Message from $chat_id: $text");
-        
-        $stmt = $db->prepare("SELECT * FROM users WHERE chat_id = ?");
-        $stmt->execute([$chat_id]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $user = loadUsers($db, $chat_id);
         
         if (!$user) {
             $ref_code = generateRefCode($chat_id);
@@ -311,7 +311,7 @@ function processUpdate($update) {
                 'awaiting_ton_address' => 0,
                 'ton_address_temp' => null
             ];
-            saveUser($chat_id, $user);
+            saveUser($db, $chat_id, $user);
             logError("New user created: $chat_id");
         }
         
@@ -321,7 +321,7 @@ function processUpdate($update) {
             
             $welcome = "🚀 <b>Welcome to TAKONI ADS!</b>\n\n";
             
-            if ($ref_code_param && $ref_code_param !== $user['ref_code']) {
+            if ($ref_code_param && $ref_code_param !== $user['ref_code'] && !$user['referred_by']) {
                 logError("Referral code detected: $ref_code_param");
                 $stmt = $db->prepare("SELECT chat_id, username, referrals, balance, total_earned FROM users WHERE ref_code = ? AND chat_id != ?");
                 $stmt->execute([$ref_code_param, $chat_id]);
@@ -331,55 +331,50 @@ function processUpdate($update) {
                     $referrer_id = $referrer['chat_id'];
                     $db->beginTransaction();
                     try {
-                        // Update referred_by, replacing any existing referral
                         $db->prepare("UPDATE users SET referred_by = ? WHERE chat_id = ?")
                            ->execute([$referrer_id, $chat_id]);
                         
-                        // Check if the referral was successfully applied
-                        $stmt = $db->prepare("SELECT referred_by FROM users WHERE chat_id = ?");
-                        $stmt->execute([$chat_id]);
-                        $updatedUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                        $new_referrals = $referrer['referrals'] + 1;
+                        $new_balance = $referrer['balance'] + REF_REWARD;
+                        $new_total_earned = $referrer['total_earned'] + REF_REWARD;
+                        $db->prepare("UPDATE users SET referrals = ?, balance = ?, total_earned = ? WHERE chat_id = ?")
+                           ->execute([$new_referrals, $new_balance, $new_total_earned, $referrer_id]);
                         
-                        if ($updatedUser['referred_by'] === $referrer_id) {
-                            // Remove old referral entry if it exists
-                            $db->prepare("DELETE FROM referral_list WHERE referred_id = ?")
-                               ->execute([$chat_id]);
-                            
-                            // Update referrer's referral count and reward (set to 1)
-                            $new_referrals = 1; // Reset to 1, replacing previous
-                            $new_balance = $referrer['balance'] + REF_REWARD;
-                            $new_total_earned = $referrer['total_earned'] + REF_REWARD;
-                            $db->prepare("UPDATE users SET referrals = ?, balance = ?, total_earned = ? WHERE chat_id = ?")
-                               ->execute([$new_referrals, $new_balance, $new_total_earned, $referrer_id]);
-                            
-                            $db->prepare("INSERT INTO referral_list (referrer_id, referred_id, username, joined_at, earned_from) VALUES (?, ?, ?, ?, ?)")
-                               ->execute([$referrer_id, $chat_id, $username, time(), REF_REWARD]);
-                            
-                            $db->commit();
-                            logError("Referral replaced successfully for $referrer_id");
-                            
-                            // Send notification to referrer
-                            $ref_message = "🎉 <b>New Referral!</b>\n\n👤 A new user joined using your referral link!\n💰 You earned: <b>" . REF_REWARD . " TON</b>\n👥 Total referrals: <b>$new_referrals</b>\n💳 New balance: <b>" . number_format($new_balance, 6) . " TON</b>";
-                            sendMessage($referrer_id, $ref_message);
-                            
-                            $welcome = "🎉 <b>Welcome via Referral!</b>\n\nYou joined using a referral link!\n\n";
-                        }
+                        $db->prepare("INSERT INTO referral_list (referrer_id, referred_id, username, joined_at, earned_from) VALUES (?, ?, ?, ?, ?)")
+                           ->execute([$referrer_id, $chat_id, $username, time(), REF_REWARD]);
+                        
+                        $db->commit();
+                        logError("Referral saved successfully for $referrer_id");
+                        
+                        $ref_message = "🎉 <b>New Referral!</b>\n\n👤 New user @$username joined using your referral link!\n💰 You earned: <b>" . REF_REWARD . " TON</b>\n👥 Total referrals: <b>" . $new_referrals . "</b>\n💳 New balance: <b>" . number_format($new_balance, 6) . " TON</b>";
+                        sendMessage($referrer_id, $ref_message);
+                        
+                        $welcome = "🎉 <b>Welcome via Referral!</b>\n\nYou joined using @" . ($referrer['username'] ?? 'User') . "'s referral link!\n\n";
                     } catch (Exception $e) {
                         $db->rollBack();
                         logError("Referral error: " . $e->getMessage());
                     }
+                } else {
+                    $welcome .= "Invalid referral code.\n\n";
                 }
+            } elseif ($ref_code_param) {
+                sendMessage($chat_id, "You are already a member with a referral.");
+                return;
+            } elseif ($user['referred_by']) {
+                sendMessage($chat_id, "You are already a member with referral.");
+                return;
+            } else {
+                sendMessage($chat_id, "You are already a member.");
+                return;
             }
             
             $welcome .= "💰 <b>Earn TON</b> by watching ads\n👥 <b>Invite friends</b> for bonus TON\n🏧 <b>Withdraw</b> to TON wallet\n\n🔗 <b>Your referral code:</b>\n<code>" . $user['ref_code'] . "</code>\n\n📊 <b>Rewards:</b>\n• Watch Ad: <b>" . AD_REWARD . " TON</b>\n• Per Referral: <b>" . REF_REWARD . " TON</b>\n\n⚠️ <b>Daily Limit:</b>\n• Maximum <b>" . DAILY_AD_LIMIT . " ads</b> per day\n\n⚠️ <b>Withdrawal Requirement:</b>\n• Minimum <b>" . MIN_WITHDRAW_REF . " referrals</b> needed";
             sendMessage($chat_id, $welcome, getMainKeyboard());
         } elseif ($user['awaiting_ton_address']) {
             $ton_address = trim($text);
-            
             if (strlen($ton_address) >= 10) {
                 $db->prepare("UPDATE users SET ton_address_temp = ?, awaiting_ton_address = 0 WHERE chat_id = ?")
                    ->execute([$ton_address, $chat_id]);
-                
                 $response = "🔗 <b>TON Address Received</b>\n\nAddress: <code>$ton_address</code>\n\nAdresi onaylıyor musunuz? İstediğiniz zaman değiştirebilirsiniz.";
                 sendMessage($chat_id, $response, getSaveAddressKeyboard());
             } else {
@@ -393,10 +388,7 @@ function processUpdate($update) {
         $data = $callback['data'];
         
         logError("Callback from $chat_id: $data");
-        
-        $stmt = $db->prepare("SELECT * FROM users WHERE chat_id = ?");
-        $stmt->execute([$chat_id]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $user = loadUsers($db, $chat_id);
         
         if (!$user) {
             $ref_code = generateRefCode($chat_id);
@@ -416,7 +408,7 @@ function processUpdate($update) {
                 'awaiting_ton_address' => 0,
                 'ton_address_temp' => null
             ];
-            saveUser($chat_id, $user);
+            saveUser($db, $chat_id, $user);
         }
         
         switch ($data) {
@@ -468,20 +460,11 @@ function processUpdate($update) {
                 $referrals = $user['referrals'] ?? 0;
                 $response = "🏧 <b>Withdraw TON</b>\n\n💰 <b>Available Balance:</b> " . number_format($balance, 6) . " TON\n👥 <b>Your Referrals:</b> $referrals/" . MIN_WITHDRAW_REF . "\n🔗 <b>TON Address:</b> " . ($ton_address ? "<code>$ton_address</code>\n\nİstediğiniz zaman adresi değiştirebilirsiniz." : "Not set") . "\n\n";
                 $errors = [];
-                if ($balance < MIN_WITHDRAW_AMOUNT) {
-                    $errors[] = "❌ Minimum withdrawal: " . MIN_WITHDRAW_AMOUNT . " TON";
-                }
-                if ($referrals < MIN_WITHDRAW_REF) {
-                    $errors[] = "❌ Need " . (MIN_WITHDRAW_REF - $referrals) . " more referrals";
-                }
-                if (!$ton_address) {
-                    $errors[] = "❌ Please set a TON address";
-                }
-                if (!empty($errors)) {
-                    $response .= implode("\n", $errors) . "\n\n";
-                } else {
-                    $response .= "✅ Ready to withdraw! Click below to proceed.\n";
-                }
+                if ($balance < MIN_WITHDRAW_AMOUNT) $errors[] = "❌ Minimum withdrawal: " . MIN_WITHDRAW_AMOUNT . " TON";
+                if ($referrals < MIN_WITHDRAW_REF) $errors[] = "❌ Need " . (MIN_WITHDRAW_REF - $referrals) . " more referrals";
+                if (!$ton_address) $errors[] = "❌ Please set a TON address";
+                if (!empty($errors)) $response .= implode("\n", $errors) . "\n\n";
+                else $response .= "✅ Ready to withdraw! Click below to proceed.\n";
                 editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard($ton_address !== ''));
                 break;
                 
@@ -523,17 +506,10 @@ function processUpdate($update) {
                         sendMessage($chat_id, "❌ Withdrawal failed. Please try again later.", getMainKeyboard());
                     }
                 } else {
-                    $errors = [];
-                    if ($balance < MIN_WITHDRAW_AMOUNT) {
-                        $errors[] = "• Balance too low (min: " . MIN_WITHDRAW_AMOUNT . " TON)";
-                    }
-                    if ($referrals < MIN_WITHDRAW_REF) {
-                        $errors[] = "• Need " . (MIN_WITHDRAW_REF - $referrals) . " more referrals";
-                    }
-                    if (!$ton_address) {
-                        $errors[] = "• No TON address set";
-                    }
-                    $response = "❌ Cannot process withdrawal:\n" . implode("\n", $errors);
+                    $response = "❌ Cannot process withdrawal:\n";
+                    if ($balance < MIN_WITHDRAW_AMOUNT) $response .= "• Balance too low (min: " . MIN_WITHDRAW_AMOUNT . " TON)\n";
+                    if ($referrals < MIN_WITHDRAW_REF) $response .= "• Need " . (MIN_WITHDRAW_REF - $referrals) . " more referrals\n";
+                    if (!$ton_address) $response .= "• No TON address set\n";
                     sendMessage($chat_id, $response, getWithdrawKeyboard($ton_address !== ''));
                 }
                 break;
