@@ -3,54 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAKONI ADS</title>
+    <title>TAKONI ADS - Robot Assistant</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Courier New', monospace; /* Futuristic font for robot theme */
             text-align: center;
             padding: 20px;
-            background-color: #f0f0f0; /* Light background to avoid black screen */
-            color: #333;
+            background-color: #ffffff; /* White background */
+            color: #1e90ff; /* Dodger blue for text */
             margin: 0;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        .container {
+            background: linear-gradient(135deg, #ffffff 0%, #e6f0fa 100%); /* Blue-white gradient */
+            border: 2px solid #1e90ff;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.5); /* Blue glow effect */
         }
         h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #1e90ff;
+            text-shadow: 1px 1px 2px #87cefa; /* Light blue shadow */
         }
         p {
             font-size: 16px;
             margin-bottom: 20px;
+            color: #4682b4; /* Steel blue for contrast */
         }
         button {
-            padding: 10px 20px;
+            padding: 12px 25px;
             font-size: 16px;
             cursor: pointer;
-            background-color: #0088cc;
-            color: white;
-            border: none;
+            background-color: #1e90ff; /* Dodger blue button */
+            color: #ffffff;
+            border: 2px solid #87cefa; /* Light blue border */
             border-radius: 5px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         button:hover {
-            background-color: #005f8a;
+            background-color: #87cefa; /* Light sky blue on hover */
+            transform: translateY(-2px); /* Lift effect */
+        }
+        button:disabled {
+            background-color: #a3bffa; /* Disabled state */
+            cursor: not-allowed;
+            opacity: 0.6;
         }
         .error {
-            color: red;
+            color: #ff4500; /* OrangeRed for errors */
             display: none;
             margin-top: 20px;
+            font-weight: bold;
         }
         #status {
             font-size: 16px;
             margin-top: 20px;
             display: none;
+            color: #4682b4;
+            animation: blink 1s infinite alternate; /* Blinking effect for robot feel */
+        }
+        /* Robot antenna decoration */
+        .antenna {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid #1e90ff;
+        }
+        .antenna::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 10px;
+            height: 10px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #1e90ff;
+        }
+        @keyframes blink {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
         }
     </style>
 </head>
 <body>
-    <h1>TAKONI ADS</h1>
-    <p>Watch the ad to earn 0.0001 TON!</p>
-    <button id="watchAdButton" onclick="watchAd()">Watch Ad</button>
-    <p id="error-message" class="error"></p>
-    <p id="status"></p>
+    <div class="container">
+        <div class="antenna"></div> <!-- Robot antenna -->
+        <h1>TAKONI ADS Bot</h1>
+        <p>Watch the ad to earn 0.0001 TON with me, your robot assistant!</p>
+        <button id="watchAdButton" onclick="watchAd()">Activate Ad Watch</button>
+        <p id="error-message" class="error"></p>
+        <p id="status"></p>
+    </div>
+
+    <!-- Ad script from gigapub.tech -->
+    <script src="https://ad.gigapub.tech/script?id=3305"></script>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
@@ -82,28 +140,45 @@
                 watchAdButton.disabled = true;
                 watchAdButton.style.opacity = '0.6';
 
-                // Simulate ad watching (5-second delay as an example)
+                // Show ad and handle completion or errors
                 status.style.display = 'block';
-                status.innerText = 'Watching ad... Please wait.';
-                
-                setTimeout(() => {
-                    // Verify ad completion (simulated)
-                    status.innerText = 'Ad completed! Verifying...';
-                    
-                    setTimeout(() => {
-                        // Send ad completion data to the bot
-                        tg.sendData(JSON.stringify({
-                            action: 'ad_completed',
-                            chat_id: user.id,
-                            reward: 0.0001
-                        }));
-                        // Show redirect message
-                        status.innerText = 'You are redirecting for the reward';
-                        
-                        // Close Web App after a short delay
-                        setTimeout(() => tg.close(), 2000);
-                    }, 1000); // 1-second verification delay
-                }, 5000); // 5-second ad duration
+                status.innerText = 'Scanning ad signal... Please wait.';
+
+                window.showGiga()
+                    .then(() => {
+                        // Ad completed successfully
+                        status.innerText = 'Ad processed! Verifying with robot core...';
+                        setTimeout(() => {
+                            // Send ad completion data to the bot
+                            tg.sendData(JSON.stringify({
+                                action: 'ad_completed',
+                                chat_id: user.id,
+                                reward: 0.0001
+                            }));
+                            // Show redirect message
+                            status.innerText = 'Redirecting for your reward... Beep boop!';
+                            // Close Web App after a short delay
+                            setTimeout(() => tg.close(), 2000);
+                        }, 1000); // 1-second verification delay
+                    })
+                    .catch(e => {
+                        // Handle specific ad errors with detailed messages
+                        let errorMessage = 'Error: Ad failed to load. ';
+                        if (e.message.includes('network')) {
+                            errorMessage += 'Check your internet connection.';
+                        } else if (e.message.includes('unavailable')) {
+                            errorMessage += 'No ads available at this time.';
+                        } else if (e.message.includes('timeout')) {
+                            errorMessage += 'Ad load timed out. Try again later.';
+                        } else {
+                            errorMessage += 'Unknown error: ' + e.message;
+                        }
+                        document.getElementById('error-message').style.display = 'block';
+                        document.getElementById('error-message').innerText = errorMessage;
+                        watchAdButton.disabled = false;
+                        watchAdButton.style.opacity = '1';
+                        status.style.display = 'none';
+                    });
             } catch (e) {
                 document.getElementById('error-message').style.display = 'block';
                 document.getElementById('error-message').innerText = 'Error: ' + e.message;
@@ -113,152 +188,4 @@
         }
     </script>
 </body>
-</html>        .verify-button {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            border-radius: 25px;
-            cursor: pointer;
-            margin: 10px 0;
-            transition: all 0.3s ease;
-            display: none;
-        }
-        
-        .reward-info {
-            background: #0088cc;
-            border: 1px solid #0077b3;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-            color: white;
-        }
-        
-        .reward-amount {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffd700;
-        }
-        
-        .success-message {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            display: none;
-        }
-        
-        .step-indicator {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-            position: relative;
-        }
-        
-        .step {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #ecf0f1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            z-index: 2;
-        }
-        
-        .step.active {
-            background: #3498db;
-            color: white;
-        }
-        
-        .step.completed {
-            background: #27ae60;
-            color: white;
-        }
-        
-        .step-line {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
-            height: 2px;
-            background: #ecf0f1;
-            z-index: 1;
-        }
-        
-        .ad-content {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin: 10px 0;
-            line-height: 1.4;
-        }
-        
-        .verification-countdown {
-            font-size: 16px;
-            color: #e74c3c;
-            font-weight: bold;
-            margin: 10px 0;
-            display: none;
-        }
-        
-        .ton-logo {
-            color: #0088cc;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="logo">📺</div>
-        <h1>Watch Ad & Earn <span class="ton-logo">0.001 TON</span></h1>
-        <p class="subtitle">Complete the ad watching process to earn TON coins</p>
-        
-        <div class="step-indicator">
-            <div class="step active" id="step1">1</div>
-            <div class="step" id="step2">2</div>
-            <div class="step" id="step3">3</div>
-            <div class="step-line"></div>
-        </div>
-        
-        <div class="reward-info">
-            <div>🎁 You will earn</div>
-            <div class="reward-amount">+0.001 TON</div>
-        </div>
-        
-        <!-- Step 1: Watch Ad -->
-        <div id="step1Content">
-            <div class="ad-container">
-                <div style="font-size: 18px; color: #2c3e50; margin-bottom: 15px;">ADVERTISEMENT</div>
-                <div class="ad-video">
-                    <div style="text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: 10px;">🎬</div>
-                        <div>Video Advertisement</div>
-                        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">15 seconds</div>
-                    </div>
-                </div>
-                <div class="ad-progress">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                <div class="countdown" id="countdown">Time remaining: 15 seconds</div>
-                <div class="ad-content">
-                    This is a sample advertisement. Please watch the entire video to earn your TON reward.
-                </div>
-            </div>
-            
-            <button class="watch-button" id="watchButton" onclick="startWatching()">
-                ▶ Start Watching Ad (15s)
-            </button>
-        </div>
-        
-        <!-- Step 2: Verification -->
-        <div id="step2Content" style="display: none;">
-            <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
-            <h2>Verification Required</h2>
-            <p class="subtitle">Please verify that you watched the entire ad</p>
-            
-            <div class="verification-countdown" id="verificationCountdown">
-                Auto-verifying in: <span id="verifyTimer">5</span>s
+</html>
