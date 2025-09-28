@@ -1,625 +1,12 @@
-        return $stmt->execute($values);
-    }
-    
-    public function addTransaction($chat_id, $type, $amount, $description = '') {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO transactions (chat_id, type, amount, description, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-        return $stmt->execute([$chat_id, $type, $amount, $description, time()]);
-    }
-    
-    public function addAdWatch($chat_id, $reward_amount) {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO ad_watches (chat_id, reward_amount, watch_time, created_at)
-            VALUES (?, ?, ?, ?)
-        ");
-        return $stmt->execute([$chat_id, $reward_amount, time(), time()]);
-    }
-    
-    public function addReferral($referrer_chat_id, $referred_chat_id, $referred_username, $level = 1) {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO referrals (referrer_chat_id, referred_chat_id, referred_username, level, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-        return $stmt->execute([$referrer_chat_id, $referred_chat_id, $referred_username, $level, time()]);
-    }
-    
-    public function getUserByRefCode($ref_code) {
-        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE ref_code = ?");
-        $stmt->execute([$ref_code]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    public function getReferralCount($chat_id) {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) as count FROM referrals WHERE referrer_chat_id = ?");
-        $stmt->execute([$chat_id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['count'] ?? 0;
-    }
-    
-    public function getReferralHistory($chat_id, $limit = 50) {
-        $stmt = $this->pdo->prepare("
-            SELECT * FROM referrals 
-            WHERE referrer_chat_id = ? 
-            ORDER BY created_at DESC 
-            LIMIT ?
-        ");
-        $stmt->execute([$chat_id, $limit]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    public function getTotalReferralStats($chat_id) {
-        $stmt = $this->pdo->prepare("
-            SELECT 
-                COUNT(*) as total_referrals,
-                COUNT(CASE WHEN created_at >= ? THEN 1 END) as today_referrals,
-                COUNT(CASE WHEN created_at >= ? THEN 1 END) as week_referrals
-            FROM referrals 
-            WHERE referrer_chat_id = ?
-        ");
-        
-        $today = strtotime('today');
-        $week_ago = strtotime('-7 days');
-        
-        $stmt->execute([$today, $week_ago, $chat_id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    public function getTodayAdWatches($chat_id) {
-        $today = date('Y-m-d');
-        $start_time = strtotime($today);
-        $stmt = $this->pdo->prepare("
-            SELECT COUNT(*) as count FROM ad_watches 
-            WHERE chat_id = ? AND created_at >= ?
-        ");
-        $stmt->execute([$chat_id, $start_time]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['count'] ?? 0;
-    }
-    
-    public function resetDailyLimits() {
-        $today = date('Y-m-d');
-        $stmt = $this->pdo->prepare("
-            UPDATE users SET ads_watched_today = 0, last_daily_reset = ? 
-            WHERE last_daily_reset != ? OR last_daily_reset IS NULL
-        ");
-        return $stmt->execute([$today, $today]);
-    }
-    
-    public function getTopUsers($limit = 10) {
-        $stmt = $this->pdo->prepare("
-            SELECT username, balance, total_referrals, total_earned 
-            FROM users ORDER BY balance DESC LIMIT ?
-        ");
-        $stmt->execute([$limit]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    public function getTotalStats() {
-        $stats = [];
-        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM users");
-        $stats['total_users'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
-        
-        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM ad_watches");
-        $stats['total_ads'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
-        
-        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM withdrawals WHERE status = 'completed'");
-        $stats['total_withdrawals'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
-        
-        return $stats;
-    }
-}
-
-function logError($message) {
-    @file_put_contents(ERROR_LOG, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
-}
-
-function sendMessage($chat_id, $text, $keyboard = null) {
-    $params = array('chat_id' => $chat_id, 'text' => $text, 'parse_mode' => 'HTML');
-    if ($keyboard) $params['reply_markup'] = json_encode($keyboard);
-    $url = API_URL . 'sendMessage?' . http_build_query($params);
-    return @file_get_contents($url) !== false;
-}
-
-function editMessageText($chat_id, $message_id, $text, $keyboard = null) {
-    $params = array('chat_id' => $chat_id, 'message_id' => $message_id, 'text' => $text, 'parse_mode' => 'HTML');
-    if ($keyboard) $params['reply_markup'] = json_encode($keyboard);
-    $url = API_URL . 'editMessageText?' . http_build_query($params);
-    return @file_get_contents($url) !== false;
-}
-
-function generateRefCode($chat_id) {
-    return 'TAK' . substr(md5($chat_id . time()), 0, 7);
-}
-
-function isUserInChannel($chat_id) {
-    $method = 'getChatMember';
-    $params = array('chat_id' => CHANNEL_ID, 'user_id' => $chat_id);
-    $url = API_URL . $method . '?' . http_build_query($params);
-    $response = @file_get_contents($url);
-    
-    if ($response === false) return false;
-    
-    $data = json_decode($response, true);
-    if (isset($data['ok']) && $data['ok'] === true) {
-        $status = $data['result']['status'];
-        return in_array($status, ['member', 'administrator', 'creator', 'restricted']);
-    }
-    return false;
-}
-
-function isValidTONAddress($address) {
-    $address = trim($address);
-    $patterns = [
-        '/^EQ[0-9a-zA-Z_-]{48}$/', '/^UQ[0-9a-zA-Z_-]{48}$/',
-        '/^Ef[0-9a-zA-Z_-]{48}$/', '/^Uf[0-9a-zA-Z_-]{48}$/',
-        '/^0:[0-9a-fA-F]{64}$/', '/^[0-9a-zA-Z_-]{48}$/',
-    ];
-    
-    foreach ($patterns as $pattern) {
-        if (preg_match($pattern, $address)) return true;
-    }
-    
-    if (preg_match('/^EQ[a-zA-Z0-9_-]{44,50}$/', $address)) return true;
-    if (preg_match('/^UQ[a-zA-Z0-9_-]{44,50}$/', $address)) return true;
-    
-    return false;
-}
-
-function getMainKeyboard() {
-    return array('inline_keyboard' => array(
-        array(
-            array('text' => 'Earn TON', 'callback_data' => 'earn'),
-            array('text' => 'Balance', 'callback_data' => 'balance')
-        ),
-        array(
-            array('text' => 'Referrals', 'callback_data' => 'referrals'),
-            array('text' => 'Withdraw', 'callback_data' => 'withdraw')
-        ),
-        array(
-            array('text' => 'Statistics', 'callback_data' => 'statistics')
-        )
-    ));
-}
-
-function getEarnKeyboard() {
-    $webapp_url = "https://takoniads.onrender.com/webapp.html";
-    return array('inline_keyboard' => array(
-        array(array('text' => 'Watch Ad (' . AD_REWARD . ' TON)', 'web_app' => array('url' => $webapp_url))),
-        array(array('text' => 'Check Balance', 'callback_data' => 'balance')),
-        array(array('text' => 'Back to Main', 'callback_data' => 'main_menu'))
-    ));
-}
-
-function getBalanceKeyboard() {
-    return array('inline_keyboard' => array(
-        array(array('text' => 'Watch Another Ad', 'callback_data' => 'earn')),
-        array(array('text' => 'Refresh Balance', 'callback_data' => 'balance')),
-        array(array('text' => 'Back to Main', 'callback_data' => 'main_menu'))
-    ));
-}
-
-function getReferralsKeyboard() {
-    return array('inline_keyboard' => array(
-        array(
-            array('text' => 'Share Referral', 'callback_data' => 'share_referral'),
-            array('text' => 'Full History', 'callback_data' => 'referral_history')
-        ),
-        array(
-            array('text' => 'Refresh', 'callback_data' => 'referrals'),
-            array('text' => 'Back to Main', 'callback_data' => 'main_menu')
-        )
-    ));
-}
-
-function getWithdrawKeyboard($has_address = false) {
-    if ($has_address) {
-        return array('inline_keyboard' => array(
-            array(array('text' => 'Submit Withdrawal', 'callback_data' => 'submit_withdrawal')),
-            array(array('text' => 'Change Address', 'callback_data' => 'enter_ton_address')),
-            array(array('text' => 'Back to Main', 'callback_data' => 'main_menu'))
-        ));
-    } else {
-        return array('inline_keyboard' => array(
-            array(array('text' => 'Enter TON Address', 'callback_data' => 'enter_ton_address')),
-            array(array('text' => 'Back to Main', 'callback_data' => 'main_menu'))
-        ));
-    }
-}
-
-function getChannelJoinKeyboard() {
-    return array('inline_keyboard' => array(
-        array(array('text' => 'Join Channel', 'url' => CHANNEL_URL)),
-        array(array('text' => 'I Joined', 'callback_data' => 'check_join'))
-    ));
-}
-
-function processReferralSystem($referrer_chat_id, $referred_chat_id, $referred_username) {
-    global $db;
-    
-    $current_ref_count = $db->getReferralCount($referrer_chat_id);
-    $new_ref_count = $current_ref_count + 1;
-    
-    $db->addReferral($referrer_chat_id, $referred_chat_id, $referred_username, 1);
-    $db->updateUser($referrer_chat_id, ['total_referrals' => $new_ref_count]);
-    
-    $referrer = $db->getUser($referrer_chat_id);
-    $new_balance = $referrer['balance'] + REF_REWARD;
-    $new_max_balance = max($referrer['max_balance'], $new_balance);
-    
-    $db->updateUser($referrer_chat_id, [
-        'balance' => $new_balance,
-        'max_balance' => $new_max_balance,
-        'total_earned' => $referrer['total_earned'] + REF_REWARD
-    ]);
-    
-    $db->addTransaction($referrer_chat_id, 'referral', REF_REWARD, "Referral #" . $new_ref_count . ": @" . $referred_username);
-    
-    $ref_message = "NEW REFERRAL #" . $new_ref_count . "!\n\n";
-    $ref_message .= "New User: @" . ($referred_username ?: 'Unknown') . "\n";
-    $ref_message .= "Reward Received: " . REF_REWARD . " TON\n";
-    $ref_message .= "Total Referrals: " . $new_ref_count . "\n";
-    $ref_message .= "New Balance: " . number_format($new_balance, 6) . " TON\n\n";
-    
-    if ($new_ref_count == 1) {
-        $ref_message .= "First referral! Welcome to the team!\n";
-    } elseif ($new_ref_count == 5) {
-        $ref_message .= "5 referrals! You're on fire!\n";
-    } elseif ($new_ref_count == 10) {
-        $ref_message .= "10 referrals! Amazing growth!\n";
-    } elseif ($new_ref_count == 25) {
-        $ref_message .= "25 referrals! You're a superstar!\n";
-    } elseif ($new_ref_count == 50) {
-        $ref_message .= "50 referrals! Legend status achieved!\n";
-    } elseif ($new_ref_count % 10 == 0) {
-        $ref_message .= "Milestone reached! Keep going!\n";
-    }
-    
-    $ref_message .= "\nKeep inviting to build your empire!";
-    
-    sendMessage($referrer_chat_id, $ref_message);
-    
-    $welcome_message = "Welcome to Takoni Ads!\n\n";
-    $welcome_message .= "You were referred by @" . ($referrer['username'] ?: 'a friend') . "\n";
-    $welcome_message .= "Start earning " . AD_REWARD . " TON per ad!\n\n";
-    $welcome_message .= "Invite friends to earn " . REF_REWARD . " TON each!";
-    
-    sendMessage($referred_chat_id, $welcome_message, getMainKeyboard());
-}
-
-$db = new Database();
-
-function showMainMenu($chat_id, $user) {
-    $response = "Welcome to Takoni Ads Bot!\n\n";
-    $response .= "Your Balance: " . number_format($user['balance'], 6) . " TON\n";
-    $response .= "Referrals: " . $user['total_referrals'] . "\n\n";
-    $response .= "Available Actions:\n";
-    $response .= "Earn TON: Watch ads and earn " . AD_REWARD . " TON each\n";
-    $response .= "Referrals: Earn " . REF_REWARD . " TON per referral\n";
-    $response .= "Withdraw: Minimum " . MIN_WITHDRAW_AMOUNT . " TON (" . MIN_WITHDRAW_REF . " refs required)\n\n";
-    $response .= "Start earning now!";
-    
-    sendMessage($chat_id, $response, getMainKeyboard());
-}
-
-function processEnhancedStartCommand($chat_id, $text, $username) {
-    global $db;
-    
-    $user = $db->getUser($chat_id);
-    $ref_code = generateRefCode($chat_id);
-    
-    if (!$user) {
-        $user_data = array(
-            'chat_id' => $chat_id, 'username' => $username, 'balance' => 0,
-            'total_referrals' => 0, 'ref_code' => $ref_code, 'last_ad_watch' => 0,
-            'ads_watched_today' => 0, 'last_daily_reset' => date('Y-m-d'),
-            'ton_address' => '', 'total_earned' => 0, 'created_at' => time(),
-            'referred_by' => null, 'max_balance' => 0, 'channel_joined' => true
-        );
-        
-        $parts = explode(' ', $text);
-        if (count($parts) > 1) {
-            $ref_code = $parts[1];
-            $referrer = $db->getUserByRefCode($ref_code);
-            if ($referrer) {
-                $user_data['referred_by'] = $ref_code;
-                processReferralSystem($referrer['chat_id'], $chat_id, $username);
-            }
-        }
-        
-        $db->createUser($user_data);
-        $user = $user_data;
-    }
-    
-    showMainMenu($chat_id, $user);
-}
-
-function showEarnMenu($chat_id, $message_id, $user) {
-    global $db;
-    $ads_today = $db->getTodayAdWatches($chat_id);
-    $ads_remaining = DAILY_AD_LIMIT - $ads_today;
-    
-    $response = "Earn TON\n\n";
-    $response .= "Watch Ads & Earn " . AD_REWARD . " TON Each\n\n";
-    $response .= "How to earn:\n";
-    $response .= "1. Click 'Watch Ad Now' button\n";
-    $response .= "2. Watch the advertisement completely\n";
-    $response .= "3. Get " . AD_REWARD . " TON automatically!\n\n";
-    $response .= "Cooldown: " . AD_COOLDOWN . " seconds between ads\n\n";
-    $response .= "Daily Progress:\n";
-    $response .= "Watched today: " . $ads_today . "/" . DAILY_AD_LIMIT . " ads\n";
-    $response .= "Remaining: " . $ads_remaining . " ads\n\n";
-    $response .= "Balance Stats:\n";
-    $response .= "Current: " . number_format($user['balance'], 6) . " TON\n";
-    $response .= "Highest: " . number_format($user['max_balance'], 6) . " TON\n";
-    $response .= "Total Earned: " . number_format($user['total_earned'], 6) . " TON\n\n";
-    
-    editMessageText($chat_id, $message_id, $response, getEarnKeyboard());
-}
-
-function showBalanceMenu($chat_id, $message_id, $user) {
-    $response = "Your Balance\n\n";
-    $response .= "Available: " . number_format($user['balance'], 6) . " TON\n";
-    $response .= "Highest Balance: " . number_format($user['max_balance'], 6) . " TON\n";
-    $response .= "Total Earned: " . number_format($user['total_earned'], 6) . " TON\n";
-    $response .= "Referrals: " . $user['total_referrals'] . "\n\n";
-    
-    editMessageText($chat_id, $message_id, $response, getBalanceKeyboard());
-}
-
-function showReferralsMenu($chat_id, $message_id, $user) {
-    global $db;
-    
-    $ref_stats = $db->getTotalReferralStats($chat_id);
-    $referral_history = $db->getReferralHistory($chat_id, 10);
-    $total_earned_from_refs = $user['total_referrals'] * REF_REWARD;
-    
-    $response = "Referral System\n\n";
-    $response .= "Statistics:\n";
-    $response .= "Total Referrals: " . $user['total_referrals'] . "\n";
-    $response .= "Today: " . ($ref_stats['today_referrals'] ?? 0) . "\n";
-    $response .= "This Week: " . ($ref_stats['week_referrals'] ?? 0) . "\n";
-    $response .= "Earned from Referrals: " . number_format($total_earned_from_refs, 6) . " TON\n\n";
-    $response .= "Your Referral Code:\n";
-    $response .= $user['ref_code'] . "\n\n";
-    $response .= "Your Referral Link:\n";
-    $response .= "https://t.me/" . BOT_USERNAME . "?start=" . $user['ref_code'] . "\n\n";
-    $response .= "Referral Reward: " . REF_REWARD . " TON per user\n\n";
-    
-    if (!empty($referral_history)) {
-        $response .= "Recent Referrals:\n";
-        foreach ($referral_history as $ref) {
-            $date = date('M j', $ref['created_at']);
-            $response .= "@" . ($ref['referred_username'] ?: 'Unknown') . " - $date\n";
-        }
-        $response .= "\n";
-    }
-    
-    $response .= "How it works:\n";
-    $response .= "1. Share your referral link\n";
-    $response .= "2. Earn " . REF_REWARD . " TON for each friend who joins\n";
-    $response .= "3. Track all your referrals forever\n";
-    $response .= "4. No limits - refer endlessly!";
-    
-    editMessageText($chat_id, $message_id, $response, getReferralsKeyboard());
-}
-
-function shareReferral($chat_id, $user) {
-    $ref_link = "https://t.me/" . BOT_USERNAME . "?start=" . $user['ref_code'];
-    $response = "Share Your Referral Link\n\n";
-    $response .= "Invite friends and earn " . REF_REWARD . " TON for each referral!\n\n";
-    $response .= "Your Referral Link:\n";
-    $response .= $ref_link . "\n\n";
-    $response .= "Your Referrals: " . $user['total_referrals'] . "\n";
-    $response .= "Earned from Referrals: " . number_format($user['total_referrals'] * REF_REWARD, 6) . " TON\n\n";
-    $response .= "Share this message:\n";
-    $response .= "Join Takoni Ads Bot and earn free TON by watching ads! Use my referral link: " . $ref_link;
-    
-    sendMessage($chat_id, $response);
-}
-
-function showFullReferralHistory($chat_id, $message_id, $user) {
-    global $db;
-    
-    $referral_history = $db->getReferralHistory($chat_id, 100);
-    $total_refs = count($referral_history);
-    
-    $response = "Complete Referral History\n\n";
-    $response .= "Total referrals: " . $total_refs . "\n";
-    $response .= "Total earned: " . number_format($total_refs * REF_REWARD, 6) . " TON\n\n";
-    
-    if (empty($referral_history)) {
-        $response .= "No referrals yet. Start sharing your link!";
-    } else {
-        $response .= "All your referrals are saved permanently:\n\n";
-        
-        foreach ($referral_history as $index => $ref) {
-            $number = $index + 1;
-            $username = $ref['referred_username'] ?: 'Unknown';
-            $date = date('Y-m-d H:i', $ref['created_at']);
-            
-            $response .= $number . ". @" . $username . " - " . $date . "\n";
-            
-            if (($index + 1) % 15 === 0 && ($index + 1) < $total_refs) {
-                $response .= "\n--- Continued ---\n\n";
-            }
-        }
-    }
-    
-    $keyboard = array('inline_keyboard' => array(
-        array(array('text' => 'Back to Stats', 'callback_data' => 'referrals')),
-        array(array('text' => 'Main Menu', 'callback_data' => 'main_menu'))
-    ));
-    
-    editMessageText($chat_id, $message_id, $response, $keyboard);
-}
-
-function showWithdrawMenu($chat_id, $message_id, $user) {
-    $has_address = !empty($user['ton_address']);
-    $response = "Withdraw TON\n\n";
-    $response .= "Requirements:\n";
-    $response .= "Minimum " . MIN_WITHDRAW_REF . " referrals\n";
-    $response .= "Minimum " . MIN_WITHDRAW_AMOUNT . " TON balance\n\n";
-    $response .= "Your Stats:\n";
-    $response .= "Referrals: " . $user['total_referrals'] . "/" . MIN_WITHDRAW_REF . "\n";
-    $response .= "Balance: " . number_format($user['balance'], 6) . "/" . MIN_WITHDRAW_AMOUNT . " TON\n\n";
-    
-    if ($has_address) {
-        $response .= "Your TON Address:\n" . $user['ton_address'] . "\n\n";
-    } else {
-        $response .= "No TON address set\n\nPlease set your TON wallet address first.\n\n";
-    }
-    
-    editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard($has_address));
-}
-
-function processWithdrawal($chat_id, $message_id, $user) {
-    global $db;
-    
-    if ($user['total_referrals'] < MIN_WITHDRAW_REF) {
-        $response = "Insufficient Referrals\n\nYou need at least " . MIN_WITHDRAW_REF . " referrals to withdraw. You have " . $user['total_referrals'] . ".";
-        editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(!empty($user['ton_address'])));
-        return;
-    }
-    
-    if ($user['balance'] < MIN_WITHDRAW_AMOUNT) {
-        $response = "Insufficient Balance\n\nMinimum withdrawal amount is " . MIN_WITHDRAW_AMOUNT . " TON. You have " . number_format($user['balance'], 6) . " TON.";
-        editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(!empty($user['ton_address'])));
-        return;
-    }
-    
-    if (empty($user['ton_address'])) {
-        $response = "No TON Address\n\nPlease set your TON wallet address first.";
-        editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard(false));
-        return;
-    }
-    
-    $withdrawal_amount = $user['balance'];
-    $db->updateUser($chat_id, array(
-        'balance' => 0, 'total_earned' => $user['total_earned'] + $withdrawal_amount
-    ));
-    
-    $stmt = $db->pdo->prepare("
-        INSERT INTO withdrawals (chat_id, amount, ton_address, status, created_at)
-        VALUES (?, ?, ?, 'pending', ?)
-    ");
-    $stmt->execute([$chat_id, $withdrawal_amount, $user['ton_address'], time()]);
-    
-    $response = "Withdrawal Request Submitted!\n\n";
-    $response .= "Amount: " . number_format($withdrawal_amount, 6) . " TON\n";
-    $response .= "Address: " . $user['ton_address'] . "\n";
-    $response .= "Status: Pending\n\n";
-    $response .= "Your withdrawal request has been received and will be processed within 24 hours.\n\n";
-    $response .= "Thank you for using Takoni Ads!";
-    
-    editMessageText($chat_id, $message_id, $response, getMainKeyboard());
-}
-
-function showStatistics($chat_id, $message_id, $user) {
-    global $db;
-    $top_users = $db->getTopUsers(5);
-    $stats = $db->getTotalStats();
-    
-    $response = "Global Statistics\n\n";
-    $response .= "Total Users: " . $stats['total_users'] . "\n";
-    $response .= "Total Ads Watched: " . $stats['total_ads'] . "\n";
-    $response .= "Total Withdrawals: " . $stats['total_withdrawals'] . "\n\n";
-    $response .= "Top Earners:\n";
-    
-    foreach ($top_users as $index => $top_user) {
-        $rank = $index + 1;
-        $name = $top_user['username'] ?: 'Unknown';
-        $balance = number_format($top_user['balance'], 6);
-        $response .= $rank . ". @" . $name . " - " . $balance . " TON\n";
-    }
-    
-    $response .= "\nYour Position: Keep watching ads to climb the leaderboard!";
-    
-    editMessageText($chat_id, $message_id, $response, getMainKeyboard());
-}
-
-function processCallbackQuery($callback) {
-    global $db;
-    $chat_id = $callback['message']['chat']['id'];
-    $message_id = $callback['message']['message_id'];
-    $data = $callback['data'];
-    
-    $user = $db->getUser($chat_id);
-    if (!$user) {
-        $ref_code = generateRefCode($chat_id);
-        $user_data = array(
-            'chat_id' => $chat_id, 'username' => 'Unknown', 'balance' => 0,
-            'total_referrals' => 0, 'ref_code' => $ref_code, 'last_ad_watch' => 0,
-            'ads_watched_today' => 0, 'last_daily_reset' => date('Y-m-d'),
-            'ton_address' => '', 'total_earned' => 0, 'created_at' => time(),
-            'referred_by' => null, 'max_balance' => 0, 'channel_joined' => false
-        );
-        $db->createUser($user_data);
-        $user = $user_data;
-    }
-    
-    if ($data == 'check_join') {
-        $channel_joined = isUserInChannel($chat_id);
-        if ($channel_joined) {
-            $db->updateUser($chat_id, array('channel_joined' => 1));
-            showMainMenu($chat_id, $user);
-        } else {
-            editMessageText($chat_id, $message_id, "You haven't joined the channel yet!\n\nPlease join " . CHANNEL_USERNAME . " first, then click 'I Joined'", getChannelJoinKeyboard());
-        }
-        return;
-    }
-    
-    if (!$user['channel_joined']) {
-        editMessageText($chat_id, $message_id, "Channel Membership Required\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the 'I Joined' button below.", getChannelJoinKeyboard());
-        return;
-    }
-    
-    switch ($data) {
-        case 'main_menu': showMainMenu($chat_id, $user); break;
-        case 'earn': showEarnMenu($chat_id, $message_id, $user); break;
-        case 'balance': showBalanceMenu($chat_id, $message_id, $user); break;
-        case 'referrals': showReferralsMenu($chat_id, $message_id, $user); break;
-        case 'withdraw': showWithdrawMenu($chat_id, $message_id, $user); break;
-        case 'enter_ton_address': 
-            $db->updateUser($chat_id, array('awaiting_ton_address' => 1));
-            sendMessage($chat_id, "Enter TON Address\n\nPlease send your TON wallet address now:\n\nExamples:\nEQDhG2TjEqX_iNGuOdS_SP2GpvwOxMVupxf5mvMAKIid46HS\nUQDhG2TjEqX_iNGuOdS_SP2GpvwOxMVupxf5mvMAKIid46HS");
-            break;
-        case 'submit_withdrawal': processWithdrawal($chat_id, $message_id, $user); break;
-        case 'share_referral': shareReferral($chat_id, $user); break;
-        case 'referral_history': showFullReferralHistory($chat_id, $message_id, $user); break;
-        case 'statistics': showStatistics($chat_id, $message_id, $user); break;
-        default: showMainMenu($chat_id, $user); break;
-    }
-}
-
-function processUpdate($update) {
-    global $db;
-    $db->resetDailyLimits();
-    
-    if (isset($update['message'])) {
-        $message = $update['message'];
-        $chat_id = $message['chat']['id'];
-        $text = $message['text'] ?? '';
-        $username = $message['chat']['username'] ?? 'Unknown';
-        
-        if (strpos($text, '/') === 0) {
-            $user = $db->getUser($chat_id);
-            if (!$user) {
-                processEnhancedStartCommand($chat_id, $text, $username);
-                return;
-            }
-            if (!$user['channel_joined']) {
-                $channel_joined = isUserInChannel($chat_id);
-                if ($channel_joined) {
-                    $db->updateUser($chat_id, array('channel_joined' => 1));
-                    showMainMenu($chat_id, $user);
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $bot_token = getenv('BOT_TOKEN');
-if (!$bot_token) die("❌ BOT_TOKEN not set");
+if (!$bot_token) {
+    logError("BOT_TOKEN not set");
+    die("BOT_TOKEN not set");
+}
 
 define('BOT_TOKEN', $bot_token);
 define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
@@ -636,6 +23,11 @@ define('CHANNEL_ID', '-1002855918077');
 define('CHANNEL_URL', 'https://t.me/TakoniFinance');
 define('BOT_USERNAME', 'takoniAdsBot');
 
+// Basit log fonksiyonu
+function logError($message) {
+    error_log(date('[Y-m-d H:i:s] ') . $message . "\n", 3, ERROR_LOG);
+}
+
 class Database {
     private $pdo;
     
@@ -645,12 +37,8 @@ class Database {
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->initTables();
         } catch (PDOException $e) {
-            $this->logError("DB Error: " . $e->getMessage());
+            logError("DB Error: " . $e->getMessage());
         }
-    }
-    
-    private function logError($message) {
-        @file_put_contents(ERROR_LOG, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
     }
     
     private function initTables() {
@@ -662,27 +50,6 @@ class Database {
                 total_earned REAL DEFAULT 0, created_at INTEGER, referred_by TEXT,
                 max_balance REAL DEFAULT 0, channel_joined BOOLEAN DEFAULT 0,
                 updated_at INTEGER, awaiting_ton_address BOOLEAN DEFAULT 0
-            )",
-            "CREATE TABLE IF NOT EXISTS referrals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, referrer_chat_id INTEGER,
-                referred_chat_id INTEGER, referred_username TEXT, level INTEGER DEFAULT 1,
-                earned_amount REAL DEFAULT 0, created_at INTEGER,
-                FOREIGN KEY (referrer_chat_id) REFERENCES users (chat_id),
-                FOREIGN KEY (referred_chat_id) REFERENCES users (chat_id)
-            )",
-            "CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, type TEXT,
-                amount REAL, description TEXT, created_at INTEGER,
-                FOREIGN KEY (chat_id) REFERENCES users (chat_id)
-            )",
-            "CREATE TABLE IF NOT EXISTS withdrawals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, amount REAL,
-                ton_address TEXT, status TEXT DEFAULT 'pending', created_at INTEGER,
-                processed_at INTEGER, FOREIGN KEY (chat_id) REFERENCES users (chat_id)
-            )",
-            "CREATE TABLE IF NOT EXISTS ad_watches (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, reward_amount REAL,
-                watch_time INTEGER, created_at INTEGER, FOREIGN KEY (chat_id) REFERENCES users (chat_id)
             )"
         ];
         
@@ -727,133 +94,33 @@ class Database {
         $stmt = $this->pdo->prepare("UPDATE users SET $set_clause WHERE chat_id = ?");
         return $stmt->execute($values);
     }
-    
-    public function addTransaction($chat_id, $type, $amount, $description = '') {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO transactions (chat_id, type, amount, description, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-        return $stmt->execute([$chat_id, $type, $amount, $description, time()]);
-    }
-    
-    public function addAdWatch($chat_id, $reward_amount) {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO ad_watches (chat_id, reward_amount, watch_time, created_at)
-            VALUES (?, ?, ?, ?)
-        ");
-        return $stmt->execute([$chat_id, $reward_amount, time(), time()]);
-    }
-    
-    public function addReferral($referrer_chat_id, $referred_chat_id, $referred_username, $level = 1) {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO referrals (referrer_chat_id, referred_chat_id, referred_username, level, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-        return $stmt->execute([$referrer_chat_id, $referred_chat_id, $referred_username, $level, time()]);
-    }
-    
-    public function getUserByRefCode($ref_code) {
-        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE ref_code = ?");
-        $stmt->execute([$ref_code]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    public function getReferralCount($chat_id) {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) as count FROM referrals WHERE referrer_chat_id = ?");
-        $stmt->execute([$chat_id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['count'] ?? 0;
-    }
-    
-    public function getReferralHistory($chat_id, $limit = 50) {
-        $stmt = $this->pdo->prepare("
-            SELECT * FROM referrals 
-            WHERE referrer_chat_id = ? 
-            ORDER BY created_at DESC 
-            LIMIT ?
-        ");
-        $stmt->execute([$chat_id, $limit]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    public function getTotalReferralStats($chat_id) {
-        $stmt = $this->pdo->prepare("
-            SELECT 
-                COUNT(*) as total_referrals,
-                COUNT(CASE WHEN created_at >= ? THEN 1 END) as today_referrals,
-                COUNT(CASE WHEN created_at >= ? THEN 1 END) as week_referrals
-            FROM referrals 
-            WHERE referrer_chat_id = ?
-        ");
-        
-        $today = strtotime('today');
-        $week_ago = strtotime('-7 days');
-        
-        $stmt->execute([$today, $week_ago, $chat_id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    public function getTodayAdWatches($chat_id) {
-        $today = date('Y-m-d');
-        $start_time = strtotime($today);
-        $stmt = $this->pdo->prepare("
-            SELECT COUNT(*) as count FROM ad_watches 
-            WHERE chat_id = ? AND created_at >= ?
-        ");
-        $stmt->execute([$chat_id, $start_time]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['count'] ?? 0;
-    }
-    
-    public function resetDailyLimits() {
-        $today = date('Y-m-d');
-        $stmt = $this->pdo->prepare("
-            UPDATE users SET ads_watched_today = 0, last_daily_reset = ? 
-            WHERE last_daily_reset != ? OR last_daily_reset IS NULL
-        ");
-        return $stmt->execute([$today, $today]);
-    }
-    
-    public function getTopUsers($limit = 10) {
-        $stmt = $this->pdo->prepare("
-            SELECT username, balance, total_referrals, total_earned 
-            FROM users ORDER BY balance DESC LIMIT ?
-        ");
-        $stmt->execute([$limit]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    public function getTotalStats() {
-        $stats = [];
-        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM users");
-        $stats['total_users'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
-        
-        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM ad_watches");
-        $stats['total_ads'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
-        
-        $stmt = $this->pdo->query("SELECT COUNT(*) as count FROM withdrawals WHERE status = 'completed'");
-        $stats['total_withdrawals'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
-        
-        return $stats;
-    }
-}
-
-function logError($message) {
-    @file_put_contents(ERROR_LOG, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
 }
 
 function sendMessage($chat_id, $text, $keyboard = null) {
-    $params = array('chat_id' => $chat_id, 'text' => $text, 'parse_mode' => 'HTML');
-    if ($keyboard) $params['reply_markup'] = json_encode($keyboard);
+    logError("Sending message to: $chat_id, text: " . substr($text, 0, 100));
+    
+    $params = array(
+        'chat_id' => $chat_id, 
+        'text' => $text, 
+        'parse_mode' => 'HTML'
+    );
+    
+    if ($keyboard) {
+        $params['reply_markup'] = json_encode($keyboard);
+    }
+    
     $url = API_URL . 'sendMessage?' . http_build_query($params);
-    return @file_get_contents($url) !== false;
-}
-
-function editMessageText($chat_id, $message_id, $text, $keyboard = null) {
-    $params = array('chat_id' => $chat_id, 'message_id' => $message_id, 'text' => $text, 'parse_mode' => 'HTML');
-    if ($keyboard) $params['reply_markup'] = json_encode($keyboard);
-    $url = API_URL . 'editMessageText?' . http_build_query($params);
-    return @file_get_contents($url) !== false;
+    logError("API URL: " . $url);
+    
+    $result = @file_get_contents($url);
+    
+    if ($result === false) {
+        logError("Failed to send message to: $chat_id");
+        return false;
+    }
+    
+    logError("Message sent successfully to: $chat_id");
+    return true;
 }
 
 function generateRefCode($chat_id) {
@@ -861,37 +128,35 @@ function generateRefCode($chat_id) {
 }
 
 function isUserInChannel($chat_id) {
+    logError("Checking channel membership for: $chat_id");
+    
+    // TEST MOD: Herkesi kanalda kabul et
+    logError("TEST MOD: Channel check bypassed for: $chat_id");
+    return true;
+    
+    /*
     $method = 'getChatMember';
     $params = array('chat_id' => CHANNEL_ID, 'user_id' => $chat_id);
     $url = API_URL . $method . '?' . http_build_query($params);
+    
     $response = @file_get_contents($url);
     
-    if ($response === false) return false;
+    if ($response === false) {
+        logError("Failed to check channel membership for: $chat_id");
+        return false;
+    }
     
     $data = json_decode($response, true);
     if (isset($data['ok']) && $data['ok'] === true) {
         $status = $data['result']['status'];
-        return in_array($status, ['member', 'administrator', 'creator', 'restricted']);
-    }
-    return false;
-}
-
-function isValidTONAddress($address) {
-    $address = trim($address);
-    $patterns = [
-        '/^EQ[0-9a-zA-Z_-]{48}$/', '/^UQ[0-9a-zA-Z_-]{48}$/',
-        '/^Ef[0-9a-zA-Z_-]{48}$/', '/^Uf[0-9a-zA-Z_-]{48}$/',
-        '/^0:[0-9a-fA-F]{64}$/', '/^[0-9a-zA-Z_-]{48}$/',
-    ];
-    
-    foreach ($patterns as $pattern) {
-        if (preg_match($pattern, $address)) return true;
+        $is_member = in_array($status, ['member', 'administrator', 'creator', 'restricted']);
+        logError("Channel membership for $chat_id: $status -> " . ($is_member ? 'MEMBER' : 'NOT MEMBER'));
+        return $is_member;
     }
     
-    if (preg_match('/^EQ[a-zA-Z0-9_-]{44,50}$/', $address)) return true;
-    if (preg_match('/^UQ[a-zA-Z0-9_-]{44,50}$/', $address)) return true;
-    
+    logError("Channel check failed for: $chat_id");
     return false;
+    */
 }
 
 function getMainKeyboard() {
@@ -903,56 +168,8 @@ function getMainKeyboard() {
         array(
             array('text' => '👥 Referrals', 'callback_data' => 'referrals'),
             array('text' => '🏧 Withdraw', 'callback_data' => 'withdraw')
-        ),
-        array(
-            array('text' => '📊 Statistics', 'callback_data' => 'statistics')
         )
     ));
-}
-
-function getEarnKeyboard() {
-    $webapp_url = "https://takoniads.onrender.com/webapp.html";
-    return array('inline_keyboard' => array(
-        array(array('text' => '📱 Watch Ad (' . AD_REWARD . ' TON)', 'web_app' => array('url' => $webapp_url))),
-        array(array('text' => '🔄 Check Balance', 'callback_data' => 'balance')),
-        array(array('text' => '⬅️ Back to Main', 'callback_data' => 'main_menu'))
-    ));
-}
-
-function getBalanceKeyboard() {
-    return array('inline_keyboard' => array(
-        array(array('text' => '📱 Watch Another Ad', 'callback_data' => 'earn')),
-        array(array('text' => '🔄 Refresh Balance', 'callback_data' => 'balance')),
-        array(array('text' => '⬅️ Back to Main', 'callback_data' => 'main_menu'))
-    ));
-}
-
-function getReferralsKeyboard() {
-    return array('inline_keyboard' => array(
-        array(
-            array('text' => '📤 Share Referral', 'callback_data' => 'share_referral'),
-            array('text' => '📊 Full History', 'callback_data' => 'referral_history')
-        ),
-        array(
-            array('text' => '🔄 Refresh', 'callback_data' => 'referrals'),
-            array('text' => '⬅️ Back to Main', 'callback_data' => 'main_menu')
-        )
-    ));
-}
-
-function getWithdrawKeyboard($has_address = false) {
-    if ($has_address) {
-        return array('inline_keyboard' => array(
-            array(array('text' => '🚀 Submit Withdrawal', 'callback_data' => 'submit_withdrawal')),
-            array(array('text' => '✏️ Change Address', 'callback_data' => 'enter_ton_address')),
-            array(array('text' => '⬅️ Back to Main', 'callback_data' => 'main_menu'))
-        ));
-    } else {
-        return array('inline_keyboard' => array(
-            array(array('text' => '💳 Enter TON Address', 'callback_data' => 'enter_ton_address')),
-            array(array('text' => '⬅️ Back to Main', 'callback_data' => 'main_menu'))
-        ));
-    }
 }
 
 function getChannelJoinKeyboard() {
@@ -962,90 +179,9 @@ function getChannelJoinKeyboard() {
     ));
 }
 
-// GELİŞTİRİLMİŞ REFERANS SİSTEMİ
-function processReferralSystem($referrer_chat_id, $referred_chat_id, $referred_username) {
-    global $db;
-    
-    logError("Processing referral: $referrer_chat_id referred $referred_chat_id");
-    
-    // Mevcut referans sayısını al
-    $current_ref_count = $db->getReferralCount($referrer_chat_id);
-    $new_ref_count = $current_ref_count + 1;
-    
-    logError("Current ref count: $current_ref_count, New ref count: $new_ref_count");
-    
-    // Referans kaydı oluştur
-    $referral_added = $db->addReferral($referrer_chat_id, $referred_chat_id, $referred_username, 1);
-    logError("Referral added: " . ($referral_added ? "YES" : "NO"));
-    
-    // Kullanıcının toplam referans sayısını güncelle
-    $update_result = $db->updateUser($referrer_chat_id, ['total_referrals' => $new_ref_count]);
-    logError("User updated: " . ($update_result ? "YES" : "NO"));
-    
-    // Referrer bilgilerini al
-    $referrer = $db->getUser($referrer_chat_id);
-    if (!$referrer) {
-        logError("Referrer not found: $referrer_chat_id");
-        return;
-    }
-    
-    // Ödülü hesapla ve bakiye güncelle
-    $new_balance = $referrer['balance'] + REF_REWARD;
-    $new_max_balance = max($referrer['max_balance'], $new_balance);
-    
-    logError("Old balance: " . $referrer['balance'] . ", New balance: " . $new_balance);
-    
-    $balance_updated = $db->updateUser($referrer_chat_id, [
-        'balance' => $new_balance,
-        'max_balance' => $new_max_balance,
-        'total_earned' => $referrer['total_earned'] + REF_REWARD
-    ]);
-    
-    logError("Balance updated: " . ($balance_updated ? "YES" : "NO"));
-    
-    // Transaction kaydı
-    $transaction_added = $db->addTransaction($referrer_chat_id, 'referral', REF_REWARD, "Referral #" . $new_ref_count . ": @" . $referred_username);
-    logError("Transaction added: " . ($transaction_added ? "YES" : "NO"));
-    
-    // REFERANS BİLDİRİM MESAJI
-    $ref_message = "🎉 <b>NEW REFERRAL #" . $new_ref_count . "!</b>\n\n";
-    $ref_message .= "👤 <b>New User:</b> @" . ($referred_username ?: 'Unknown') . "\n";
-    $ref_message .= "💰 <b>Reward Received:</b> " . REF_REWARD . " TON\n";
-    $ref_message .= "📊 <b>Total Referrals:</b> <b>" . $new_ref_count . "</b>\n";
-    $ref_message .= "💳 <b>New Balance:</b> " . number_format($new_balance, 6) . " TON\n\n";
-    
-    // Özel mesajlar
-    if ($new_ref_count == 1) {
-        $ref_message .= "🎊 <b>First referral! Welcome to the team!</b>\n";
-    } elseif ($new_ref_count == 5) {
-        $ref_message .= "🔥 <b>5 referrals! You're on fire!</b>\n";
-    } elseif ($new_ref_count == 10) {
-        $ref_message .= "🚀 <b>10 referrals! Amazing growth!</b>\n";
-    } elseif ($new_ref_count == 25) {
-        $ref_message .= "🏆 <b>25 referrals! You're a superstar!</b>\n";
-    } elseif ($new_ref_count == 50) {
-        $ref_message .= "👑 <b>50 referrals! Legend status achieved!</b>\n";
-    } elseif ($new_ref_count % 10 == 0) {
-        $ref_message .= "⭐ <b>Milestone reached! Keep going!</b>\n";
-    }
-    
-    $ref_message .= "\nKeep inviting to build your empire! 💪";
-    
-    $message_sent = sendMessage($referrer_chat_id, $ref_message);
-    logError("Referral message sent: " . ($message_sent ? "YES" : "NO"));
-    
-    // Yeni kullanıcıya hoş geldin mesajı
-    $welcome_message = "👋 <b>Welcome to Takoni Ads!</b>\n\n";
-    $welcome_message .= "You were referred by @" . ($referrer['username'] ?: 'a friend') . "\n";
-    $welcome_message .= "Start earning " . AD_REWARD . " TON per ad!\n\n";
-    $welcome_message .= "Invite friends to earn " . REF_REWARD . " TON each!";
-    
-    sendMessage($referred_chat_id, $welcome_message, getMainKeyboard());
-}
-
-$db = new Database();
-
 function showMainMenu($chat_id, $user) {
+    logError("Showing main menu for: $chat_id");
+    
     $response = "🤖 <b>Welcome to Takoni Ads Bot!</b>\n\n";
     $response .= "💰 <b>Your Balance:</b> " . number_format($user['balance'], 6) . " TON\n";
     $response .= "👥 <b>Referrals:</b> " . $user['total_referrals'] . "\n\n";
@@ -1055,13 +191,30 @@ function showMainMenu($chat_id, $user) {
     $response .= "• <b>Withdraw:</b> Minimum " . MIN_WITHDRAW_AMOUNT . " TON (" . MIN_WITHDRAW_REF . " refs required)\n\n";
     $response .= "🚀 <b>Start earning now!</b>";
     
-    sendMessage($chat_id, $response, getMainKeyboard());
+    $success = sendMessage($chat_id, $response, getMainKeyboard());
+    
+    if (!$success) {
+        logError("FAILED to show main menu for: $chat_id");
+        // Alternatif mesaj gönder
+        sendMessage($chat_id, "Welcome! Use the buttons below to start earning TON.", getMainKeyboard());
+    }
 }
 
-function processEnhancedStartCommand($chat_id, $text, $username) {
+function processStartCommand($chat_id, $text, $username) {
     global $db;
     
-    logError("Processing start command for: $chat_id, text: $text");
+    logError("Processing start command for: $chat_id, username: $username");
+    
+    // Önce kanal kontrolü - TEST MOD: herkes geçiyor
+    $channel_joined = isUserInChannel($chat_id);
+    
+    if (!$channel_joined) {
+        logError("User not in channel: $chat_id");
+        sendMessage($chat_id, "📢 <b>Channel Membership Required</b>\n\nTo use this bot, you must join our official channel:\n" . CHANNEL_USERNAME . "\n\nAfter joining, click the '✅ I Joined' button below.", getChannelJoinKeyboard());
+        return;
+    }
+    
+    logError("User is in channel, proceeding: $chat_id");
     
     $user = $db->getUser($chat_id);
     $ref_code = generateRefCode($chat_id);
@@ -1070,33 +223,142 @@ function processEnhancedStartCommand($chat_id, $text, $username) {
         logError("Creating new user: $chat_id");
         
         $user_data = array(
-            'chat_id' => $chat_id, 'username' => $username, 'balance' => 0,
-            'total_referrals' => 0, 'ref_code' => $ref_code, 'last_ad_watch' => 0,
-            'ads_watched_today' => 0, 'last_daily_reset' => date('Y-m-d'),
-            'ton_address' => '', 'total_earned' => 0, 'created_at' => time(),
-            'referred_by' => null, 'max_balance' => 0, 'channel_joined' => false // Kanal kontrolü aktif
+            'chat_id' => $chat_id, 
+            'username' => $username, 
+            'balance' => 0,
+            'total_referrals' => 0, 
+            'ref_code' => $ref_code, 
+            'last_ad_watch' => 0,
+            'ads_watched_today' => 0, 
+            'last_daily_reset' => date('Y-m-d'),
+            'ton_address' => '', 
+            'total_earned' => 0, 
+            'created_at' => time(),
+            'referred_by' => null, 
+            'max_balance' => 0, 
+            'channel_joined' => 1
         );
         
-        // Referral kontrolü - DÜZELTİLDİ
+        // Referral kontrolü
         $parts = explode(' ', $text);
         if (count($parts) > 1) {
             $ref_code_param = $parts[1];
             logError("Referral code detected: $ref_code_param");
-            
-            $referrer = $db->getUserByRefCode($ref_code_param);
-            if ($referrer) {
-                logError("Referrer found: " . $referrer['chat_id']);
-                $user_data['referred_by'] = $ref_code_param;
-                
-                // Referans sistemini tetikle - HEMEN ÇAĞIR
-                processReferralSystem($referrer['chat_id'], $chat_id, $username);
-            } else {
-                logError("Referrer not found for code: $ref_code_param");
-            }
         }
         
         $db->createUser($user_data);
-          processUpdate($update);
+        $user = $user_data;
+        logError("New user created: $chat_id");
+    } else {
+        logError("Existing user found: $chat_id");
     }
+    
+    // Ana menüyü göster
+    logError("Calling showMainMenu for: $chat_id");
+    showMainMenu($chat_id, $user);
+}
+
+function processCallbackQuery($callback) {
+    global $db;
+    
+    $chat_id = $callback['message']['chat']['id'];
+    $data = $callback['data'];
+    
+    logError("Callback received: $data from $chat_id");
+    
+    if ($data == 'check_join') {
+        $channel_joined = isUserInChannel($chat_id);
+        if ($channel_joined) {
+            $db->updateUser($chat_id, array('channel_joined' => 1));
+            $user = $db->getUser($chat_id);
+            showMainMenu($chat_id, $user);
+        } else {
+            sendMessage($chat_id, "❌ <b>You haven't joined the channel yet!</b>\n\nPlease join " . CHANNEL_USERNAME . " first, then click '✅ I Joined'", getChannelJoinKeyboard());
+        }
+        return;
+    }
+    
+    $user = $db->getUser($chat_id);
+    if (!$user) {
+        logError("User not found in callback: $chat_id");
+        return;
+    }
+    
+    // Basit menü işlemleri
+    switch ($data) {
+        case 'earn':
+            sendMessage($chat_id, "💰 <b>Earn TON</b>\n\nClick the button below to watch ads and earn " . AD_REWARD . " TON per ad!", getMainKeyboard());
+            break;
+        case 'balance':
+            sendMessage($chat_id, "💳 <b>Your Balance</b>\n\n💰 Available: " . number_format($user['balance'], 6) . " TON\n👥 Referrals: " . $user['total_referrals'], getMainKeyboard());
+            break;
+        case 'referrals':
+            sendMessage($chat_id, "👥 <b>Referrals</b>\n\nYour referral code: <code>" . $user['ref_code'] . "</code>\nEarn " . REF_REWARD . " TON per referral!", getMainKeyboard());
+            break;
+        case 'withdraw':
+            sendMessage($chat_id, "🏧 <b>Withdraw</b>\n\nMinimum withdrawal: " . MIN_WITHDRAW_AMOUNT . " TON\nRequired referrals: " . MIN_WITHDRAW_REF, getMainKeyboard());
+            break;
+        default:
+            showMainMenu($chat_id, $user);
+            break;
+    }
+}
+
+function processUpdate($update) {
+    global $db;
+    
+    logError("Raw update: " . json_encode($update));
+    
+    if (isset($update['message'])) {
+        $message = $update['message'];
+        $chat_id = $message['chat']['id'];
+        $text = $message['text'] ?? '';
+        $username = $message['chat']['username'] ?? 'Unknown';
+        
+        logError("Message received from $chat_id: $text");
+        
+        if (strpos($text, '/start') === 0) {
+            logError("Start command detected");
+            processStartCommand($chat_id, $text, $username);
+            return;
+        }
+        
+        // Diğer mesajlar için ana menü göster
+        $user = $db->getUser($chat_id);
+        if ($user) {
+            showMainMenu($chat_id, $user);
+        } else {
+            processStartCommand($chat_id, '/start', $username);
+        }
+        
+    } elseif (isset($update['callback_query'])) {
+        logError("Callback query detected");
+        processCallbackQuery($update['callback_query']);
+    } else {
+        logError("Unknown update type received");
+    }
+}
+
+// Database bağlantısı
+$db = new Database();
+
+// Ana update işlemi
+$input = file_get_contents("php://input");
+logError("Raw input received: " . $input);
+
+if ($input) {
+    $update = json_decode($input, true);
+    if ($update) {
+        processUpdate($update);
+    } else {
+        logError("Failed to decode JSON input");
+    }
+} else {
+    logError("No input received");
+}
+
+// Test için basit bir endpoint
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    echo "Bot is running! Check error.log for details.";
 }
 ?>
