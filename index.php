@@ -1,8 +1,3 @@
-Anladım! Balance, Earn, Referrals ve Withdraw butonlarını düzeltelim. İşte güncellenmiş kod:
-
-🔧 Güncellenmiş index.php
-
-```php
 <?php
 // Enable all errors
 error_reporting(E_ALL);
@@ -50,6 +45,12 @@ define('BOT_TOKEN', $bot_token);
 define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
 define('USERS_FILE', 'users.json');
 define('ERROR_LOG', 'error.log');
+
+// TON Rewards
+define('AD_REWARD', 0.001); // 0.001 TON per ad
+define('REF_REWARD', 0.002); // 0.002 TON per referral
+define('MIN_WITHDRAW_REF', 5); // Minimum 5 referrals to withdraw
+define('MIN_WITHDRAW_AMOUNT', 0.01); // Minimum 0.01 TON to withdraw
 
 // Initialize files
 if (!file_exists(USERS_FILE)) file_put_contents(USERS_FILE, '{}');
@@ -140,12 +141,17 @@ function editMessageText($chat_id, $message_id, $text, $keyboard = null) {
     }
 }
 
+// Generate unique referral code based on user ID (always the same)
+function generateRefCode($chat_id) {
+    return 'TAK' . substr(md5($chat_id), 0, 7);
+}
+
 // Main menu keyboard
 function getMainKeyboard() {
     return [
         'inline_keyboard' => [
             [
-                ['text' => '💰 Earn', 'callback_data' => 'earn'],
+                ['text' => '💰 Earn TON', 'callback_data' => 'earn'],
                 ['text' => '💳 Balance', 'callback_data' => 'balance']
             ],
             [
@@ -163,10 +169,7 @@ function getEarnKeyboard() {
     return [
         'inline_keyboard' => [
             [
-                ['text' => '📱 Watch Ad (25 Points)', 'web_app' => ['url' => $mini_app_url]]
-            ],
-            [
-                ['text' => '✅ I Watched the Ad', 'callback_data' => 'ad_watched']
+                ['text' => '📱 Watch Ad (0.001 TON)', 'web_app' => ['url' => $mini_app_url]]
             ],
             [
                 ['text' => '⬅️ Back to Main', 'callback_data' => 'main_menu']
@@ -214,9 +217,6 @@ function getWithdrawKeyboard() {
                 ['text' => '💳 Enter TON Address', 'callback_data' => 'enter_ton_address']
             ],
             [
-                ['text' => '💰 Enter Amount', 'callback_data' => 'enter_amount']
-            ],
-            [
                 ['text' => '🚀 Submit Withdrawal', 'callback_data' => 'submit_withdrawal']
             ],
             [
@@ -239,40 +239,96 @@ function processUpdate($update) {
         
         logError("Message from {$chat_id}: {$text}");
         
+        // Check if user exists, if not create with permanent ref code
         if (!isset($users[$chat_id])) {
+            $ref_code = generateRefCode($chat_id);
             $users[$chat_id] = [
                 'balance' => 0,
                 'referrals' => 0,
-                'ref_code' => substr(md5($chat_id . time()), 0, 8),
-                'last_earn' => 0,
+                'ref_code' => $ref_code,
                 'last_ad_watch' => 0,
                 'ton_address' => '',
-                'pending_withdrawal' => 0
+                'pending_withdrawal' => 0,
+                'total_earned' => 0,
+                'created_at' => time()
             ];
         }
         
         if (strpos($text, '/start') === 0) {
             $ref_code = explode(' ', $text)[1] ?? null;
+            $user = $users[$chat_id];
             
-            if ($ref_code && !isset($users[$chat_id]['referred_by'])) {
-                foreach ($users as $id => $user) {
-                    if (isset($user['ref_code']) && $user['ref_code'] === $ref_code && $id != $chat_id) {
+            // Handle referral registration
+            if ($ref_code && $ref_code !== $user['ref_code'] && !isset($user['referred_by'])) {
+                $referrer_found = false;
+                
+                foreach ($users as $id => $u) {
+                    if (isset($u['ref_code']) && $u['ref_code'] === $ref_code && $id != $chat_id) {
+                        // Register referral
                         $users[$chat_id]['referred_by'] = $id;
                         $users[$id]['referrals'] = ($users[$id]['referrals'] ?? 0) + 1;
-                        $users[$id]['balance'] = ($users[$id]['balance'] ?? 0) + 50;
-                        sendMessage($id, "🎉 New referral! +50 points bonus!");
+                        $users[$id]['balance'] = ($users[$id]['balance'] ?? 0) + REF_REWARD;
+                        $users[$id]['total_earned'] = ($users[$id]['total_earned'] ?? 0) + REF_REWARD;
+                        
+                        // Notify referrer
+                        $ref_message = "🎉 <b>New Referral!</b>\n\n";
+                        $ref_message .= "👤 New user joined using your referral link!\n";
+                        $ref_message .= "💰 You earned: <b>" . REF_REWARD . " TON</b>\n";
+                        $ref_message .= "👥 Total referrals: <b>{$users[$id]['referrals']}</b>";
+                        sendMessage($id, $ref_message);
+                        
+                        $referrer_found = true;
                         break;
                     }
                 }
+                
+                if ($referrer_found) {
+                    $welcome = "🎉 <b>Welcome via Referral!</b>\n\n";
+                    $welcome .= "You joined using a referral link!\n\n";
+                } else {
+                    $welcome = "🚀 <b>Welcome to TAKONI ADS!</b>\n\n";
+                }
+            } else {
+                $welcome = "🚀 <b>Welcome to TAKONI ADS!</b>\n\n";
             }
             
-            $welcome = "🚀 <b>Welcome to Earning Bot!</b>\n\n";
-            $welcome .= "💰 <b>Earn points</b> by watching ads\n";
-            $welcome .= "👥 <b>Invite friends</b> for bonus points\n";
+            $welcome .= "💰 <b>Earn TON</b> by watching ads\n";
+            $welcome .= "👥 <b>Invite friends</b> for bonus TON\n";
             $welcome .= "🏧 <b>Withdraw</b> to TON wallet\n\n";
-            $welcome .= "🔗 Your referral code: <code>{$users[$chat_id]['ref_code']}</code>";
+            $welcome .= "🔗 <b>Your permanent referral code:</b>\n";
+            $welcome .= "<code>{$users[$chat_id]['ref_code']}</code>\n\n";
+            $welcome .= "📊 <b>Rewards:</b>\n";
+            $welcome .= "• Watch Ad: <b>" . AD_REWARD . " TON</b>\n";
+            $welcome .= "• Per Referral: <b>" . REF_REWARD . " TON</b>";
             
             sendMessage($chat_id, $welcome, getMainKeyboard());
+            saveUsers($users);
+        }
+        
+        // Handle TON address input
+        elseif (isset($users[$chat_id]['awaiting_ton_address'])) {
+            $ton_address = trim($text);
+            
+            // Basic TON address validation
+            if (strlen($ton_address) >= 10 && (strpos($ton_address, 'EQ') === 0 || strpos($ton_address, 'UQ') === 0)) {
+                $users[$chat_id]['ton_address'] = $ton_address;
+                unset($users[$chat_id]['awaiting_ton_address']);
+                
+                $response = "✅ <b>TON Address Saved!</b>\n\n";
+                $response .= "🔗 Your TON address:\n";
+                $response .= "<code>{$ton_address}</code>\n\n";
+                $response .= "You can now submit withdrawal requests.";
+                
+                sendMessage($chat_id, $response, getWithdrawKeyboard());
+            } else {
+                $response = "❌ <b>Invalid TON Address</b>\n\n";
+                $response .= "Please enter a valid TON wallet address.\n";
+                $response .= "📍 <b>Format:</b> EQ... or UQ...\n\n";
+                $response .= "Please try again:";
+                
+                sendMessage($chat_id, $response);
+            }
+            
             saveUsers($users);
         }
     }
@@ -288,14 +344,16 @@ function processUpdate($update) {
         
         $users = loadUsers();
         if (!isset($users[$chat_id])) {
+            $ref_code = generateRefCode($chat_id);
             $users[$chat_id] = [
                 'balance' => 0,
                 'referrals' => 0,
-                'ref_code' => substr(md5($chat_id . time()), 0, 8),
-                'last_earn' => 0,
+                'ref_code' => $ref_code,
                 'last_ad_watch' => 0,
                 'ton_address' => '',
-                'pending_withdrawal' => 0
+                'pending_withdrawal' => 0,
+                'total_earned' => 0,
+                'created_at' => time()
             ];
         }
         
@@ -303,14 +361,14 @@ function processUpdate($update) {
         
         switch ($data) {
             case 'earn':
-                $response = "💰 <b>Earn Points</b>\n\n";
-                $response .= "📱 <b>Watch Ads & Earn 25 Points</b>\n\n";
+                $response = "💰 <b>Earn TON</b>\n\n";
+                $response .= "📱 <b>Watch Ads & Earn " . AD_REWARD . " TON Each</b>\n\n";
                 $response .= "🎬 How to earn:\n";
                 $response .= "1. Click 'Watch Ad Now' button\n";
                 $response .= "2. Watch the advertisement completely\n";
-                $response .= "3. Return and click 'I Watched the Ad'\n";
-                $response .= "4. Get 25 points instantly!\n\n";
-                $response .= "⏰ Cooldown: 5 minutes between ads";
+                $response .= "3. Get " . AD_REWARD . " TON automatically!\n\n";
+                $response .= "⏰ Cooldown: 5 minutes between ads\n\n";
+                $response .= "👥 <b>Referral Bonus:</b> " . REF_REWARD . " TON per friend";
                 
                 editMessageText($chat_id, $message_id, $response, getEarnKeyboard());
                 break;
@@ -318,76 +376,50 @@ function processUpdate($update) {
             case 'balance':
                 $balance = $user['balance'] ?? 0;
                 $referrals = $user['referrals'] ?? 0;
-                $total_earned = $balance + ($user['withdrawn'] ?? 0);
+                $total_earned = $user['total_earned'] ?? $balance;
                 
-                $response = "💳 <b>Your Balance</b>\n\n";
-                $response .= "💰 <b>Available Balance:</b> {$balance} points\n";
+                $response = "💳 <b>Your TON Balance</b>\n\n";
+                $response .= "💰 <b>Available Balance:</b> " . number_format($balance, 6) . " TON\n";
                 $response .= "👥 <b>Total Referrals:</b> {$referrals}\n";
-                $response .= "🏆 <b>Total Earned:</b> {$total_earned} points\n\n";
-                $response .= "💎 <b>Withdrawal Info:</b>\n";
-                $response .= "• Minimum: 100 points\n";
-                $response .= "• Rate: 1000 points = 1 TON\n\n";
-                $response .= "📊 <b>Your TON Address:</b>\n";
+                $response .= "🏆 <b>Total Earned:</b> " . number_format($total_earned, 6) . " TON\n\n";
+                $response .= "💎 <b>Withdrawal Requirements:</b>\n";
+                $response .= "• Minimum " . MIN_WITHDRAW_REF . " referrals\n";
+                $response .= "• Minimum " . MIN_WITHDRAW_AMOUNT . " TON balance\n\n";
+                $response .= "🔗 <b>Your TON Address:</b>\n";
                 $response .= "<code>" . ($user['ton_address'] ?: 'Not set') . "</code>";
                 
                 editMessageText($chat_id, $message_id, $response, getBalanceKeyboard());
                 break;
                 
-            case 'ad_watched':
-                $last_watch = $user['last_ad_watch'] ?? 0;
-                $current_time = time();
-                
-                // Check cooldown (5 minutes)
-                if ($current_time - $last_watch < 300) {
-                    $remaining = 300 - ($current_time - $last_watch);
-                    $minutes = ceil($remaining / 60);
-                    $response = "⏳ <b>Please wait {$minutes} minutes</b> before watching another ad!";
-                    editMessageText($chat_id, $message_id, $response, getMainKeyboard());
-                } else {
-                    // Add points
-                    $users[$chat_id]['balance'] = ($user['balance'] ?? 0) + 25;
-                    $users[$chat_id]['last_ad_watch'] = $current_time;
-                    $new_balance = $users[$chat_id]['balance'];
-                    
-                    $response = "🎉 <b>Ad Rewarded!</b>\n\n";
-                    $response .= "✅ You earned <b>25 points</b>!\n";
-                    $response .= "💰 New balance: <b>{$new_balance} points</b>\n\n";
-                    $response .= "🔄 You can watch another ad in 5 minutes.";
-                    
-                    editMessageText($chat_id, $message_id, $response, getMainKeyboard());
-                    saveUsers($users);
-                }
-                break;
-                
             case 'referrals':
                 $ref_code = $user['ref_code'] ?? 'N/A';
                 $referrals = $user['referrals'] ?? 0;
-                $ref_earnings = $referrals * 50;
+                $ref_earnings = $referrals * REF_REWARD;
                 
                 $response = "👥 <b>Referral System</b>\n\n";
-                $response .= "🔗 <b>Your Referral Code:</b>\n";
+                $response .= "🔗 <b>Your Permanent Referral Code:</b>\n";
                 $response .= "<code>{$ref_code}</code>\n\n";
                 $response .= "📊 <b>Statistics:</b>\n";
                 $response .= "• Total Referrals: <b>{$referrals}</b>\n";
-                $response .= "• Referral Earnings: <b>{$ref_earnings} points</b>\n\n";
-                $response .= "💰 <b>Bonus:</b> 50 points per referral\n\n";
+                $response .= "• Referral Earnings: <b>" . number_format($ref_earnings, 6) . " TON</b>\n\n";
+                $response .= "💰 <b>Bonus:</b> " . REF_REWARD . " TON per referral\n\n";
                 $response .= "📤 <b>Share this link:</b>\n";
-                $response .= "<code>https://t.me/" . explode(':', BOT_TOKEN)[0] . "?start={$ref_code}</code>\n\n";
+                $response .= "<code>https://t.me/takoniAdsBot?start={$ref_code}</code>\n\n";
                 $response .= "👥 <b>How it works:</b>\n";
                 $response .= "1. Share your referral link\n";
                 $response .= "2. Friend joins using your link\n";
-                $response .= "3. You get 50 points instantly!";
+                $response .= "3. You get " . REF_REWARD . " TON instantly!";
                 
                 editMessageText($chat_id, $message_id, $response, getReferralsKeyboard());
                 break;
                 
             case 'share_referral':
                 $ref_code = $user['ref_code'] ?? 'N/A';
-                $share_text = urlencode("Join this earning bot and earn points! Use my referral code: {$ref_code}");
-                $share_url = "https://t.me/share/url?url=https://t.me/" . explode(':', BOT_TOKEN)[0] . "&text={$share_text}";
+                $share_text = urlencode("🚀 Join TAKONI ADS and earn TON coins by watching ads! Use my referral code: {$ref_code} - https://t.me/takoniAdsBot?start={$ref_code}");
+                $share_url = "https://t.me/share/url?url=https://t.me/takoniAdsBot&text={$share_text}";
                 
                 $response = "📤 <b>Share Referral</b>\n\n";
-                $response .= "Click the button below to share your referral link!";
+                $response .= "Click the button below to share your referral link on Telegram!";
                 
                 $share_keyboard = [
                     'inline_keyboard' => [
@@ -405,25 +437,45 @@ function processUpdate($update) {
                 
             case 'withdraw':
                 $balance = $user['balance'] ?? 0;
-                $min_withdraw = 100;
+                $referrals = $user['referrals'] ?? 0;
                 $ton_address = $user['ton_address'] ?? 'Not set';
                 
-                $response = "🏧 <b>Withdraw Points</b>\n\n";
-                $response .= "💰 <b>Available Balance:</b> {$balance} points\n";
-                $response .= "💎 <b>Minimum Withdrawal:</b> {$min_withdraw} points\n";
+                $response = "🏧 <b>Withdraw TON</b>\n\n";
+                $response .= "💰 <b>Available Balance:</b> " . number_format($balance, 6) . " TON\n";
+                $response .= "👥 <b>Your Referrals:</b> {$referrals}/" . MIN_WITHDRAW_REF . "\n";
                 $response .= "🔗 <b>Your TON Address:</b>\n";
                 $response .= "<code>{$ton_address}</code>\n\n";
-                $response .= "📝 <b>Withdrawal Steps:</b>\n";
-                $response .= "1. Set your TON address\n";
-                $response .= "2. Enter withdrawal amount\n";
-                $response .= "3. Submit withdrawal request\n\n";
-                $response .= "💸 <b>Exchange Rate:</b>\n";
-                $response .= "1000 points = 1 TON";
                 
-                if ($balance < $min_withdraw) {
-                    $needed = $min_withdraw - $balance;
-                    $response .= "\n\n❌ <b>Insufficient Balance!</b>\n";
-                    $response .= "You need {$needed} more points to withdraw.";
+                // Check requirements
+                $can_withdraw = true;
+                $requirements = [];
+                
+                if ($referrals < MIN_WITHDRAW_REF) {
+                    $can_withdraw = false;
+                    $requirements[] = "❌ Need " . (MIN_WITHDRAW_REF - $referrals) . " more referrals";
+                }
+                
+                if ($balance < MIN_WITHDRAW_AMOUNT) {
+                    $can_withdraw = false;
+                    $needed = MIN_WITHDRAW_AMOUNT - $balance;
+                    $requirements[] = "❌ Need " . number_format($needed, 6) . " more TON";
+                }
+                
+                if (empty($ton_address) || $ton_address === 'Not set') {
+                    $can_withdraw = false;
+                    $requirements[] = "❌ TON address not set";
+                }
+                
+                if ($can_withdraw) {
+                    $response .= "✅ <b>All requirements met!</b>\n\n";
+                    $response .= "You can submit your withdrawal request.";
+                } else {
+                    $response .= "📋 <b>Withdrawal Requirements:</b>\n";
+                    $response .= "• Minimum " . MIN_WITHDRAW_REF . " referrals\n";
+                    $response .= "• Minimum " . MIN_WITHDRAW_AMOUNT . " TON balance\n";
+                    $response .= "• TON address must be set\n\n";
+                    $response .= "❌ <b>Missing Requirements:</b>\n";
+                    $response .= implode("\n", $requirements);
                 }
                 
                 editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard());
@@ -432,7 +484,7 @@ function processUpdate($update) {
             case 'enter_ton_address':
                 $response = "🔗 <b>Enter TON Address</b>\n\n";
                 $response .= "Please send your TON wallet address as a message.\n\n";
-                $response .= "📍 <b>Format:</b> EQ... (TON wallet address)\n\n";
+                $response .= "📍 <b>Format:</b> EQ... or UQ... (TON wallet address)\n\n";
                 $response .= "⚠️ <b>Warning:</b> Make sure the address is correct!";
                 
                 // Store state for next message
@@ -446,156 +498,14 @@ function processUpdate($update) {
                 ]);
                 break;
                 
-            case 'enter_amount':
-                $balance = $user['balance'] ?? 0;
-                $response = "💰 <b>Enter Withdrawal Amount</b>\n\n";
-                $response .= "Your balance: <b>{$balance} points</b>\n";
-                $response .= "Minimum: <b>100 points</b>\n\n";
-                $response .= "Please send the amount you want to withdraw as a message.\n\n";
-                $response .= "💸 <b>Exchange Rate:</b> 1000 points = 1 TON";
-                
-                // Store state for next message
-                $users[$chat_id]['awaiting_amount'] = true;
-                saveUsers($users);
-                
-                editMessageText($chat_id, $message_id, $response, [
-                    'inline_keyboard' => [
-                        [['text' => '⬅️ Back to Withdraw', 'callback_data' => 'withdraw']]
-                    ]
-                ]);
-                break;
-                
             case 'submit_withdrawal':
                 $balance = $user['balance'] ?? 0;
+                $referrals = $user['referrals'] ?? 0;
                 $ton_address = $user['ton_address'] ?? '';
-                $min_withdraw = 100;
                 
+                // Validate requirements
                 if (empty($ton_address)) {
                     $response = "❌ <b>TON Address Not Set</b>\n\n";
                     $response .= "Please set your TON address first before withdrawing.";
-                } elseif ($balance < $min_withdraw) {
-                    $response = "❌ <b>Insufficient Balance</b>\n\n";
-                    $response .= "You need at least {$min_withdraw} points to withdraw.";
-                } else {
-                    // Process withdrawal
-                    $users[$chat_id]['pending_withdrawal'] = $balance;
-                    $users[$chat_id]['balance'] = 0;
-                    
-                    $response = "✅ <b>Withdrawal Submitted!</b>\n\n";
-                    $response .= "💰 <b>Amount:</b> {$balance} points\n";
-                    $response .= "🔗 <b>TON Address:</b>\n";
-                    $response .= "<code>{$ton_address}</code>\n\n";
-                    $response .= "⏳ <b>Status:</b> Processing\n";
-                    $response .= "📞 Our team will process your withdrawal within 24 hours.";
-                    
-                    saveUsers($users);
-                }
-                
-                editMessageText($chat_id, $message_id, $response, [
-                    'inline_keyboard' => [
-                        [['text' => '⬅️ Back to Main', 'callback_data' => 'main_menu']]
-                    ]
-                ]);
-                break;
-                
-            case 'main_menu':
-                $response = "🎮 <b>Main Menu</b>\n\nWelcome back! Choose an option below:";
-                editMessageText($chat_id, $message_id, $response, getMainKeyboard());
-                break;
-        }
-        
-        saveUsers($users);
-    }
-    
-    // Handle web app data (from mini app)
-    elseif (isset($update['web_app_data'])) {
-        $web_app_data = $update['web_app_data'];
-        $chat_id = $web_app_data['user']['id'];
-        $data = json_decode($web_app_data['data'], true);
-        
-        logError("Web app data from {$chat_id}: " . $web_app_data['data']);
-        
-        if ($data && $data['action'] === 'ad_watched') {
-            $users = loadUsers();
-            
-            if (!isset($users[$chat_id])) {
-                $users[$chat_id] = [
-                    'balance' => 0,
-                    'referrals' => 0,
-                    'ref_code' => substr(md5($chat_id . time()), 0, 8),
-                    'last_earn' => 0,
-                    'last_ad_watch' => 0,
-                    'ton_address' => '',
-                    'pending_withdrawal' => 0
-                ];
-            }
-            
-            $last_watch = $users[$chat_id]['last_ad_watch'] ?? 0;
-            $current_time = time();
-            
-            if ($current_time - $last_watch >= 300) {
-                $users[$chat_id]['balance'] += 25;
-                $users[$chat_id]['last_ad_watch'] = $current_time;
-                $new_balance = $users[$chat_id]['balance'];
-                
-                $response = "🎉 <b>Ad Completed!</b>\n\n";
-                $response .= "✅ You earned <b>25 points</b>!\n";
-                $response .= "💰 New balance: <b>{$new_balance} points</b>";
-                
-                sendMessage($chat_id, $response, getMainKeyboard());
-                saveUsers($users);
-            }
-        }
-    }
-}
-
-// Main webhook handler
-$input = file_get_contents('php://input');
-$update = json_decode($input, true);
-
-if ($update) {
-    processUpdate($update);
-    http_response_code(200);
-    echo "OK";
-} else {
-    // Serve mini app if no update
-    if (isset($_GET['mini_app'])) {
-        header('Content-Type: text/html');
-        readfile('index.html');
-    } else {
-        http_response_code(400);
-        echo "No data received";
-    }
-}
-?>
-```
-
-🎯 Yeni Özellikler:
-
-💰 Earn:
-
-· Watch Ads butonu (Mini App)
-· I Watched the Ad butonu
-· 5 dakika cooldown
-
-💳 Balance:
-
-· Mevcut bakiye
-· Toplam referral
-· TON adresi bilgisi
-· Refresh butonu
-
-👥 Referrals:
-
-· Referral kodu ve link
-· İstatistikler
-· Share butonu
-
-🏧 Withdraw:
-
-· TON adresi ekleme
-· Miktar girme
-· Withdrawal submit
-· Minimum 100 points
-
-Artık tüm butonlar çalışacak ve her menü kendi işlevini yerine getirecek! 🚀
+                } elseif ($referrals < MIN_WITHDRAW_REF) {
+                    $response = "❌ <b>Insuffic
