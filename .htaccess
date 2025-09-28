@@ -1,15 +1,6 @@
 RewriteEngine On
 
-# Simple rewrite rule
+# Handle all requests through index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
-
-# Basic security
-<Files "*.json">
-    Deny from all
-</Files>
-
-<Files "*.log">
-    Deny from all
-</Files>
+RewriteRule . index.php [L]
