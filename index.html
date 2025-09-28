@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Ad - Earn 0.001 TON</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .ad-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px dashed #ddd;
+        }
+        
+        .ad-video {
+            width: 100%;
+            height: 200px;
+            background: #2c3e50;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ad-progress {
+            width: 100%;
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #e74c3c, #e67e22);
+            width: 0%;
+            transition: width 1s linear;
+        }
+        
+        .countdown {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 15px 0;
+        }
+        
+        .watch-button {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .watch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        
+        .watch-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .verify-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .reward-info {
+            background: #0088cc;
+            border: 1px solid #0077b3;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            color: white;
+        }
+        
+        .reward-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 2;
+        }
+        
+        .step.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .step.completed {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .step-line {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            height: 2px;
+            background: #ecf0f1;
+            z-index: 1;
+        }
+        
+        .ad-content {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+        
+        .verification-countdown {
+            font-size: 16px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .ton-logo {
+            color: #0088cc;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📺</div>
+        <h1>Watch Ad & Earn <span class="ton-logo">0.001 TON</span></h1>
+        <p class="subtitle">Complete the ad watching process to earn TON coins</p>
+        
+        <div class="step-indicator">
+            <div class="step active" id="step1">1</div>
+            <div class="step" id="step2">2</div>
+            <div class="step" id="step3">3</div>
+            <div class="step-line"></div>
+        </div>
+        
+        <div class="reward-info">
+            <div>🎁 You will earn</div>
+            <div class="reward-amount">+0.001 TON</div>
+        </div>
+        
+        <!-- Step 1: Watch Ad -->
+        <div id="step1Content">
+            <div class="ad-container">
+                <div style="font-size: 18px; color: #2c3e50; margin-bottom: 15px;">ADVERTISEMENT</div>
+                <div class="ad-video">
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🎬</div>
+                        <div>Video Advertisement</div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">15 seconds</div>
+                    </div>
+                </div>
+                <div class="ad-progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="countdown" id="countdown">Time remaining: 15 seconds</div>
+                <div class="ad-content">
+                    This is a sample advertisement. Please watch the entire video to earn your TON reward.
+                </div>
+            </div>
+            
+            <button class="watch-button" id="watchButton" onclick="startWatching()">
+                ▶ Start Watching Ad (15s)
+            </button>
+        </div>
+        
+        <!-- Step 2: Verification -->
+        <div id="step2Content" style="display: none;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+            <h2>Verification Required</h2>
+            <p class="subtitle">Please verify that you watched the entire ad</p>
+            
+            <div class="verification-countdown" id="verificationCountdown">
+                Auto-verifying in: <span id="verifyTimer">5</span>s
