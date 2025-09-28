@@ -236,7 +236,9 @@ function getWithdrawKeyboard($has_address = false) {
             [['text' => '⬅️ Back to Main', 'callback_data' => 'main_menu']]
         ]
     ];
-    if ($has_address) $keyboard['inline_keyboard'][0][] = ['text' => '🔄 Change Address', 'callback_data' => 'enter_ton_address'];
+    if ($has_address) {
+        $keyboard['inline_keyboard'][0][] = ['text' => '🔄 Change Address', 'callback_data' => 'enter_ton_address'];
+    }
     return $keyboard;
 }
 
@@ -446,4 +448,101 @@ function processUpdate($update) {
                 $referrals = $user['referrals'] ?? 0;
                 $ref_earnings = $referrals * REF_REWARD;
                 $ref_needed = max(0, MIN_WITHDRAW_REF - $referrals);
-        
+                $ref_link = "https://t.me/takoniAdsBot?start=" . $ref_code;
+                $response = "👥 <b>Referral System</b>\n🔗 Link: <code>$ref_link</code>\n📊 Stats:\n• Referrals: $referrals/$MIN_WITHDRAW_REF\n• Earnings: " . number_format($ref_earnings, 6) . " TON\n• Need: $ref_needed more\n💰 Earn " . REF_REWARD . " TON per referral";
+                editMessageText($chat_id, $message_id, $response, getReferralsKeyboard());
+                break;
+            case 'share_referral':
+                $ref_code = $user['ref_code'];
+                $ref_link = "https://t.me/takoniAdsBot?start=" . $ref_code;
+                $share_text = "🎉 Join TAKONI ADS!\n💰 Earn " . AD_REWARD . " TON per ad\n👥 Use my link: $ref_link\n🚀 Start now!";
+                $keyboard = [
+                    'inline_keyboard' => [
+                        [['text' => '📤 Share', 'url' => "https://t.me/share/url?url=" . urlencode($ref_link) . "&text=" . urlencode($share_text)]],
+                        [['text' => '⬅️ Back', 'callback_data' => 'referrals']]
+                    ]
+                ];
+                editMessageText($chat_id, $message_id, "📤 Share your referral link:", $keyboard);
+                break;
+            case 'withdraw':
+                $balance = $user['balance'] ?? 0;
+                $ton_address = $user['ton_address'] ?? '';
+                $referrals = $user['referrals'] ?? 0;
+                $response = "🏧 <b>Withdraw TON</b>\n💰 Balance: " . number_format($balance, 6) . " TON\n👥 Referrals: $referrals/$MIN_WITHDRAW_REF\n🔗 Address: " . ($ton_address ? "<code>$ton_address</code>" : "Not set") . "\n";
+                if ($balance < MIN_WITHDRAW_AMOUNT || $referrals < MIN_WITHDRAW_REF || !$ton_address) {
+                    $errors = [];
+                    if ($balance < MIN_WITHDRAW_AMOUNT) $errors[] = "❌ Min: " . MIN_WITHDRAW_AMOUNT . " TON";
+                    if ($referrals < MIN_WITHDRAW_REF) $errors[] = "❌ Need " . (MIN_WITHDRAW_REF - $referrals) . " referrals";
+                    if (!$ton_address) $errors[] = "❌ Set TON address";
+                    $response .= implode("\n", $errors);
+                } else {
+                    $response .= "✅ Ready to withdraw!";
+                }
+                editMessageText($chat_id, $message_id, $response, getWithdrawKeyboard($ton_address !== ''));
+                break;
+            case 'enter_ton_address':
+                $db->prepare("UPDATE users SET awaiting_ton_address = 1 WHERE chat_id = ?")
+                   ->execute([$chat_id]);
+                sendMessage($chat_id, "💳 Enter your TON address:", getMainKeyboard());
+                break;
+            case 'save_ton_address':
+                $stmt = $db->prepare("SELECT ton_address_temp FROM users WHERE chat_id = ?");
+                $stmt->execute([$chat_id]);
+                $temp_address = $stmt->fetchColumn();
+                if ($temp_address) {
+                    $db->prepare("UPDATE users SET ton_address = ?, ton_address_temp = NULL WHERE chat_id = ?")
+                       ->execute([$temp_address, $chat_id]);
+                    sendMessage($chat_id, "✅ TON address saved!", getMainKeyboard());
+                } else {
+                    sendMessage($chat_id, "❌ No address provided.", getMainKeyboard());
+                }
+                break;
+            case 'submit_withdrawal':
+                $balance = $user['balance'] ?? 0;
+                $referrals = $user['referrals'] ?? 0;
+                $ton_address = $user['ton_address'] ?? '';
+                if ($balance >= MIN_WITHDRAW_AMOUNT && $referrals >= MIN_WITHDRAW_REF && $ton_address) {
+                    $db->beginTransaction();
+                    try {
+                        $db->prepare("UPDATE users SET balance = 0 WHERE chat_id = ?")
+                           ->execute([$chat_id]);
+                        $db->commit();
+                        $response = "🏧 Withdrawal requested!\nAmount: " . number_format($balance, 6) . " TON\nTo: <code>$ton_address</code>";
+                        sendMessage($chat_id, $response, getMainKeyboard());
+                        logError("Withdrawal by $chat_id: $balance TON to $ton_address");
+                    } catch (Exception $e) {
+                        $db->rollBack();
+                        logError("Withdrawal error: " . $e->getMessage());
+                        sendMessage($chat_id, "❌ Withdrawal failed.", getMainKeyboard());
+                    }
+                } else {
+                    $response = "❌ Cannot withdraw:\n";
+                    if ($balance < MIN_WITHDRAW_AMOUNT) $response .= "• Min: " . MIN_WITHDRAW_AMOUNT . " TON\n";
+                    if ($referrals < MIN_WITHDRAW_REF) $response .= "• Need " . (MIN_WITHDRAW_REF - $referrals) . " referrals\n";
+                    if (!$ton_address) $response .= "• No address\n";
+                    sendMessage($chat_id, $response, getWithdrawKeyboard($ton_address !== ''));
+                }
+                break;
+            case 'main_menu':
+                $response = "🚀 <b>TAKONI ADS</b>\n💰 Earn TON\n👥 Invite friends\n🏧 Withdraw\nSelect an option:";
+                editMessageText($chat_id, $message_id, $response, getMainKeyboard());
+                break;
+        }
+    }
+}
+
+// Handle incoming webhook
+$input = file_get_contents('php://input');
+$update = json_decode($input, true);
+if ($update === null && $input !== '') {
+    logError("Invalid JSON input: $input, Error: " . json_last_error_msg());
+    http_response_code(400);
+    exit("Invalid request");
+}
+
+if ($update) {
+    processUpdate($update);
+} else {
+    http_response_code(200);
+    echo "OK";
+}
