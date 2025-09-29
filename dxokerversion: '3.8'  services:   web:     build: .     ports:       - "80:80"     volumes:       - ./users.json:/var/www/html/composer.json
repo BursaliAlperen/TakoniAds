@@ -1,6 +1,19 @@
 {
-  "name": "takoni-ads-bot",
-  "require": {
-    "php": "^8.3"
-  }
+    "name": "telegram-bot/php-bot",
+    "description": "PHP Telegram Bot with MySQL",
+    "type": "project",
+    "require": {
+        "php": "^8.1",
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "chmod -R 755 storage"
+        ]
+    }
 }
