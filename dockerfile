@@ -1,15 +1,25 @@
-FROM php:8.3-cli
+FROM php:8.2-apache
 
-# Install PDO for MySQL
-RUN apt-get update && apt-get install -y default-libmysqlclient-dev \
-    && docker-php-ext-install pdo pdo_mysql \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    unzip \
+    && docker-php-ext-install pdo_mysql zip
 
-# Copy app files
-COPY . /app
+RUN a2enmod rewrite
 
-# Set working directory
-WORKDIR /app
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Run the bot script
-CMD ["php", "index.php"]
+WORKDIR /var/www/html
+
+COPY composer.json composer.lock* ./
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+COPY . .
+
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod 644 .htaccess config.php index.php
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]
