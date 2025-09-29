@@ -1,0 +1,48 @@
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>        $stmt = $this->pdo->prepare("INSERT INTO referrals (referrer_chat_id, referred_chat_id, referred_username, level, earned_amount, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([$referrer_chat_id, $referred_chat_id, $referred_username, $level, REF_REWARD / $level, time()]);
+    }
+
+    public function getUserByRefCode($ref_code) {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE ref_code = ?");
+        $stmt->execute([$ref_code]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getReferralCount($chat_id) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) as count FROM referrals WHERE referrer_chat_id = ?");
+        $stmt->execute([$chat_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    }
+
+    public function getReferralHistory($chat_id, $limit = 50) {
+        $stmt = $this->pdo->prepare("SELECT * FROM referrals WHERE referrer_chat_id = ? ORDER BY created_at DESC LIMIT ?");
+        $stmt->execute([$chat_id, $limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTodayAdWatches($chat_id) {
+        $today = date('Y-m-d');
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) as count FROM ad_watches WHERE chat_id = ? AND DATE(FROM_UNIXTIME(created_at)) = ?");
+        $stmt->execute([$chat_id, $today]);
+        return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+    }
+
+    public function resetDailyLimits() {
+        $today = date('Y-m-d');
+        $stmt = $this->pdo->prepare("UPDATE users SET ads_watched_today = 0, last_daily_reset = ? WHERE last_daily_reset != ? OR last_daily_reset IS NULL");
+        return $stmt->execute([$today, $today]);
+    }
+} 
