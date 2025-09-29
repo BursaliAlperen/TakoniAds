@@ -1,26 +1,29 @@
 version: '3.8'
+
 services:
-  bot:
+  app:
     build: .
-    depends_on:
-      - db
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
     environment:
-      - BOT_TOKEN=your_bot_token_here
-      - BOT_USERNAME=takoniAdsBot
-      - CHANNEL_USERNAME=@TakoniFinance
-      - CHANNEL_ID=-1002855918077
-      - CHANNEL_URL=https://t.me/TakoniFinance
-      - WEBAPP_URL=https://takoniads.onrender.com/webapp.html
-      - DB_DSN=mysql:host=db;port=3306;dbname=botdb
+      - DB_HOST=mysql
+      - DB_NAME=telegram_bot_db
       - DB_USER=root
-      - DB_PASS=mysqlpassword
-      - AD_ZONE_ID=3305
-  db:
+      - DB_PASS=rootpass
+    depends_on:
+      - mysql
+
+  mysql:
     image: mysql:8.0
     environment:
-      - MYSQL_DATABASE=botdb
-      - MYSQL_ROOT_PASSWORD=mysqlpassword
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: telegram_bot_db
+    ports:
+      - "3306:3306"
     volumes:
-      - mysqldata:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+
 volumes:
-  mysqldata:
+  mysql_data:
