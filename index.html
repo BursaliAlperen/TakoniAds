@@ -19,25 +19,25 @@
 
     <style>
         :root {
-            --tg-theme-bg-color: #0f172a;
+            --tg-theme-bg-color: #0f0f0f;
             --tg-theme-text-color: #ffffff;
-            --tg-theme-button-color: #1e40af;
+            --tg-theme-button-color: #dc2626;
             --tg-theme-button-text-color: #ffffff;
-            --tg-theme-hint-color: #94a3b8;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --secondary-bg-color: #1e293b;
-            --border-color: #334155;
-            --accent-color: #3b82f6;
-            --gradient-primary: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-            --gradient-secondary: linear-gradient(135deg, #3730a3 0%, #5b21b6 100%);
-            --gradient-success: linear-gradient(135deg, #059669 0%, #047857 100%);
+            --tg-theme-hint-color: #a3a3a3;
+            --success-color: #16a34a;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --secondary-bg-color: #1a1a1a;
+            --border-color: #404040;
+            --accent-color: #dc2626;
+            --gradient-primary: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            --gradient-secondary: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            --gradient-success: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
             --gradient-warning: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-            --gradient-card: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.2);
+            --gradient-card: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            --gradient-dark: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.3);
             --radius: 16px;
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
@@ -160,7 +160,7 @@
         .header h1 {
             font-size: 32px;
             font-weight: 700;
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            background: linear-gradient(90deg, #dc2626, #ef4444);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
@@ -210,7 +210,7 @@
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
         }
 
         .card::before {
@@ -246,7 +246,7 @@
             color: var(--tg-theme-text-color);
             margin-bottom: 10px;
             text-align: center;
-            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+            background: linear-gradient(90deg, #ef4444, #dc2626);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: pulse 2s infinite;
@@ -261,7 +261,7 @@
         }
 
         .ad-info-item {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             padding: 15px;
             border-radius: 12px;
             transition: var(--transition);
@@ -269,7 +269,7 @@
         }
 
         .ad-info-item:hover {
-            background: rgba(30, 64, 175, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             transform: translateY(-3px);
         }
 
@@ -345,8 +345,8 @@
         }
 
         .btn:disabled {
-            background: #475569;
-            color: #94a3b8;
+            background: #404040;
+            color: #a3a3a3;
             cursor: not-allowed;
             box-shadow: none;
             transform: none;
@@ -411,7 +411,7 @@
             box-sizing: border-box;
             box-shadow: var(--shadow);
             backdrop-filter: blur(10px);
-            background: rgba(30, 41, 59, 0.95);
+            background: rgba(26, 26, 26, 0.95);
             border-left: 4px solid;
             color: var(--tg-theme-text-color);
         }
@@ -452,7 +452,7 @@
             display: flex;
             justify-content: space-around;
             padding: 12px 0;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
             border-top: 1px solid var(--border-color);
             z-index: 999;
             backdrop-filter: blur(10px);
@@ -535,7 +535,7 @@
             padding: 16px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(26, 26, 26, 0.8);
             color: var(--tg-theme-text-color);
             font-size: 16px;
             box-sizing: border-box;
@@ -545,15 +545,15 @@
         .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
             outline: none;
             border-color: var(--tg-theme-button-color);
-            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.3);
-            background: rgba(30, 41, 59, 1);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3);
+            background: rgba(26, 26, 26, 1);
         }
 
         /* Referral Styles */
         .referral-input-container {
             margin-top: 20px;
             padding: 20px;
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             border-radius: 12px;
             border: 1px solid var(--border-color);
             animation: fadeInUp 0.5s ease-out;
@@ -570,7 +570,7 @@
             padding: 14px;
             border-radius: 10px;
             border: 1px solid var(--border-color);
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(26, 26, 26, 0.8);
             color: var(--tg-theme-text-color);
         }
 
@@ -591,7 +591,7 @@
         }
 
         .referral-code-box {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             padding: 20px;
             border-radius: 12px;
             border: 1px dashed var(--tg-theme-hint-color);
@@ -607,7 +607,7 @@
         }
 
         .referral-code-box:hover {
-            background: rgba(30, 64, 175, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             border-color: var(--accent-color);
             transform: translateY(-3px);
         }
@@ -640,7 +640,7 @@
         .chart-container {
             margin-top: 20px;
             padding: 20px;
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             border-radius: 12px;
             border: 1px solid var(--border-color);
             animation: fadeInUp 0.5s ease-out;
@@ -673,12 +673,12 @@
         }
 
         .chart-change.positive {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(22, 163, 74, 0.2);
             color: var(--success-color);
         }
 
         .chart-change.negative {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             color: var(--danger-color);
         }
 
@@ -687,7 +687,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(15, 15, 15, 0.5);
             border-radius: 10px;
             color: var(--tg-theme-hint-color);
             font-size: 14px;
@@ -698,7 +698,7 @@
         }
 
         .chart-placeholder:hover {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
         }
 
         .chart-info {
@@ -724,7 +724,7 @@
         }
 
         .admin-stat-card {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             padding: 20px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -734,7 +734,7 @@
         }
 
         .admin-stat-card:hover {
-            background: rgba(30, 64, 175, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             transform: translateY(-3px);
         }
 
@@ -786,7 +786,7 @@
         }
 
         .admin-user-item {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -798,7 +798,7 @@
         }
 
         .admin-user-item:hover {
-            background: rgba(30, 64, 175, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             transform: translateY(-2px);
         }
 
@@ -852,7 +852,7 @@
         }
 
         .withdraw-request-item {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -861,7 +861,7 @@
         }
 
         .withdraw-request-item:hover {
-            background: rgba(30, 64, 175, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             transform: translateY(-2px);
         }
 
@@ -884,7 +884,7 @@
         .withdraw-request-address {
             font-size: 11px;
             color: var(--tg-theme-hint-color);
-            background: rgba(30, 64, 175, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             padding: 8px;
             border-radius: 6px;
             margin: 5px 0;
@@ -894,7 +894,7 @@
         }
 
         .withdraw-request-address:hover {
-            background: rgba(30, 64, 175, 0.3);
+            background: rgba(220, 38, 38, 0.3);
         }
 
         .withdraw-request-date {
@@ -938,7 +938,7 @@
         }
 
         .referral-history-item {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
@@ -947,7 +947,7 @@
         }
 
         .referral-history-item:hover {
-            background: rgba(30, 64, 175, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             transform: translateY(-2px);
         }
 
@@ -994,7 +994,7 @@
         .admin-user-list::-webkit-scrollbar-track,
         .withdraw-requests-list::-webkit-scrollbar-track,
         .referral-history::-webkit-scrollbar-track {
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             border-radius: 3px;
         }
 
@@ -1015,7 +1015,7 @@
         .progress-container {
             width: 100%;
             height: 10px;
-            background: rgba(30, 64, 175, 0.1);
+            background: rgba(220, 38, 38, 0.1);
             border-radius: 5px;
             overflow: hidden;
             margin: 10px 0;
@@ -1030,7 +1030,7 @@
 
         /* Countdown Timer */
         .countdown-timer {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(220, 38, 38, 0.2);
             color: var(--danger-color);
             padding: 10px;
             border-radius: 8px;
@@ -1377,6 +1377,12 @@
     <div class="status-message" id="statusMessage"></div>
 
     <script>
+        // JSONBin API Configuration
+        const JSONBIN_API_KEY = '$2a$10$Fv9Ec7a8u59so/FlxU1buOBqSrJZbj7FD8hxVsGCtRPqxQ6cpXBY.';
+        const JSONBIN_BIN_ID = '68e2b3ebd0ea881f40965de6';
+        const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
+        const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
         // Telegram WebApp initialization
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -1384,15 +1390,19 @@
         
         // Global variables
         let userData = {
+            userId: '',
             balance: 0,
             adCount: 0,
             dailyAdCount: 0,
+            lastAdDate: '',
             referralCode: '',
             referredBy: '',
             referrals: [],
             referralEarnings: 0,
             withdrawHistory: [],
-            lastAdTime: 0
+            lastAdTime: 0,
+            userName: '',
+            userEmail: ''
         };
         
         let appData = {
@@ -1401,14 +1411,16 @@
             totalWithdrawals: 0,
             totalEarnings: 0,
             withdrawRequests: [],
-            users: []
+            users: {},
+            lastUpdated: Date.now()
         };
-        
+
         const AD_REWARD = 0.0005; // $0.0005 per ad
         const DAILY_AD_LIMIT = 200;
         const MIN_WITHDRAWAL = 5; // 5 TRX
         const AD_COOLDOWN = 5000; // 5 seconds in milliseconds
-        
+        const ADMIN_USERS = ['8401848644', '7904032877']; // Admin user IDs
+
         // DOM Elements
         const elements = {
             // Views
@@ -1474,16 +1486,63 @@
         };
 
         // Initialize the app
-        function initApp() {
+        async function initApp() {
+            await loadAppDataFromJSONBin();
             loadUserData();
-            loadAppData();
             setupEventListeners();
             updateUI();
             startTRONPriceTracker();
+            checkAdminMode();
             
-            // Check if user is admin
-            if (tg.initDataUnsafe.user && tg.initDataUnsafe.user.id === 123456789) { // Replace with actual admin ID
-                elements.adminHeaderBtn.style.display = 'flex';
+            // Auto-save every 10 seconds
+            setInterval(async () => {
+                await saveAppDataToJSONBin();
+            }, 10000);
+        }
+
+        // Load app data from JSONBin
+        async function loadAppDataFromJSONBin() {
+            try {
+                const response = await fetch(JSONBIN_URL, {
+                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.record) {
+                        appData = { ...appData, ...data.record };
+                        console.log('JSONBin verileri başarıyla yüklendi');
+                    }
+                } else {
+                    console.error('JSONBin yükleme hatası:', response.status);
+                }
+            } catch (error) {
+                console.error('JSONBin yükleme hatası:', error);
+            }
+        }
+
+        // Save app data to JSONBin
+        async function saveAppDataToJSONBin() {
+            appData.lastUpdated = Date.now();
+            
+            try {
+                const response = await fetch(JSONBIN_UPDATE_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'X-Bin-Versioning': 'false'
+                    },
+                    body: JSON.stringify(appData)
+                });
+                
+                if (response.ok) {
+                    console.log('JSONBin verileri başarıyla kaydedildi');
+                } else {
+                    console.error('JSONBin kaydetme hatası:', response.status);
+                }
+            } catch (error) {
+                console.error('JSONBin kaydetme hatası:', error);
             }
         }
 
@@ -1491,36 +1550,60 @@
         function loadUserData() {
             const saved = localStorage.getItem('takoniads_user_data');
             if (saved) {
-                userData = JSON.parse(saved);
+                const parsedData = JSON.parse(saved);
+                userData = { ...userData, ...parsedData };
+                
+                // Check if daily ad count needs reset
+                checkDailyReset();
+                
+                // Update user data in appData
+                updateUserInAppData();
             } else {
                 // Initialize new user
-                userData.userId = tg.initDataUnsafe.user?.id || Date.now();
+                userData.userId = tg.initDataUnsafe.user?.id?.toString() || 'user_' + Date.now();
                 userData.referralCode = generateReferralCode();
+                userData.lastAdDate = new Date().toDateString();
+                
+                // Add user to appData
+                appData.users[userData.userId] = userData;
+                appData.totalUsers = Object.keys(appData.users).length;
+                
                 saveUserData();
             }
+        }
+
+        // Update user data in appData
+        function updateUserInAppData() {
+            appData.users[userData.userId] = userData;
+            appData.totalUsers = Object.keys(appData.users).length;
         }
 
         // Save user data to localStorage
         function saveUserData() {
             localStorage.setItem('takoniads_user_data', JSON.stringify(userData));
+            updateUserInAppData();
         }
 
-        // Load app data from localStorage
-        function loadAppData() {
-            const saved = localStorage.getItem('takoniads_app_data');
-            if (saved) {
-                appData = JSON.parse(saved);
+        // Check if daily ad count needs reset
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (userData.lastAdDate !== today) {
+                userData.dailyAdCount = 0;
+                userData.lastAdDate = today;
+                saveUserData();
             }
-        }
-
-        // Save app data to localStorage
-        function saveAppData() {
-            localStorage.setItem('takoniads_app_data', JSON.stringify(appData));
         }
 
         // Generate referral code
         function generateReferralCode() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
+            return 'TAKONI' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        // Check admin mode
+        function checkAdminMode() {
+            if (ADMIN_USERS.includes(userData.userId)) {
+                elements.adminHeaderBtn.style.display = 'flex';
+            }
         }
 
         // Setup event listeners
@@ -1603,9 +1686,9 @@
             // Update withdraw button state
             const canWithdraw = trxBalance >= MIN_WITHDRAWAL;
             elements.mainWithdrawBtn.disabled = !canWithdraw;
-            elements.mainWithdrawBtn.textContent = canWithdraw ? 
-                `Çekim Yap (TRX ${trxBalance.toFixed(2)})` : 
-                `Çekim Yapmak İçin ${MIN_WITHDRAWAL} TRX'ye Ulaş`;
+            elements.mainWithdrawBtn.innerHTML = canWithdraw ? 
+                `<i class="fas fa-money-bill-wave"></i> Çekim Yap (${trxBalance.toFixed(2)} TRX)` : 
+                `<i class="fas fa-money-bill-wave"></i> Çekim Yapmak İçin ${(MIN_WITHDRAWAL - trxBalance).toFixed(2)} TRX Daha Gerekli`;
             
             // Check ad cooldown
             checkAdCooldown();
@@ -1681,8 +1764,8 @@
         }
 
         // Handle ad reward
-        function handleAdReward() {
-            const trxPrice = getCurrentTRXPrice();
+        async function handleAdReward() {
+            const trxPrice = await getCurrentTRXPrice();
             const trxReward = AD_REWARD / trxPrice;
             
             // Update user data
@@ -1696,7 +1779,7 @@
             
             // Save data
             saveUserData();
-            saveAppData();
+            await saveAppDataToJSONBin();
             
             // Update UI
             updateUI();
@@ -1708,10 +1791,27 @@
             checkAdCooldown();
         }
 
+        // Get current TRX price from CoinGecko
+        async function getCurrentTRXPrice() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd&include_24hr_change=true');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.tron.usd;
+                } else {
+                    throw new Error('TRON fiyatı alınamadı');
+                }
+            } catch (error) {
+                console.error('TRON fiyatı yüklenirken hata:', error);
+                return 0.12; // Fallback price
+            }
+        }
+
         // Update withdraw view
         function updateWithdrawView() {
             elements.withdrawBalanceDisplay.textContent = `TRX ${userData.balance.toFixed(6)}`;
-            elements.withdrawAmount.value = '';
+            elements.withdrawAmount.value = Math.min(userData.balance, 5).toFixed(2);
             elements.tronAddress.value = '';
             elements.withdrawBtn.disabled = true;
             
@@ -1731,7 +1831,7 @@
         }
 
         // Submit withdrawal request
-        function submitWithdrawal() {
+        async function submitWithdrawal() {
             const amount = parseFloat(elements.withdrawAmount.value);
             const address = elements.tronAddress.value.trim();
             
@@ -1752,21 +1852,19 @@
             
             // Create withdrawal request
             const withdrawal = {
-                id: Date.now(),
+                id: 'WD_' + Math.random().toString(36).substring(2, 9).toUpperCase(),
                 amount: amount,
                 address: address,
                 status: 'pending',
-                date: new Date().toISOString()
+                date: new Date().toISOString(),
+                userId: userData.userId
             };
             
             // Add to user history
             userData.withdrawHistory.unshift(withdrawal);
             
             // Add to app withdrawal requests
-            appData.withdrawRequests.unshift({
-                ...withdrawal,
-                userId: userData.userId
-            });
+            appData.withdrawRequests.unshift(withdrawal);
             
             // Update balance
             userData.balance -= amount;
@@ -1777,14 +1875,14 @@
             
             // Save data
             saveUserData();
-            saveAppData();
+            await saveAppDataToJSONBin();
             
             // Update UI
             updateUI();
             updateWithdrawHistory();
             
             // Reset form
-            elements.withdrawAmount.value = '';
+            elements.withdrawAmount.value = Math.min(userData.balance, 5).toFixed(2);
             elements.tronAddress.value = '';
             elements.withdrawBtn.disabled = true;
             
@@ -1839,7 +1937,7 @@
         }
 
         // Apply referral code
-        function applyReferralCode() {
+        async function applyReferralCode() {
             const code = elements.referralInput.value.trim().toUpperCase();
             
             if (!code) {
@@ -1857,20 +1955,45 @@
                 return;
             }
             
-            // In a real app, you would validate the code with your backend
-            // For now, we'll simulate successful referral application
+            // Check if referral code exists in appData
+            let referrerFound = false;
+            for (const userId in appData.users) {
+                if (appData.users[userId].referralCode === code) {
+                    referrerFound = true;
+                    
+                    // Add referral to referrer's list
+                    appData.users[userId].referrals.push({
+                        userId: userData.userId,
+                        date: new Date().toISOString(),
+                        bonus: 0.5
+                    });
+                    appData.users[userId].referralEarnings += 0.5;
+                    appData.users[userId].balance += 0.5;
+                    
+                    break;
+                }
+            }
+            
+            if (!referrerFound) {
+                showStatus('Geçersiz referans kodu.', 'error');
+                return;
+            }
+            
+            // Update current user
             userData.referredBy = code;
             
-            // Add referral bonus
-            const bonusAmount = 0.1; // 0.1 TRX bonus
-            userData.balance += bonusAmount;
+            // Add referral bonus to current user
+            userData.balance += 0.5;
+            userData.referralEarnings += 0.5;
             
             saveUserData();
-            updateUI();
-            updateReferralView();
+            await saveAppDataToJSONBin();
             
             elements.referralInput.value = '';
-            showStatus(`Tebrikler! Referans bonusu olarak ${bonusAmount} TRX kazandınız.`, 'success');
+            showStatus(`Tebrikler! Referans bonusu olarak 0.5 TRX kazandınız.`, 'success');
+            
+            updateUI();
+            updateReferralView();
         }
 
         // Update referral history
@@ -1910,25 +2033,28 @@
 
         // Update admin user list
         function updateAdminUserList() {
-            // In a real app, you would fetch this from your backend
-            // For now, we'll show current user and some mock data
-            const users = [userData];
+            const users = Object.values(appData.users);
+            
+            if (users.length === 0) {
+                elements.adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">Kullanıcı bulunamadı</p>';
+                return;
+            }
             
             const userListHTML = users.map(user => `
                 <div class="admin-user-item">
                     <div class="admin-user-info">
-                        <div class="admin-user-id">Kullanıcı ${user.userId}</div>
+                        <div class="admin-user-id">${user.userName || 'Kullanıcı'} (${user.userId})</div>
                         <div class="admin-user-balance">Bakiye: TRX ${user.balance.toFixed(6)}</div>
                         <div class="admin-user-date">Reklamlar: ${user.adCount} | Referanslar: ${user.referrals.length}</div>
                     </div>
                     <div class="admin-user-actions">
-                        <button class="admin-action-btn" onclick="adminAddBalance(${user.userId})">+ Bakiye</button>
-                        <button class="admin-action-btn" onclick="adminResetUser(${user.userId})">Sıfırla</button>
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1 TRX</button>
+                        <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 5)">+5 TRX</button>
                     </div>
                 </div>
             `).join('');
             
-            elements.adminUserList.innerHTML = userListHTML || '<p style="text-align: center; color: var(--tg-theme-hint-color);">Kullanıcı bulunamadı</p>';
+            elements.adminUserList.innerHTML = userListHTML;
         }
 
         // Update withdraw requests for admin
@@ -1938,31 +2064,57 @@
                 return;
             }
             
-            const requestsHTML = appData.withdrawRequests.map(request => `
-                <div class="withdraw-request-item">
-                    <div class="withdraw-request-info">
-                        <div class="withdraw-request-user">Kullanıcı ${request.userId} - ${request.amount.toFixed(2)} TRX</div>
-                        <div class="withdraw-request-details">Durum: ${request.status}</div>
-                        <div class="withdraw-request-address" onclick="copyToClipboard('${request.address}')">${request.address}</div>
-                        <div class="withdraw-request-date">${new Date(request.date).toLocaleString('tr-TR')}</div>
+            const requestsHTML = appData.withdrawRequests.map(request => {
+                const user = appData.users[request.userId];
+                return `
+                    <div class="withdraw-request-item">
+                        <div class="withdraw-request-info">
+                            <div class="withdraw-request-user">${user?.userName || 'Kullanıcı'} (${request.userId}) - ${request.amount.toFixed(2)} TRX</div>
+                            <div class="withdraw-request-details">Durum: ${request.status}</div>
+                            <div class="withdraw-request-address" onclick="copyToClipboard('${request.address}')">${request.address}</div>
+                            <div class="withdraw-request-date">${new Date(request.date).toLocaleString('tr-TR')}</div>
+                        </div>
+                        <div class="withdraw-request-actions">
+                            <button class="withdraw-action-btn approve" onclick="adminProcessWithdrawal('${request.id}', 'completed')">Onayla</button>
+                            <button class="withdraw-action-btn reject" onclick="adminProcessWithdrawal('${request.id}', 'rejected')">Reddet</button>
+                        </div>
                     </div>
-                    <div class="withdraw-request-actions">
-                        <button class="withdraw-action-btn approve" onclick="adminProcessWithdrawal(${request.id}, 'completed')">Onayla</button>
-                        <button class="withdraw-action-btn reject" onclick="adminProcessWithdrawal(${request.id}, 'rejected')">Reddet</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             elements.withdrawRequestsList.innerHTML = requestsHTML;
         }
 
+        // Admin add balance
+        async function adminAddBalance(userId, amount) {
+            if (appData.users[userId]) {
+                appData.users[userId].balance += amount;
+                await saveAppDataToJSONBin();
+                updateAdminView();
+                showStatus(`${userId} kullanıcısına ${amount} TRX eklendi.`, 'success');
+            }
+        }
+
+        // Admin process withdrawal
+        async function adminProcessWithdrawal(requestId, status) {
+            const request = appData.withdrawRequests.find(req => req.id === requestId);
+            if (request) {
+                request.status = status;
+                
+                // If rejected, return balance to user
+                if (status === 'rejected' && appData.users[request.userId]) {
+                    appData.users[request.userId].balance += request.amount;
+                }
+                
+                await saveAppDataToJSONBin();
+                updateAdminView();
+                showStatus(`Çekim talebi ${status === 'completed' ? 'onaylandı' : 'reddedildi'}.`, 'success');
+            }
+        }
+
         // Export data
         function exportData() {
-            const dataStr = JSON.stringify({
-                userData: userData,
-                appData: appData
-            }, null, 2);
-            
+            const dataStr = JSON.stringify(appData, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1977,12 +2129,19 @@
         }
 
         // Reset all data
-        function resetAllData() {
+        async function resetAllData() {
             if (confirm('TÜM verileri sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
                 localStorage.removeItem('takoniads_user_data');
-                localStorage.removeItem('takoniads_app_data');
-                
-                // Reload the page
+                appData = {
+                    totalUsers: 0,
+                    totalAds: 0,
+                    totalWithdrawals: 0,
+                    totalEarnings: 0,
+                    withdrawRequests: [],
+                    users: {},
+                    lastUpdated: Date.now()
+                };
+                await saveAppDataToJSONBin();
                 location.reload();
             }
         }
@@ -1991,17 +2150,11 @@
         function showStatus(message, type) {
             elements.statusMessage.textContent = message;
             elements.statusMessage.className = 'status-message ' + type;
+            elements.statusMessage.style.display = 'block';
             
             setTimeout(() => {
                 elements.statusMessage.style.display = 'none';
             }, 5000);
-        }
-
-        // Get current TRX price (mock function)
-        function getCurrentTRXPrice() {
-            // In a real app, you would fetch this from an API
-            // For now, we'll use a mock price
-            return 0.12; // $0.12 per TRX
         }
 
         // Start TRON price tracker
@@ -2012,20 +2165,34 @@
         }
 
         // Update TRON price display
-        function updateTRONPrice() {
-            // Mock price data - in real app, fetch from CoinGecko API
-            const mockPrice = 0.12 + (Math.random() - 0.5) * 0.01;
-            const mockChange = (Math.random() - 0.5) * 2;
-            
-            elements.tronPrice.textContent = `$${mockPrice.toFixed(4)}`;
-            elements.tronChange.textContent = `24s: ${mockChange > 0 ? '+' : ''}${mockChange.toFixed(2)}%`;
-            elements.tronChange.className = `chart-change ${mockChange >= 0 ? 'positive' : 'negative'}`;
-            
-            // Update chart (mock)
-            updateTRONChart(mockPrice, mockChange);
+        async function updateTRONPrice() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd&include_24hr_change=true');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const price = data.tron.usd;
+                    const change = data.tron.usd_24h_change || 0;
+                    
+                    elements.tronPrice.textContent = `$${price.toFixed(4)}`;
+                    elements.tronChange.textContent = `24s: ${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+                    elements.tronChange.className = `chart-change ${change >= 0 ? 'positive' : 'negative'}`;
+                    
+                    // Update chart
+                    updateTRONChart(price, change);
+                } else {
+                    throw new Error('TRON fiyatı alınamadı');
+                }
+            } catch (error) {
+                console.error('TRON fiyatı yüklenirken hata:', error);
+                // Fallback values
+                elements.tronPrice.textContent = '$0.1200';
+                elements.tronChange.textContent = '24s: +0.50%';
+                elements.tronChange.className = 'chart-change positive';
+            }
         }
 
-        // Update TRON chart (mock)
+        // Update TRON chart
         function updateTRONChart(price, change) {
             const canvas = document.getElementById('trxChartCanvas');
             const ctx = canvas.getContext('2d');
@@ -2037,19 +2204,19 @@
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw mock chart
+            // Draw mock chart based on price change
             ctx.beginPath();
             ctx.moveTo(0, canvas.height / 2);
             
             const points = 20;
             for (let i = 0; i <= points; i++) {
                 const x = (i / points) * canvas.width;
-                const variation = Math.sin(i * 0.5) * 20;
-                const y = canvas.height / 2 + (change >= 0 ? -variation : variation);
+                const variation = Math.sin(i * 0.5) * 20 * (change >= 0 ? -1 : 1);
+                const y = canvas.height / 2 + variation;
                 ctx.lineTo(x, y);
             }
             
-            ctx.strokeStyle = change >= 0 ? '#10b981' : '#ef4444';
+            ctx.strokeStyle = change >= 0 ? '#16a34a' : '#dc2626';
             ctx.lineWidth = 2;
             ctx.stroke();
         }
@@ -2059,32 +2226,6 @@
             navigator.clipboard.writeText(text).then(() => {
                 showStatus('Kopyalandı!', 'success');
             });
-        }
-
-        // Admin functions (would be connected to backend in real app)
-        function adminAddBalance(userId) {
-            // In real app, make API call to add balance
-            showStatus(`Kullanıcı ${userId} bakiyesi güncellendi.`, 'success');
-        }
-
-        function adminResetUser(userId) {
-            if (confirm('Bu kullanıcıyı sıfırlamak istediğinizden emin misiniz?')) {
-                // In real app, make API call to reset user
-                showStatus(`Kullanıcı ${userId} sıfırlandı.`, 'success');
-            }
-        }
-
-        function adminProcessWithdrawal(requestId, status) {
-            // In real app, make API call to process withdrawal
-            showStatus(`Çekim talebi ${status === 'completed' ? 'onaylandı' : 'reddedildi'}.`, 'success');
-            
-            // Update local data
-            const request = appData.withdrawRequests.find(req => req.id === requestId);
-            if (request) {
-                request.status = status;
-                saveAppData();
-                updateWithdrawRequests();
-            }
         }
 
         // Initialize the app when DOM is loaded
