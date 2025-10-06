@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TakoniAds - Reklam İzle, TRON Kazan</title>
+    <title>TakoniAds - Watch Ads, Earn TRON</title>
     
-    <!-- Adexora Reklam SDK -->
+    <!-- Adexora Ad SDK -->
     <script src="https://adexora.com/cdn/ads.js?id=491"></script>
     
     <!-- Telegram WebApp -->
@@ -1091,7 +1091,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- Ana Sayfa -->
+        <!-- Home View -->
         <div id="home-view" class="view">
             <div class="header">
                 <div class="logo-container">
@@ -1100,39 +1100,39 @@
                     </div>
                 </div>
                 <h1>TakoniAds</h1>
-                <p>Reklam İzle ve TRON Kazan</p>
+                <p>Watch Ads and Earn TRON</p>
                 <button class="admin-header-btn" id="adminHeaderBtn" style="display: none;">
                     <i class="fas fa-cog"></i>
                     Admin
                 </button>
             </div>
             
-            <!-- TRON Grafik Bölümü -->
+            <!-- TRON Chart Section -->
             <div class="card">
-                <h2><i class="fas fa-chart-line"></i> TRON Fiyatı</h2>
+                <h2><i class="fas fa-chart-line"></i> TRON Price</h2>
                 <div class="chart-container">
                     <div class="chart-header">
                         <div class="chart-title">TRON (TRX)</div>
-                        <div class="chart-price" id="tronPrice">Yükleniyor...</div>
+                        <div class="chart-price" id="tronPrice">Loading...</div>
                     </div>
                     <div class="chart-change-container">
-                        <span class="chart-change" id="tronChange">24s: 0.00%</span>
+                        <span class="chart-change" id="tronChange">24h: 0.00%</span>
                     </div>
                     <div class="chart-placeholder" id="tronChart">
                         <canvas id="trxChartCanvas"></canvas>
                     </div>
                     <div class="chart-info">
-                        Daha fazla bilgi için CoinGecko'yu ziyaret edin
+                        Visit CoinGecko for more information
                     </div>
                 </div>
             </div>
             
-            <!-- Bakiye Kartı -->
+            <!-- Balance Card -->
             <div class="card">
-                <h2><i class="fas fa-wallet"></i> Mevcut Bakiye</h2>
+                <h2><i class="fas fa-wallet"></i> Current Balance</h2>
                 <div class="balance-amount" id="balanceDisplay">TRX 0.00</div>
                 
-                <!-- Günlük Reklam İlerleme Çubuğu -->
+                <!-- Daily Ad Progress Bar -->
                 <div class="progress-container">
                     <div class="progress-bar" id="dailyAdProgress" style="width: 0%"></div>
                 </div>
@@ -1140,173 +1140,173 @@
                 <div class="ad-info-grid">
                     <div class="ad-info-item">
                         <h3 id="adCountDisplay">0</h3>
-                        <p>Toplam İzlenen Reklam</p>
+                        <p>Total Ads Watched</p>
                     </div>
                     <div class="ad-info-item">
                         <h3 id="dailyAdCountDisplay">0 / 200</h3>
-                        <p>Bugünkü Reklamlar</p>
+                        <p>Today's Ads</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Reklam Butonu -->
+            <!-- Ad Button -->
             <div class="ad-buttons">
                 <button class="btn btn-primary" id="rewardedBtn">
                     <i class="fas fa-play-circle"></i>
-                    Reklam İzle (+0.0005$)
+                    Watch Ad (+0.0005$)
                 </button>
                 <div class="countdown-timer" id="countdownTimer">
-                    Sonraki reklam için bekleyin: <span id="countdownSeconds">5</span>s
+                    Wait for next ad: <span id="countdownSeconds">5</span>s
                 </div>
             </div>
             
-            <!-- Çekim Butonu -->
+            <!-- Withdraw Button -->
             <button class="btn btn-success" id="mainWithdrawBtn" disabled>
                 <i class="fas fa-money-bill-wave"></i>
-                Çekim Yapmak İçin 5 TRX'ye Ulaş
+                Reach 10 TRX to Withdraw
             </button>
         </div>
 
-        <!-- Para Çekme View -->
+        <!-- Withdraw View -->
         <div id="withdraw-view" class="view">
             <div class="header">
-                <h1>Para Çekme</h1>
-                <p>Kazancınızı talep edin</p>
+                <h1>Withdraw</h1>
+                <p>Claim your earnings</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-wallet"></i> Bakiyeniz</h2>
+                <h2><i class="fas fa-wallet"></i> Your Balance</h2>
                 <div class="balance-amount" id="withdrawBalanceDisplay">TRX 0.00</div>
                 <p style="text-align: center; color: var(--tg-theme-text-color); margin-top: 10px;">
-                    Minimum çekim: <strong>5 TRX</strong>
+                    Minimum withdrawal: <strong>10 TRX</strong>
                 </p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-money-bill-wave"></i> Çekim Bilgileri</h2>
+                <h2><i class="fas fa-money-bill-wave"></i> Withdraw Information</h2>
                 <div class="input-group">
-                    <label for="withdrawAmount">Çekim Miktarı (TRX)</label>
-                    <input type="number" id="withdrawAmount" placeholder="Minimum 5 TRX" min="5" step="0.1">
+                    <label for="withdrawAmount">Withdraw Amount (TRX)</label>
+                    <input type="number" id="withdrawAmount" placeholder="Minimum 10 TRX" min="10" step="0.1">
                 </div>
                 <div class="input-group">
-                    <label for="tronAddress">TRON Cüzdan Adresi</label>
-                    <input type="text" id="tronAddress" placeholder="T... veya TRC20 adresiniz">
+                    <label for="tronAddress">TRON Wallet Address</label>
+                    <input type="text" id="tronAddress" placeholder="T... or your TRC20 address">
                 </div>
                 <button class="btn btn-success" id="withdrawBtn" disabled>
                     <i class="fas fa-paper-plane"></i>
-                    Çekim Talebi Gönder
+                    Submit Withdraw Request
                 </button>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-history"></i> Çekim Geçmişi</h2>
+                <h2><i class="fas fa-history"></i> Withdraw History</h2>
                 <div id="withdrawHistory">
                     <p style="text-align: center; color: var(--tg-theme-text-color);">
-                        Henüz çekim yapılmamış
+                        No withdrawals yet
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Referans View -->
+        <!-- Referral View -->
         <div id="referral-view" class="view">
             <div class="header">
-                <h1>Referans Sistemi</h1>
-                <p>Arkadaşlarını Davet Et, Bonus Kazan</p>
+                <h1>Referral System</h1>
+                <p>Invite Friends, Earn Bonus</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-users"></i> Referans İstatistikleri</h2>
+                <h2><i class="fas fa-users"></i> Referral Statistics</h2>
                 <div class="ad-info-grid">
                     <div class="ad-info-item">
                         <h3 id="referralCount">0</h3>
-                        <p>Toplam Referans</p>
+                        <p>Total Referrals</p>
                     </div>
                     <div class="ad-info-item">
                         <h3 id="referralEarnings">TRX 0.00</h3>
-                        <p>Referans Kazancı</p>
+                        <p>Referral Earnings</p>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-share-alt"></i> Referans Linkiniz</h2>
+                <h2><i class="fas fa-share-alt"></i> Your Referral Code</h2>
                 <div class="referral-code-box" id="referralCode">
-                    Yükleniyor...
+                    Loading...
                 </div>
                 <button class="referral-share-btn" id="shareReferralBtn">
                     <i class="fas fa-share"></i>
-                    Referans Linkini Kopyala
+                    Copy Referral Message
                 </button>
             </div>
             
             <div class="referral-input-container">
                 <h3 style="color: var(--tg-theme-text-color); margin-bottom: 10px;">
-                    <i class="fas fa-user-plus"></i> Referans Kodu Gir
+                    <i class="fas fa-user-plus"></i> Enter Referral Code
                 </h3>
                 <div class="referral-input-group">
-                    <input type="text" id="referralInput" placeholder="Referans kodunu gir">
-                    <button id="applyReferralBtn">Uygula</button>
+                    <input type="text" id="referralInput" placeholder="Enter referral code">
+                    <button id="applyReferralBtn">Apply</button>
                 </div>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-list"></i> Referans Geçmişi</h2>
+                <h2><i class="fas fa-list"></i> Referral History</h2>
                 <div class="referral-history" id="referralHistoryList">
                     <p style="text-align: center; color: var(--tg-theme-text-color);">
-                        Henüz referans aktivitesi yok
+                        No referral activity yet
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Hakkında View -->
+        <!-- About View -->
         <div id="about-view" class="view">
             <div class="header">
-                <h1>Hakkında</h1>
-                <p>TakoniAds Bot Bilgileri</p>
+                <h1>About</h1>
+                <p>TakoniAds Bot Information</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-info-circle"></i> Bot Hakkında</h2>
+                <h2><i class="fas fa-info-circle"></i> About Bot</h2>
                 <div class="about-section">
-                    <h3>TakoniAds Nedir?</h3>
-                    <p>TakoniAds, Telegram üzerinden reklam izleyerek TRON (TRX) kazanabileceğiniz bir platformdur. Kullanıcı dostu arayüzü ve güvenilir ödeme sistemi ile hizmet vermektedir.</p>
+                    <h3>What is TakoniAds?</h3>
+                    <p>TakoniAds is a platform where you can earn TRON (TRX) by watching ads on Telegram. It offers user-friendly interface and reliable payment system.</p>
                 </div>
                 
                 <div class="about-section">
-                    <h3>Nasıl Çalışır?</h3>
-                    <p>• Reklam izleyerek her reklam başına 0.0005$ değerinde TRX kazanırsınız<br>
-                       • Günlük maksimum 200 reklam izleyebilirsiniz<br>
-                       • Minimum 5 TRX ile para çekim işlemi yapabilirsiniz<br>
-                       • Arkadaşlarınızı davet ederek ekstra bonus kazanabilirsiniz</p>
+                    <h3>How It Works?</h3>
+                    <p>• Watch ads and earn TRX worth $0.0005 per ad<br>
+                       • Maximum 200 ads per day<br>
+                       • Minimum 10 TRX for withdrawal<br>
+                       • Invite friends and earn extra bonus</p>
                 </div>
                 
                 <div class="about-section">
-                    <h3>Özellikler</h3>
-                    <p>• Hızlı ve güvenli ödemeler<br>
-                       • Gerçek zamanlı TRON fiyat takibi<br>
-                       • Referans sistemi ile ekstra kazanç<br>
-                       • Kullanıcı dostu arayüz<br>
-                       • 7/24 aktif destek</p>
+                    <h3>Features</h3>
+                    <p>• Fast and secure payments<br>
+                       • Real-time TRON price tracking<br>
+                       • Referral system for extra earnings<br>
+                       • User-friendly interface<br>
+                       • 24/7 active support</p>
                 </div>
                 
                 <div class="about-section">
-                    <h3>Destek</h3>
-                    <p>Herhangi bir sorunuz veya sorununuz varsa, destek ekibimizle iletişime geçebilirsiniz.</p>
+                    <h3>Support</h3>
+                    <p>If you have any questions or issues, you can contact our support team.</p>
                 </div>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-cog"></i> Sistem Bilgileri</h2>
+                <h2><i class="fas fa-cog"></i> System Information</h2>
                 <div class="ad-info-grid">
                     <div class="ad-info-item">
                         <h3 id="totalUsers">0</h3>
-                        <p>Toplam Kullanıcı</p>
+                        <p>Total Users</p>
                     </div>
                     <div class="ad-info-item">
                         <h3 id="totalAds">0</h3>
-                        <p>Toplam Reklam</p>
+                        <p>Total Ads</p>
                     </div>
                 </div>
             </div>
@@ -1316,45 +1316,45 @@
         <div id="admin-view" class="view">
             <div class="header">
                 <h1>Admin Panel</h1>
-                <p>Sistem Yönetimi</p>
+                <p>System Management</p>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-chart-bar"></i> İstatistikler</h2>
+                <h2><i class="fas fa-chart-bar"></i> Statistics</h2>
                 <div class="admin-stats-grid">
                     <div class="admin-stat-card">
                         <div class="admin-stat-value" id="adminTotalUsers">0</div>
-                        <div class="admin-stat-label">Toplam Kullanıcı</div>
+                        <div class="admin-stat-label">Total Users</div>
                     </div>
                     <div class="admin-stat-card">
                         <div class="admin-stat-value" id="adminTotalAds">0</div>
-                        <div class="admin-stat-label">Toplam Reklam</div>
+                        <div class="admin-stat-label">Total Ads</div>
                     </div>
                     <div class="admin-stat-card">
                         <div class="admin-stat-value" id="adminTotalWithdrawals">0</div>
-                        <div class="admin-stat-label">Toplam Çekim</div>
+                        <div class="admin-stat-label">Total Withdrawals</div>
                     </div>
                     <div class="admin-stat-card">
                         <div class="admin-stat-value" id="adminTotalEarnings">TRX 0</div>
-                        <div class="admin-stat-label">Toplam Kazanç</div>
+                        <div class="admin-stat-label">Total Earnings</div>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-users"></i> Kullanıcı Yönetimi</h2>
+                <h2><i class="fas fa-users"></i> User Management</h2>
                 <div class="admin-user-list" id="adminUserList">
                     <p style="text-align: center; color: var(--tg-theme-text-color);">
-                    Kullanıcılar yükleniyor...
+                    Loading users...
                     </p>
                 </div>
             </div>
             
             <div class="card">
-                <h2><i class="fas fa-money-bill-wave"></i> Çekim Talepleri</h2>
+                <h2><i class="fas fa-money-bill-wave"></i> Withdraw Requests</h2>
                 <div class="withdraw-requests-list" id="withdrawRequestsList">
                     <p style="text-align: center; color: var(--tg-theme-text-color);">
-                    Bekleyen çekim talebi yok
+                    No pending withdraw requests
                     </p>
                 </div>
             </div>
@@ -1362,11 +1362,11 @@
             <div class="admin-controls">
                 <button class="admin-control-btn" id="exportDataBtn">
                     <i class="fas fa-download"></i>
-                    Verileri Dışa Aktar
+                    Export Data
                 </button>
                 <button class="admin-control-btn danger" id="resetAllBtn">
                     <i class="fas fa-trash"></i>
-                    Tüm Verileri Sıfırla
+                    Reset All Data
                 </button>
             </div>
         </div>
@@ -1376,19 +1376,19 @@
     <div class="footer-nav">
         <button class="nav-btn active" data-view="home-view">
             <div class="icon"><i class="fas fa-home"></i></div>
-            Ana Sayfa
+            Home
         </button>
         <button class="nav-btn" data-view="withdraw-view">
             <div class="icon"><i class="fas fa-wallet"></i></div>
-            Para Çekme
+            Withdraw
         </button>
         <button class="nav-btn" data-view="referral-view">
             <div class="icon"><i class="fas fa-users"></i></div>
-            Referans
+            Referral
         </button>
         <button class="nav-btn" data-view="about-view">
             <div class="icon"><i class="fas fa-info-circle"></i></div>
-            Hakkında
+            About
         </button>
     </div>
 
@@ -1402,7 +1402,7 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-        // Admin user IDs
+        // Admin user IDs - FIXED: Ensure these are strings
         const ADMIN_USERS = ['8401848644', '7904032877'];
 
         // Telegram WebApp initialization
@@ -1439,7 +1439,7 @@
 
         const AD_REWARD = 0.0005; // $0.0005 per ad
         const DAILY_AD_LIMIT = 200;
-        const MIN_WITHDRAWAL = 5; // 5 TRX
+        const MIN_WITHDRAWAL = 10; // 10 TRX - UPDATED
         const AD_COOLDOWN = 5000; // 5 seconds in milliseconds
 
         // DOM Elements
@@ -1532,13 +1532,13 @@
                     const data = await response.json();
                     if (data.record) {
                         appData = { ...appData, ...data.record };
-                        console.log('JSONBin verileri başarıyla yüklendi');
+                        console.log('JSONBin data loaded successfully');
                     }
                 } else {
-                    console.error('JSONBin yükleme hatası:', response.status);
+                    console.error('JSONBin loading error:', response.status);
                 }
             } catch (error) {
-                console.error('JSONBin yükleme hatası:', error);
+                console.error('JSONBin loading error:', error);
             }
         }
 
@@ -1558,12 +1558,12 @@
                 });
                 
                 if (response.ok) {
-                    console.log('JSONBin verileri başarıyla kaydedildi');
+                    console.log('JSONBin data saved successfully');
                 } else {
-                    console.error('JSONBin kaydetme hatası:', response.status);
+                    console.error('JSONBin saving error:', response.status);
                 }
             } catch (error) {
-                console.error('JSONBin kaydetme hatası:', error);
+                console.error('JSONBin saving error:', error);
             }
         }
 
@@ -1620,10 +1620,18 @@
             return 'TAKONI' + Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
-        // Check admin mode
+        // Check admin mode - FIXED: Better admin detection
         function checkAdminMode() {
-            if (ADMIN_USERS.includes(userData.userId)) {
+            console.log('Checking admin mode for user:', userData.userId);
+            console.log('Admin users:', ADMIN_USERS);
+            
+            // Check if user ID is in admin list
+            if (ADMIN_USERS.includes(userData.userId.toString())) {
+                console.log('User is admin, showing admin button');
                 elements.adminHeaderBtn.style.display = 'flex';
+            } else {
+                console.log('User is not admin');
+                elements.adminHeaderBtn.style.display = 'none';
             }
         }
 
@@ -1662,7 +1670,7 @@
             elements.tronAddress.addEventListener('input', validateWithdrawal);
             
             // Referral buttons
-            elements.shareReferralBtn.addEventListener('click', shareReferralLink);
+            elements.shareReferralBtn.addEventListener('click', shareReferralMessage);
             elements.applyReferralBtn.addEventListener('click', applyReferralCode);
             elements.referralCode.addEventListener('click', copyReferralCode);
             
@@ -1709,8 +1717,8 @@
             const canWithdraw = trxBalance >= MIN_WITHDRAWAL;
             elements.mainWithdrawBtn.disabled = !canWithdraw;
             elements.mainWithdrawBtn.innerHTML = canWithdraw ? 
-                `<i class="fas fa-money-bill-wave"></i> Çekim Yap (${trxBalance.toFixed(2)} TRX)` : 
-                `<i class="fas fa-money-bill-wave"></i> Çekim Yapmak İçin ${(MIN_WITHDRAWAL - trxBalance).toFixed(2)} TRX Daha Gerekli`;
+                `<i class="fas fa-money-bill-wave"></i> Withdraw (${trxBalance.toFixed(2)} TRX)` : 
+                `<i class="fas fa-money-bill-wave"></i> Need ${(MIN_WITHDRAWAL - trxBalance).toFixed(2)} TRX More to Withdraw`;
             
             // Check ad cooldown
             checkAdCooldown();
@@ -1752,7 +1760,7 @@
         // Show rewarded ad
         function showRewardedAd() {
             if (userData.dailyAdCount >= DAILY_AD_LIMIT) {
-                showStatus('Günlük reklam limitine ulaştınız. Yarın tekrar deneyin!', 'error');
+                showStatus('You have reached your daily ad limit. Try again tomorrow!', 'error');
                 return;
             }
             
@@ -1771,7 +1779,7 @@
                     .catch(e => {
                         // ❌ Ad failed to load or was skipped
                         console.error('Ad error:', e);
-                        showStatus('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                        showStatus('Error loading ad. Please try again.', 'error');
                         elements.rewardedBtn.classList.remove('btn-loading');
                         elements.rewardedBtn.disabled = false;
                     });
@@ -1807,7 +1815,7 @@
             updateUI();
             
             // Show success message
-            showStatus(`Tebrikler! ${trxReward.toFixed(6)} TRX kazandınız.`, 'success');
+            showStatus(`Congratulations! You earned ${trxReward.toFixed(6)} TRX.`, 'success');
             
             // Start cooldown
             checkAdCooldown();
@@ -1822,10 +1830,10 @@
                     const data = await response.json();
                     return data.tron.usd;
                 } else {
-                    throw new Error('TRON fiyatı alınamadı');
+                    throw new Error('TRON price could not be fetched');
                 }
             } catch (error) {
-                console.error('TRON fiyatı yüklenirken hata:', error);
+                console.error('Error loading TRON price:', error);
                 return 0.12; // Fallback price
             }
         }
@@ -1833,7 +1841,7 @@
         // Update withdraw view
         function updateWithdrawView() {
             elements.withdrawBalanceDisplay.textContent = `TRX ${userData.balance.toFixed(6)}`;
-            elements.withdrawAmount.value = Math.min(userData.balance, 5).toFixed(2);
+            elements.withdrawAmount.value = Math.min(userData.balance, 10).toFixed(2);
             elements.tronAddress.value = '';
             elements.withdrawBtn.disabled = true;
             
@@ -1858,17 +1866,17 @@
             const address = elements.tronAddress.value.trim();
             
             if (amount < MIN_WITHDRAWAL) {
-                showStatus(`Minimum çekim miktarı ${MIN_WITHDRAWAL} TRX'dir.`, 'error');
+                showStatus(`Minimum withdrawal amount is ${MIN_WITHDRAWAL} TRX.`, 'error');
                 return;
             }
             
             if (amount > userData.balance) {
-                showStatus('Yetersiz bakiye.', 'error');
+                showStatus('Insufficient balance.', 'error');
                 return;
             }
             
             if (!address || (!address.startsWith('T') && !address.includes('TRC20'))) {
-                showStatus('Geçerli bir TRON adresi girin.', 'error');
+                showStatus('Please enter a valid TRON address.', 'error');
                 return;
             }
             
@@ -1904,26 +1912,26 @@
             updateWithdrawHistory();
             
             // Reset form
-            elements.withdrawAmount.value = Math.min(userData.balance, 5).toFixed(2);
+            elements.withdrawAmount.value = Math.min(userData.balance, 10).toFixed(2);
             elements.tronAddress.value = '';
             elements.withdrawBtn.disabled = true;
             
-            showStatus('Çekim talebiniz alındı. En kısa sürede işleme alınacaktır.', 'success');
+            showStatus('Your withdrawal request has been received. It will be processed shortly.', 'success');
         }
 
         // Update withdraw history
         function updateWithdrawHistory() {
             if (userData.withdrawHistory.length === 0) {
-                elements.withdrawHistory.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Henüz çekim yapılmamış</p>';
+                elements.withdrawHistory.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">No withdrawals yet</p>';
                 return;
             }
             
             const historyHTML = userData.withdrawHistory.map(withdrawal => `
                 <div class="referral-history-item">
                     <div class="referral-history-user">${withdrawal.amount.toFixed(2)} TRX</div>
-                    <div class="referral-history-date">${new Date(withdrawal.date).toLocaleDateString('tr-TR')}</div>
+                    <div class="referral-history-date">${new Date(withdrawal.date).toLocaleDateString('en-US')}</div>
                     <div class="referral-history-bonus" style="color: ${withdrawal.status === 'completed' ? 'var(--success-color)' : withdrawal.status === 'pending' ? 'var(--warning-color)' : 'var(--danger-color)'}">
-                        ${withdrawal.status === 'completed' ? 'Tamamlandı' : withdrawal.status === 'pending' ? 'Beklemede' : 'Reddedildi'}
+                        ${withdrawal.status === 'completed' ? 'Completed' : withdrawal.status === 'pending' ? 'Pending' : 'Rejected'}
                     </div>
                 </div>
             `).join('');
@@ -1941,16 +1949,23 @@
             updateReferralHistory();
         }
 
-        // Share referral link
-        function shareReferralLink() {
-            copyToClipboard(userData.referralCode);
-            showStatus('Referans kodu panoya kopyalandı!', 'success');
+        // Share referral message with custom format
+        function shareReferralMessage() {
+            const referralMessage = `➡️Earn toncoin By Watcing Ads.✨ 
+➡️Earn TRON By İnviting Friends🙂 
+➡️7/24 Earn TRON✅ 
+➡️Withdraw Anytime🔥 
+${userData.referralCode} 
+https://t.me/takoniAdsBot`;
+            
+            copyToClipboard(referralMessage);
+            showStatus('Referral message copied to clipboard!', 'success');
         }
 
         // Copy referral code
         function copyReferralCode() {
             copyToClipboard(userData.referralCode);
-            showStatus('Referans kodu panoya kopyalandı!', 'success');
+            showStatus('Referral code copied to clipboard!', 'success');
         }
 
         // Apply referral code
@@ -1958,17 +1973,17 @@
             const code = elements.referralInput.value.trim().toUpperCase();
             
             if (!code) {
-                showStatus('Lütfen bir referans kodu girin.', 'error');
+                showStatus('Please enter a referral code.', 'error');
                 return;
             }
             
             if (userData.referredBy) {
-                showStatus('Zaten bir referans kodu kullandınız.', 'error');
+                showStatus('You have already used a referral code.', 'error');
                 return;
             }
             
             if (code === userData.referralCode) {
-                showStatus('Kendi referans kodunuzu kullanamazsınız.', 'error');
+                showStatus('You cannot use your own referral code.', 'error');
                 return;
             }
             
@@ -1992,7 +2007,7 @@
             }
             
             if (!referrerFound) {
-                showStatus('Geçersiz referans kodu.', 'error');
+                showStatus('Invalid referral code.', 'error');
                 return;
             }
             
@@ -2007,7 +2022,7 @@
             await saveAppDataToJSONBin();
             
             elements.referralInput.value = '';
-            showStatus(`Tebrikler! Referans bonusu olarak 0.5 TRX kazandınız.`, 'success');
+            showStatus(`Congratulations! You earned 0.5 TRX as referral bonus.`, 'success');
             
             updateUI();
             updateReferralView();
@@ -2016,14 +2031,14 @@
         // Update referral history
         function updateReferralHistory() {
             if (userData.referrals.length === 0) {
-                elements.referralHistoryList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Henüz referans aktivitesi yok</p>';
+                elements.referralHistoryList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">No referral activity yet</p>';
                 return;
             }
             
             const historyHTML = userData.referrals.map(ref => `
                 <div class="referral-history-item">
-                    <div class="referral-history-user">Kullanıcı ${ref.userId}</div>
-                    <div class="referral-history-date">${new Date(ref.date).toLocaleDateString('tr-TR')}</div>
+                    <div class="referral-history-user">User ${ref.userId}</div>
+                    <div class="referral-history-date">${new Date(ref.date).toLocaleDateString('en-US')}</div>
                     <div class="referral-history-bonus">+${ref.bonus.toFixed(6)} TRX</div>
                 </div>
             `).join('');
@@ -2053,16 +2068,16 @@
             const users = Object.values(appData.users);
             
             if (users.length === 0) {
-                elements.adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Kullanıcı bulunamadı</p>';
+                elements.adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">No users found</p>';
                 return;
             }
             
             const userListHTML = users.map(user => `
                 <div class="admin-user-item">
                     <div class="admin-user-info">
-                        <div class="admin-user-id">${user.userName || 'Kullanıcı'} (${user.userId})</div>
-                        <div class="admin-user-balance">Bakiye: TRX ${user.balance.toFixed(6)}</div>
-                        <div class="admin-user-date">Reklamlar: ${user.adCount} | Referanslar: ${user.referrals.length}</div>
+                        <div class="admin-user-id">${user.userName || 'User'} (${user.userId})</div>
+                        <div class="admin-user-balance">Balance: TRX ${user.balance.toFixed(6)}</div>
+                        <div class="admin-user-date">Ads: ${user.adCount} | Referrals: ${user.referrals.length}</div>
                     </div>
                     <div class="admin-user-actions">
                         <button class="admin-action-btn" onclick="adminAddBalance('${user.userId}', 1)">+1 TRX</button>
@@ -2077,7 +2092,7 @@
         // Update withdraw requests for admin
         function updateWithdrawRequests() {
             if (appData.withdrawRequests.length === 0) {
-                elements.withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Bekleyen çekim talebi yok</p>';
+                elements.withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">No pending withdraw requests</p>';
                 return;
             }
             
@@ -2086,14 +2101,14 @@
                 return `
                     <div class="withdraw-request-item">
                         <div class="withdraw-request-info">
-                            <div class="withdraw-request-user">${user?.userName || 'Kullanıcı'} (${request.userId}) - ${request.amount.toFixed(2)} TRX</div>
-                            <div class="withdraw-request-details">Durum: ${request.status}</div>
+                            <div class="withdraw-request-user">${user?.userName || 'User'} (${request.userId}) - ${request.amount.toFixed(2)} TRX</div>
+                            <div class="withdraw-request-details">Status: ${request.status}</div>
                             <div class="withdraw-request-address" onclick="copyToClipboard('${request.address}')">${request.address}</div>
-                            <div class="withdraw-request-date">${new Date(request.date).toLocaleString('tr-TR')}</div>
+                            <div class="withdraw-request-date">${new Date(request.date).toLocaleString('en-US')}</div>
                         </div>
                         <div class="withdraw-request-actions">
-                            <button class="withdraw-action-btn approve" onclick="adminProcessWithdrawal('${request.id}', 'completed')">Onayla</button>
-                            <button class="withdraw-action-btn reject" onclick="adminProcessWithdrawal('${request.id}', 'rejected')">Reddet</button>
+                            <button class="withdraw-action-btn approve" onclick="adminProcessWithdrawal('${request.id}', 'completed')">Approve</button>
+                            <button class="withdraw-action-btn reject" onclick="adminProcessWithdrawal('${request.id}', 'rejected')">Reject</button>
                         </div>
                     </div>
                 `;
@@ -2108,7 +2123,7 @@
                 appData.users[userId].balance += amount;
                 await saveAppDataToJSONBin();
                 updateAdminView();
-                showStatus(`${userId} kullanıcısına ${amount} TRX eklendi.`, 'success');
+                showStatus(`Added ${amount} TRX to user ${userId}.`, 'success');
             }
         }
 
@@ -2125,7 +2140,7 @@
                 
                 await saveAppDataToJSONBin();
                 updateAdminView();
-                showStatus(`Çekim talebi ${status === 'completed' ? 'onaylandı' : 'reddedildi'}.`, 'success');
+                showStatus(`Withdrawal request ${status === 'completed' ? 'approved' : 'rejected'}.`, 'success');
             }
         }
 
@@ -2142,12 +2157,12 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            showStatus('Veriler başarıyla dışa aktarıldı.', 'success');
+            showStatus('Data exported successfully.', 'success');
         }
 
         // Reset all data
         async function resetAllData() {
-            if (confirm('TÜM verileri sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+            if (confirm('Are you sure you want to reset ALL data? This action cannot be undone!')) {
                 localStorage.removeItem('takoniads_user_data');
                 appData = {
                     totalUsers: 0,
@@ -2192,19 +2207,19 @@
                     const change = data.tron.usd_24h_change || 0;
                     
                     elements.tronPrice.textContent = `$${price.toFixed(4)}`;
-                    elements.tronChange.textContent = `24s: ${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+                    elements.tronChange.textContent = `24h: ${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
                     elements.tronChange.className = `chart-change ${change >= 0 ? 'positive' : 'negative'}`;
                     
                     // Update chart
                     updateTRONChart(price, change);
                 } else {
-                    throw new Error('TRON fiyatı alınamadı');
+                    throw new Error('TRON price could not be fetched');
                 }
             } catch (error) {
-                console.error('TRON fiyatı yüklenirken hata:', error);
+                console.error('Error loading TRON price:', error);
                 // Fallback values
                 elements.tronPrice.textContent = '$0.1200';
-                elements.tronChange.textContent = '24s: +0.50%';
+                elements.tronChange.textContent = '24h: +0.50%';
                 elements.tronChange.className = 'chart-change positive';
             }
         }
@@ -2241,7 +2256,7 @@
         // Copy to clipboard
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                showStatus('Kopyalandı!', 'success');
+                showStatus('Copied!', 'success');
             });
         }
 
