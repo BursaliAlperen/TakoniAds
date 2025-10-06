@@ -23,7 +23,7 @@
             --tg-theme-text-color: #ffffff;
             --tg-theme-button-color: #dc2626;
             --tg-theme-button-text-color: #ffffff;
-            --tg-theme-hint-color: #a3a3a3;
+            --tg-theme-hint-color: #ffffff;
             --success-color: #16a34a;
             --warning-color: #d97706;
             --danger-color: #dc2626;
@@ -167,8 +167,9 @@
         }
 
         .header p {
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             font-size: 16px;
+            opacity: 0.9;
         }
 
         .admin-header-btn {
@@ -282,8 +283,9 @@
 
         .ad-info-item p {
             font-size: 14px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             margin: 0;
+            opacity: 0.9;
         }
 
         /* Button Styles */
@@ -461,7 +463,7 @@
         .nav-btn {
             background: none;
             border: none;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -473,6 +475,7 @@
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            opacity: 0.7;
         }
 
         .nav-btn::before {
@@ -490,6 +493,7 @@
 
         .nav-btn.active {
             color: white;
+            opacity: 1;
         }
 
         .nav-btn.active::before {
@@ -499,6 +503,7 @@
         .nav-btn:hover:not(.active) {
             color: var(--tg-theme-text-color);
             transform: translateY(-3px);
+            opacity: 1;
         }
 
         .nav-btn .icon {
@@ -594,7 +599,7 @@
             background: rgba(220, 38, 38, 0.1);
             padding: 20px;
             border-radius: 12px;
-            border: 1px dashed var(--tg-theme-hint-color);
+            border: 1px dashed var(--tg-theme-text-color);
             margin-top: 15px;
             cursor: pointer;
             color: var(--tg-theme-text-color);
@@ -604,12 +609,14 @@
             font-size: 18px;
             letter-spacing: 2px;
             animation: fadeInUp 0.5s ease-out;
+            opacity: 0.9;
         }
 
         .referral-code-box:hover {
             background: rgba(220, 38, 38, 0.2);
             border-color: var(--accent-color);
             transform: translateY(-3px);
+            opacity: 1;
         }
 
         /* Referral Share Button */
@@ -689,23 +696,26 @@
             justify-content: center;
             background: rgba(15, 15, 15, 0.5);
             border-radius: 10px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             font-size: 14px;
             cursor: pointer;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            opacity: 0.9;
         }
 
         .chart-placeholder:hover {
             background: rgba(220, 38, 38, 0.1);
+            opacity: 1;
         }
 
         .chart-info {
             text-align: center;
             margin-top: 10px;
             font-size: 12px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
+            opacity: 0.9;
         }
 
         /* TRX Chart Canvas */
@@ -747,8 +757,9 @@
 
         .admin-stat-label {
             font-size: 12px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             text-transform: uppercase;
+            opacity: 0.9;
         }
 
         .admin-controls {
@@ -814,13 +825,15 @@
 
         .admin-user-balance {
             font-size: 12px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             margin-bottom: 3px;
+            opacity: 0.9;
         }
 
         .admin-user-date {
             font-size: 11px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
+            opacity: 0.8;
         }
 
         .admin-user-actions {
@@ -877,13 +890,14 @@
 
         .withdraw-request-details {
             font-size: 12px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             margin-bottom: 3px;
+            opacity: 0.9;
         }
 
         .withdraw-request-address {
             font-size: 11px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
             background: rgba(220, 38, 38, 0.2);
             padding: 8px;
             border-radius: 6px;
@@ -891,15 +905,18 @@
             cursor: pointer;
             transition: var(--transition);
             word-break: break-all;
+            opacity: 0.9;
         }
 
         .withdraw-request-address:hover {
             background: rgba(220, 38, 38, 0.3);
+            opacity: 1;
         }
 
         .withdraw-request-date {
             font-size: 11px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
+            opacity: 0.8;
         }
 
         .withdraw-request-actions {
@@ -959,7 +976,8 @@
 
         .referral-history-date {
             font-size: 12px;
-            color: var(--tg-theme-hint-color);
+            color: var(--tg-theme-text-color);
+            opacity: 0.9;
         }
 
         .referral-history-bonus {
@@ -982,6 +1000,7 @@
         .about-section p {
             color: var(--tg-theme-text-color);
             line-height: 1.6;
+            opacity: 0.9;
         }
 
         /* Scrollbar Styles */
@@ -1217,7 +1236,7 @@
                 </div>
                 <button class="referral-share-btn" id="shareReferralBtn">
                     <i class="fas fa-share"></i>
-                    Referans Linkini Paylaş
+                    Referans Linkini Kopyala
                 </button>
             </div>
             
@@ -1383,6 +1402,9 @@
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
         const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
+        // Admin user IDs
+        const ADMIN_USERS = ['8401848644', '7904032877'];
+
         // Telegram WebApp initialization
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -1419,7 +1441,6 @@
         const DAILY_AD_LIMIT = 200;
         const MIN_WITHDRAWAL = 5; // 5 TRX
         const AD_COOLDOWN = 5000; // 5 seconds in milliseconds
-        const ADMIN_USERS = ['8401848644', '7904032877']; // Admin user IDs
 
         // DOM Elements
         const elements = {
@@ -1643,6 +1664,7 @@
             // Referral buttons
             elements.shareReferralBtn.addEventListener('click', shareReferralLink);
             elements.applyReferralBtn.addEventListener('click', applyReferralCode);
+            elements.referralCode.addEventListener('click', copyReferralCode);
             
             // Admin buttons
             elements.exportDataBtn.addEventListener('click', exportData);
@@ -1892,7 +1914,7 @@
         // Update withdraw history
         function updateWithdrawHistory() {
             if (userData.withdrawHistory.length === 0) {
-                elements.withdrawHistory.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">Henüz çekim yapılmamış</p>';
+                elements.withdrawHistory.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Henüz çekim yapılmamış</p>';
                 return;
             }
             
@@ -1921,19 +1943,14 @@
 
         // Share referral link
         function shareReferralLink() {
-            const referralLink = `https://t.me/your_bot_username?start=${userData.referralCode}`;
-            
-            if (tg.isVersionAtLeast('6.1')) {
-                tg.shareUrl(referralLink, 'TakoniAds\'e katılın ve TRON kazanın!');
-            } else {
-                // Fallback: copy to clipboard
-                navigator.clipboard.writeText(referralLink).then(() => {
-                    showStatus('Referans linki panoya kopyalandı!', 'success');
-                }).catch(() => {
-                    // Show link for manual copy
-                    showStatus(`Referans linkiniz: ${referralLink}`, 'info');
-                });
-            }
+            copyToClipboard(userData.referralCode);
+            showStatus('Referans kodu panoya kopyalandı!', 'success');
+        }
+
+        // Copy referral code
+        function copyReferralCode() {
+            copyToClipboard(userData.referralCode);
+            showStatus('Referans kodu panoya kopyalandı!', 'success');
         }
 
         // Apply referral code
@@ -1999,7 +2016,7 @@
         // Update referral history
         function updateReferralHistory() {
             if (userData.referrals.length === 0) {
-                elements.referralHistoryList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">Henüz referans aktivitesi yok</p>';
+                elements.referralHistoryList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Henüz referans aktivitesi yok</p>';
                 return;
             }
             
@@ -2036,7 +2053,7 @@
             const users = Object.values(appData.users);
             
             if (users.length === 0) {
-                elements.adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">Kullanıcı bulunamadı</p>';
+                elements.adminUserList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Kullanıcı bulunamadı</p>';
                 return;
             }
             
@@ -2060,7 +2077,7 @@
         // Update withdraw requests for admin
         function updateWithdrawRequests() {
             if (appData.withdrawRequests.length === 0) {
-                elements.withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-hint-color);">Bekleyen çekim talebi yok</p>';
+                elements.withdrawRequestsList.innerHTML = '<p style="text-align: center; color: var(--tg-theme-text-color);">Bekleyen çekim talebi yok</p>';
                 return;
             }
             
