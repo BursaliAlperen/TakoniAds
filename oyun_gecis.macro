@@ -1,0 +1,468 @@
+{
+  "macro": {
+    "m_GUID": -7105025200001234567,
+    "m_name": "Oyun Geçiş (Atılma Korumalı)",
+    "m_description": "Her 10 dk bir sıradaki oyunu açar, ekran ortasına tıklar. Oyundan atılırsa otomatik geri döner.",
+    "m_enabled": true,
+    "m_category": "Oyun",
+    "m_triggerList": [
+      {
+        "m_classType": "RegularIntervalTrigger",
+        "interval": 600,
+        "useAlarm": false,
+        "m_SIGUID": -8100000000000000001,
+        "m_constraintList": [],
+        "m_isDisabled": false,
+        "m_isOrCondition": false
+      }
+    ],
+    "m_actionList": [
+      {
+        "m_classType": "IfConditionAction",
+        "childrenCollapsed": false,
+        "dontLogIfConditionIsFalse": false,
+        "m_SIGUID": -8200000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 0,
+            "comparisonType": "EQUAL",
+            "checkCase": false,
+            "dictionaryKeys": { "keys": [] },
+            "dictionaryType": 0,
+            "enableRegex": false,
+            "m_booleanValue": true,
+            "m_doubleValue": 0.0,
+            "m_intCompareVariable": false,
+            "m_intGreaterThan": false,
+            "m_intLessThan": false,
+            "m_intNotEqual": false,
+            "m_intValue": 0,
+            "m_stringComparisonType": 0,
+            "m_stringEqual": true,
+            "m_variable": {
+              "dictionary": { "entries": [], "isArray": false, "variableType": 4, "type": "Dictionary" },
+              "isActionBlockWorkingVar": false,
+              "isLocalVar": false,
+              "isSecure": false,
+              "m_name": "oyun_sira",
+              "m_type": 0,
+              "supportsInput": true,
+              "supportsOutput": true
+            },
+            "m_SIGUID": -8200000000000000002
+          }
+        ],
+        "m_isDisabled": false,
+        "m_isOrCondition": false,
+        "Consequence": [
+          {
+            "m_classType": "LaunchAppAction",
+            "packageName": "com.app.pixel.adventure",
+            "m_excludeFromRecents": false,
+            "m_SIGUID": -8200000000000000003
+          }
+        ],
+        "Alternative": [
+          {
+            "m_classType": "ElseIfConditionAction",
+            "m_constraintList": [
+              {
+                "m_classType": "VariableCondition",
+                "variableName": "oyun_sira",
+                "variableType": "GLOBAL_INTEGER",
+                "comparison": 1,
+                "comparisonType": "EQUAL",
+                "checkCase": false,
+                "dictionaryKeys": { "keys": [] },
+                "dictionaryType": 0,
+                "enableRegex": false,
+                "m_booleanValue": true,
+                "m_doubleValue": 0.0,
+                "m_intCompareVariable": false,
+                "m_intGreaterThan": false,
+                "m_intLessThan": false,
+                "m_intNotEqual": false,
+                "m_intValue": 1,
+                "m_stringComparisonType": 0,
+                "m_stringEqual": true,
+                "m_variable": {
+                  "dictionary": { "entries": [], "isArray": false, "variableType": 4, "type": "Dictionary" },
+                  "isActionBlockWorkingVar": false,
+                  "isLocalVar": false,
+                  "isSecure": false,
+                  "m_name": "oyun_sira",
+                  "m_type": 0,
+                  "supportsInput": true,
+                  "supportsOutput": true
+                },
+                "m_SIGUID": -8200000000000000004
+              }
+            ],
+            "Consequence": [
+              {
+                "m_classType": "LaunchAppAction",
+                "packageName": "com.app.gold.magic.reward",
+                "m_SIGUID": -8200000000000000005
+              }
+            ],
+            "Alternative": [
+              {
+                "m_classType": "ElseIfConditionAction",
+                "m_constraintList": [
+                  {
+                    "m_classType": "VariableCondition",
+                    "variableName": "oyun_sira",
+                    "variableType": "GLOBAL_INTEGER",
+                    "comparison": 2,
+                    "comparisonType": "EQUAL",
+                    "checkCase": false,
+                    "dictionaryKeys": { "keys": [] },
+                    "dictionaryType": 0,
+                    "enableRegex": false,
+                    "m_booleanValue": true,
+                    "m_doubleValue": 0.0,
+                    "m_intCompareVariable": false,
+                    "m_intGreaterThan": false,
+                    "m_intLessThan": false,
+                    "m_intNotEqual": false,
+                    "m_intValue": 2,
+                    "m_stringComparisonType": 0,
+                    "m_stringEqual": true,
+                    "m_variable": {
+                      "dictionary": { "entries": [], "isArray": false, "variableType": 4, "type": "Dictionary" },
+                      "isActionBlockWorkingVar": false,
+                      "isLocalVar": false,
+                      "isSecure": false,
+                      "m_name": "oyun_sira",
+                      "m_type": 0,
+                      "supportsInput": true,
+                      "supportsOutput": true
+                    },
+                    "m_SIGUID": -8200000000000000006
+                  }
+                ],
+                "Consequence": [
+                  {
+                    "m_classType": "LaunchAppAction",
+                    "packageName": "com.app.magnificent.pets.adventure",
+                    "m_SIGUID": -8200000000000000007
+                  }
+                ],
+                "Alternative": [
+                  {
+                    "m_classType": "ElseIfConditionAction",
+                    "m_constraintList": [
+                      {
+                        "m_classType": "VariableCondition",
+                        "variableName": "oyun_sira",
+                        "variableType": "GLOBAL_INTEGER",
+                        "comparison": 3,
+                        "comparisonType": "EQUAL",
+                        "m_SIGUID": -8200000000000000008,
+                        "m_variable": {
+                          "m_name": "oyun_sira",
+                          "m_type": 0,
+                          "supportsInput": true,
+                          "supportsOutput": true,
+                          "isLocalVar": false
+                        },
+                        "m_intValue": 3,
+                        "m_booleanValue": true,
+                        "m_stringEqual": true
+                      }
+                    ],
+                    "Consequence": [
+                      {
+                        "m_classType": "LaunchAppAction",
+                        "packageName": "com.app.greedy.scratch.fun",
+                        "m_SIGUID": -8200000000000000009
+                      }
+                    ],
+                    "Alternative": [
+                      {
+                        "m_classType": "ElseIfConditionAction",
+                        "m_constraintList": [
+                          {
+                            "m_classType": "VariableCondition",
+                            "variableName": "oyun_sira",
+                            "variableType": "GLOBAL_INTEGER",
+                            "comparison": 4,
+                            "comparisonType": "EQUAL",
+                            "m_variable": {
+                              "m_name": "oyun_sira",
+                              "isLocalVar": false
+                            },
+                            "m_intValue": 4,
+                            "m_booleanValue": true
+                          }
+                        ],
+                        "Consequence": [
+                          {
+                            "m_classType": "LaunchAppAction",
+                            "packageName": "com.app.cyberlooters.game"
+                          }
+                        ],
+                        "Alternative": [
+                          {
+                            "m_classType": "ElseIfConditionAction",
+                            "m_constraintList": [
+                              {
+                                "m_classType": "VariableCondition",
+                                "variableName": "oyun_sira",
+                                "variableType": "GLOBAL_INTEGER",
+                                "comparison": 5,
+                                "comparisonType": "EQUAL",
+                                "m_variable": { "m_name": "oyun_sira" },
+                                "m_intValue": 5,
+                                "m_booleanValue": true
+                              }
+                            ],
+                            "Consequence": [
+                              {
+                                "m_classType": "LaunchAppAction",
+                                "packageName": "com.app.lost.train.quest"
+                              }
+                            ],
+                            "Alternative": [
+                              {
+                                "m_classType": "ElseIfConditionAction",
+                                "m_constraintList": [
+                                  {
+                                    "m_classType": "VariableCondition",
+                                    "variableName": "oyun_sira",
+                                    "variableType": "GLOBAL_INTEGER",
+                                    "comparison": 6,
+                                    "comparisonType": "EQUAL",
+                                    "m_variable": { "m_name": "oyun_sira" },
+                                    "m_intValue": 6,
+                                    "m_booleanValue": true
+                                  }
+                                ],
+                                "Consequence": [
+                                  {
+                                    "m_classType": "LaunchAppAction",
+                                    "packageName": "com.app.illusion.show.magic"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 3,
+        "m_useAlarm": false,
+        "m_SIGUID": -8300000000000000001
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "childrenCollapsed": false,
+        "dontLogIfConditionIsFalse": false,
+        "m_SIGUID": -8400000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 0,
+            "comparisonType": "EQUAL",
+            "m_variable": { "m_name": "oyun_sira" }
+          },
+          {
+            "m_classType": "ActiveApplicationConstraint",
+            "m_active": true,
+            "m_foreground": false,
+            "m_applicationNameList": [],
+            "m_packageNameList": ["com.app.pixel.adventure"],
+            "usePackageNameOption": 0,
+            "m_SIGUID": -8400000000000000002
+          }
+        ],
+        "m_isOrCondition": false,
+        "Consequence": [
+          {
+            "m_classType": "LaunchAppAction",
+            "packageName": "com.app.pixel.adventure",
+            "m_SIGUID": -8400000000000000003
+          },
+          {
+            "m_classType": "PauseAction",
+            "m_delayInSeconds": 3,
+            "m_SIGUID": -8400000000000000004
+          }
+        ]
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_SIGUID": -8500000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 1,
+            "comparisonType": "EQUAL"
+          },
+          {
+            "m_classType": "ActiveApplicationConstraint",
+            "m_active": true,
+            "m_foreground": false,
+            "m_packageNameList": ["com.app.gold.magic.reward"]
+          }
+        ],
+        "Consequence": [
+          { "m_classType": "LaunchAppAction", "packageName": "com.app.gold.magic.reward" },
+          { "m_classType": "PauseAction", "m_delayInSeconds": 3 }
+        ]
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_SIGUID": -8600000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 2,
+            "comparisonType": "EQUAL"
+          },
+          {
+            "m_classType": "ActiveApplicationConstraint",
+            "m_active": true,
+            "m_foreground": false,
+            "m_packageNameList": ["com.app.magnificent.pets.adventure"]
+          }
+        ],
+        "Consequence": [
+          { "m_classType": "LaunchAppAction", "packageName": "com.app.magnificent.pets.adventure" },
+          { "m_classType": "PauseAction", "m_delayInSeconds": 3 }
+        ]
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_SIGUID": -8700000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 3,
+            "comparisonType": "EQUAL"
+          },
+          {
+            "m_classType": "ActiveApplicationConstraint",
+            "m_active": true,
+            "m_foreground": false,
+            "m_packageNameList": ["com.app.greedy.scratch.fun"]
+          }
+        ],
+        "Consequence": [
+          { "m_classType": "LaunchAppAction", "packageName": "com.app.greedy.scratch.fun" },
+          { "m_classType": "PauseAction", "m_delayInSeconds": 3 }
+        ]
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_SIGUID": -8800000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 4,
+            "comparisonType": "EQUAL"
+          },
+          {
+            "m_classType": "ActiveApplicationConstraint",
+            "m_active": true,
+            "m_foreground": false,
+            "m_packageNameList": ["com.app.cyberlooters.game"]
+          }
+        ],
+        "Consequence": [
+          { "m_classType": "LaunchAppAction", "packageName": "com.app.cyberlooters.game" },
+          { "m_classType": "PauseAction", "m_delayInSeconds": 3 }
+        ]
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_SIGUID": -8900000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 5,
+            "comparisonType": "EQUAL"
+          },
+          {
+            "m_classType": "ActiveApplicationConstraint",
+            "m_active": true,
+            "m_foreground": false,
+            "m_packageNameList": ["com.app.lost.train.quest"]
+          }
+        ],
+        "Consequence": [
+          { "m_classType": "LaunchAppAction", "packageName": "com.app.lost.train.quest" },
+          { "m_classType": "PauseAction", "m_delayInSeconds": 3 }
+        ]
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_SIGUID": -9000000000000000001,
+        "m_constraintList": [
+          {
+            "m_classType": "VariableCondition",
+            "variableName": "oyun_sira",
+            "variableType": "GLOBAL_INTEGER",
+            "comparison": 6,
+            "comparisonType": "EQUAL"
+          },
+          {
+            "m_classType": "ActiveApplicationConstraint",
+            "m_active": true,
+            "m_foreground": false,
+            "m_packageNameList": ["com.app.illusion.show.magic"]
+          }
+        ],
+        "Consequence": [
+          { "m_classType": "LaunchAppAction", "packageName": "com.app.illusion.show.magic" },
+          { "m_classType": "PauseAction", "m_delayInSeconds": 3 }
+        ]
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "type": "Click",
+          "xyPercentages": true,
+          "xyPoint": { "x": 50, "y": 50 },
+          "clickOption": 2
+        },
+        "m_SIGUID": -9100000000000000001
+      },
+      {
+        "m_classType": "SetVariableAction",
+        "variableName": "oyun_sira",
+        "variableType": "GLOBAL_INTEGER",
+        "expression": "(oyun_sira + 1) % 7",
+        "m_SIGUID": -9200000000000000001
+      }
+    ],
+    "m_constraintList": [],
+    "m_isOrCondition": false,
+    "localVariables": [],
+    "macroExportVersion": 1
+  }
+}
