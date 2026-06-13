@@ -1,0 +1,111 @@
+{
+  "macro": {
+    "m_name": "Saniyelik Tiklayici ve Buton Bulucu",
+    "m_enabled": false,
+    "m_description": "Start/Continue bulur, bulamazsa ortaya tiklar.",
+    "localVariables": [
+      {"m_name": "ContinueBulundu", "m_type": 0, "m_booleanValue": false, "isLocalVar": true},
+      {"m_name": "StartBulundu", "m_type": 0, "m_booleanValue": false, "isLocalVar": true}
+    ],
+    "m_triggerList": [
+      {"m_classType": "MacroEnabledTrigger"},
+      {"m_classType": "TimerRepeatingTrigger", "m_intervalInSeconds": 1}
+    ],
+    "m_constraintList": [
+      {
+        "m_classType": "ActiveApplicationConstraint",
+        "m_foreground": true,
+        "m_packageNameList": [
+          "com.app.magnificent.pets.adventure",
+          "com.app.desert.looters.hero",
+          "com.app.dragon.cave.saga.adventure",
+          "com.app.mystic.cool.game",
+          "com.app.deep.card.masters.adventure"
+        ]
+      }
+    ],
+    "m_actionList": [
+      {
+        "m_classType": "CheckTextOnScreenAction",
+        "textToCheck": "Continue",
+        "ignoreCase": true,
+        "booleanVariableName": "ContinueBulundu",
+        "m_SIGUID": -1000000000000000001
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_constraintList": [
+          {
+            "m_classType": "MacroDroidVariableConstraint",
+            "m_variable": {"m_name": "ContinueBulundu", "isLocalVar": true},
+            "m_booleanValue": true,
+            "m_stringEqual": true,
+            "m_SIGUID": -1000000000000000002
+          }
+        ],
+        "children": [
+          {
+            "m_classType": "UIInteractionAction",
+            "uiInteractionConfiguration": {
+              "type": "Click",              "clickOption": 1,
+              "textContent": "Continue",
+              "ignoreCase": true,
+              "textMatchOption": 0
+            },
+            "m_SIGUID": -1000000000000000003
+          }
+        ],
+        "m_SIGUID": -1000000000000000004
+      },
+      {
+        "m_classType": "CheckTextOnScreenAction",
+        "textToCheck": "Start",
+        "ignoreCase": true,
+        "booleanVariableName": "StartBulundu",
+        "m_SIGUID": -1000000000000000005
+      },
+      {
+        "m_classType": "IfConditionAction",
+        "m_constraintList": [
+          {
+            "m_classType": "MacroDroidVariableConstraint",
+            "m_variable": {"m_name": "StartBulundu", "isLocalVar": true},
+            "m_booleanValue": true,
+            "m_stringEqual": true,
+            "m_SIGUID": -1000000000000000006
+          }
+        ],
+        "children": [
+          {
+            "m_classType": "UIInteractionAction",
+            "uiInteractionConfiguration": {
+              "type": "Click",
+              "clickOption": 1,
+              "textContent": "Start",
+              "ignoreCase": true,
+              "textMatchOption": 0
+            },
+            "m_SIGUID": -1000000000000000007
+          }
+        ],
+        "m_SIGUID": -1000000000000000008
+      },
+      {
+        "m_classType": "UIInteractionAction",
+        "uiInteractionConfiguration": {
+          "type": "Click",
+          "clickOption": 2,
+          "xyPercentages": false,
+          "xyPoint": {"x": 540, "y": 960}        },
+        "m_SIGUID": -1000000000000000009
+      },
+      {
+        "m_classType": "PauseAction",
+        "m_delayInSeconds": 1,
+        "m_SIGUID": -1000000000000000010
+      }
+    ],
+    "m_SIGUID": -1000000000000000011
+  },
+  "macroExportVersion": 1
+}
