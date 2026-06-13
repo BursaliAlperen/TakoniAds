@@ -1,334 +1,340 @@
 <?php
-error_reporting(0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 date_default_timezone_set('Asia/Jakarta');
 
 $configFile = "config.json";
 
-// AAA Renk Paleti (Pembe, Mor, Gri, Yeşil, Kırmızı)
+// Renkler
 const pink   = "\033[38;5;213m";
 const purple = "\033[38;5;129m";
 const gray   = "\033[38;5;244m";
 const green  = "\033[38;5;46m";
 const red    = "\033[38;5;196m";
+const yellow = "\033[38;5;226m";
 const reset  = "\033[0m";
 const bold   = "\033[1m";
 
-const version     = "2.0";
-const script_name = "NINOCOIN";
-const host        = "https://99faucet.com";
-const api_in      = "https://api.waryono.my.id/in.php";
+const host = "https://99faucet.com";
+const api_in = "https://api.waryono.my.id/in.php";
 
 function clear() {
-    (PHP_OS == "Linux" || PHP_OS == "Darwin") ? system('clear') : pclose(popen('cls', 'w'));
-}
-
-function uf() {
-    return md5(uniqid(mt_rand(), true));
-}
-
-function zone() {
-    return date_default_timezone_get();
+    echo "\033[2J\033[H";
 }
 
 function banner() {
-    echo purple . bold . "  _   _ ______ _____  _____  _   _ " . reset . "\n";
-    echo purple . bold . " | \ | || ___ \_   _|/  __ \| | | |" . reset . "\n";
-    echo pink  . bold . " |  \| || |_/ / | |  | /  \/| |_| |" . reset . "\n";
-    echo pink  . bold . " | . ` || ___ \ | |  | |    |  _  |" . reset . "\n";
-    echo purple. bold . " | |\  || |_/ / | |  | \__/\| | | |" . reset . "\n";
-    echo pink  . bold . " \_| \_/\____/  \_/   \____/\_| |_/" . reset . "\n";
-    echo gray  . "          [ AAA Multi-Coin Claimer ]         " . reset . "\n";
-    echo gray  . "-----------------------------------------------------" . reset . "\n";
+    echo purple . bold . "
+ _   _ ______ _____  _____  _   _ 
+| \ | || ___ \_   _|/  __ \| | | |
+|  \| || |_/ / | |  | /  \/| |_| |
+| . ` || ___ \ | |  | |    |  _  |
+| |\  || |_/ / | |  | \__/\| | | |
+\_| \_/\____/  \_/   \____/\_| |_/
+" . reset . "\n";
+    echo gray . "        [ AAA Multi-Coin Claimer ]" . reset . "\n";
+    echo gray . "----------------------------------------" . reset . "\n\n";
 }
 
-function fast_timer($seconds, $prefix = "[*] Waiting") {
-    $wait_time = (int)$seconds;
-    while ($wait_time > 0) {
-        $hours = floor($wait_time / 3600);
-        $minutes = floor(($wait_time % 3600) / 60);
-        $secs = $wait_time % 60;
-        $time_formatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);        echo gray . $prefix . " " . pink . $time_formatted . gray . "...\r" . reset;
-        sleep(1);
-        $wait_time--;
+function getConfig($configFile) {
+    if (!file_exists($configFile)) {
+        echo purple . "[!] Config dosyası bulunamadı. Yeni oluşturuluyor...\n\n" . reset;
+        echo purple . "API Key girin: " . reset;
+        $apikey = trim(fgets(STDIN));
+        
+        echo purple . "Cookie girin: " . reset;
+        $cookie = trim(fgets(STDIN));
+        
+        if (empty($apikey) || empty($cookie)) {
+            echo red . "[!] API Key veya Cookie boş olamaz!\n" . reset;
+            exit(1);
+        }        
+        $data = [
+            "apikey" => $apikey,
+            "cookie" => $cookie,
+            "user_agent" => "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+        ];
+        
+        file_put_contents($configFile, json_encode($data, JSON_PRETTY_PRINT));
+        echo green . "[+] Config kaydedildi: $configFile\n" . reset;
+        sleep(2);
+        return $data;
     }
-    echo str_repeat(" ", 60) . "\r";
+    
+    $config = json_decode(file_get_contents($configFile), true);
+    if (!$config || empty($config['apikey']) || empty($config['cookie'])) {
+        echo red . "[!] Config dosyası hatalı! Siliniyor...\n" . reset;
+        unlink($configFile);
+        sleep(2);
+        return getConfig($configFile);
+    }
+    
+    return $config;
 }
 
 function skibidixxx($url, $method = 'GET', $data = [], $headers = []) {
     $ch = curl_init();
-    $final_headers = [];
-    foreach ($headers as $header) {
-        $final_headers[] = $header;
-    }
     $options = [
-        CURLOPT_URL            => $url,
+        CURLOPT_URL => $url,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HEADER         => true,
+        CURLOPT_HEADER => false,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_SSL_VERIFYHOST => 0,
         CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_HTTPHEADER     => $final_headers,
-        CURLOPT_CONNECTTIMEOUT => 15,
-        CURLOPT_TIMEOUT        => 15
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_CONNECTTIMEOUT => 30,
+        CURLOPT_TIMEOUT => 30
     ];
+    
     if (strtoupper($method) === 'POST') {
         $options[CURLOPT_POST] = true;
         $options[CURLOPT_POSTFIELDS] = $data;
     }
+    
     curl_setopt_array($ch, $options);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     
     if ($response && $httpCode >= 200 && $httpCode < 400) {
-        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        return substr($response, $header_size);
+        return $response;    }
+    return "error";
+}
+
+function bypassCloudflare(&$config, $configFile, $target) {
+    echo yellow . "[!] Cloudflare tespit edildi. Bypass deneniyor...\n" . reset;
+    
+    $python_cmd = "python3 exec.py " . escapeshellarg($target) . " 2>&1";
+    $output = exec($python_cmd, $output_array, $return_code);
+    
+    if (empty($output) && !empty($output_array)) {
+        $output = implode("\n", $output_array);
     }
-    return "ngelek";
+    
+    $data_bypass = json_decode($output, true);
+    
+    if (isset($data_bypass['cf_clearance']) && !empty($data_bypass['cf_clearance'])) {
+        $new_cf = $data_bypass['cf_clearance'];
+        $new_ua = $data_bypass['user_agent'] ?? $config['user_agent'];
+        
+        $old_cookie = $config['cookie'];
+        $new_token = strpos($new_cf, '=') !== false ? explode('=', $new_cf)[1] : $new_cf;
+        
+        if (preg_match('/cf_clearance=[^;]+/', $old_cookie, $matches)) {
+            $new_cookie = str_replace($matches[0], "cf_clearance=" . $new_token, $old_cookie);
+        } else {
+            $new_cookie = $old_cookie . "; cf_clearance=" . $new_token;
+        }
+        
+        $config['cookie'] = $new_cookie;
+        $config['user_agent'] = $new_ua;
+        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+        
+        echo green . "[+] Cloudflare bypass başarılı!\n" . reset;
+        sleep(2);
+        return true;
+    }
+    
+    echo red . "[-] Cloudflare bypass başarısız!\n" . reset;
+    echo gray . "Debug: $output\n" . reset;
+    return false;
 }
 
 function slider($app_id, $public_key, $version, $reff, $apikey) {
     $headers = ["Content-Type: application/json"];
     $body = json_encode([
-        "apikey"     => $apikey,
-        "app_id"     => $app_id,
-        "methods"    => "rslider",
-        "public_key" => $public_key,
-        "version"    => $version,
-        "referer"    => $reff,
-        "json"       => 1    ]);
+        "apikey" => $apikey,
+        "app_id" => $app_id,
+        "methods" => "rslider",
+        "public_key" => $public_key,        "version" => $version,
+        "referer" => $reff,
+        "json" => 1
+    ]);
     
     $request = skibidixxx(api_in, "POST", $body, $headers);
-    if (strpos($request, "ERROR") !== false || strpos($request, "error") !== false) {
+    $json = json_decode($request, true);
+    
+    if (!isset($json["request"])) {
+        echo red . "[-] Slider hatası: " . ($json['error'] ?? 'Unknown') . "\n" . reset;
         return false;
     }
     
-    $json = json_decode($request, true);
-    if (!isset($json["request"])) return false;
     $id = $json["request"];
     
-    $max_retries = 25; // Hızlı claim için 25 * 2s = 50s max bekleme
-    for ($i = 0; $i < $max_retries; $i++) {
-        echo gray . "[*] Solving Captcha... (" . ($i + 1) . "/$max_retries)\r" . reset;
+    for ($i = 0; $i < 30; $i++) {
+        echo gray . "[*] Captcha çözülüyor... (" . ($i + 1) . "/30)\r" . reset;
         sleep(2);
-        $url = "https://api.waryono.my.id/res.php?apikey=" . $apikey . "&id=" . $id . "&json=1";
-        $result = skibidixxx($url, "GET", []);
         
-        if (strpos($result, "CAPCHA_NOT_READY") !== false || strpos($result, "ERROR_SOLVE_PENDING") !== false) {
-            continue;
+        $result = skibidixxx("https://api.waryono.my.id/res.php?apikey=$apikey&id=$id&json=1", "GET");
+        $json_res = json_decode($result, true);
+        
+        if (isset($json_res["request"]) && strpos($json_res["request"], "rs_token:") !== false) {
+            preg_match('/rs_token:(\d+),rs_res:([^,]+)/', $json_res["request"], $match);
+            echo green . "[+] Captcha çözüldü!            \n" . reset;
+            return ["rs_token" => $match[1], "rs_res" => $match[2]];
         }
-        if (strpos($result, "ERROR") !== false) {
+        
+        if (isset($json_res['error']) && strpos($json_res['error'], 'ERROR') !== false) {
+            echo red . "[-] Captcha hatası: " . $json_res['error'] . "\n" . reset;
             return false;
         }
-        
-        $json_res = json_decode($result, true);
-        if (isset($json_res["request"])) {
-            $res = $json_res["request"];
-            if (preg_match('/rs_token:(\d+),rs_res:([^,]+)/', $res, $match)) {
-                echo green . "[+] Captcha Solved Successfully!            \n" . reset;
-                return ["rs_token" => $match[1], "rs_res" => $match[2]];
-            }
-        }
     }
-    echo red . "\n[-] Captcha Timeout!                        \n" . reset;
-    return false;
-}
-
-function bypassCloudflare(&$config, $configFile, $target) {
-    echo yellow . "[!] Cloudflare Detected. Bypassing..." . reset . "\n";
-    $python_cmd = "python exec.py " . escapeshellarg($target) . " 2>/dev/null";
-    $output = exec($python_cmd);
-    $data_bypass = json_decode($output, true);
     
-    if (isset($data_bypass['cf_clearance']) && !empty($data_bypass['cf_clearance'])) {
-        $full_new_cf = $data_bypass['cf_clearance'];
-        $new_ua = $data_bypass['user_agent'];
-        $old_cookie = $config['cookie'] ?? '';
-        
-        $new_token_value = strpos($full_new_cf, '=') !== false ? explode('=', $full_new_cf)[1] : $full_new_cf;        $pattern = '/cf_clearance=[^;]+/';
-        $replacement = "cf_clearance=" . $new_token_value;
-        
-        if (preg_match($pattern, $old_cookie)) {
-            $new_cookie_str = preg_replace($pattern, $replacement, $old_cookie);
-        } else {
-            $new_cookie_str = rtrim($old_cookie, "; ") . (empty($old_cookie) ? "" : "; ") . $replacement;
-        }
-        
-        $config['cookie'] = $new_cookie_str;
-        $config['user_agent'] = $new_ua;
-        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
-        
-        echo green . "[+] Cloudflare Bypassed Successfully!" . reset . "\n";
-        sleep(1);
-        return true;
-    }
-    echo red . "[-] Cloudflare Bypass Failed!" . reset . "\n";
+    echo red . "[-] Captcha timeout!\n" . reset;
     return false;
 }
 
-function getConfig($configFile) {
-    if (!file_exists($configFile)) {
-        echo purple . "API Key: " . pink;
-        $apikey = trim(fgets(STDIN));
-        echo purple . "Cookie: " . pink;
-        $coki = trim(fgets(STDIN));
-        $data = ["apikey" => $apikey, "cookie" => $coki];
-        file_put_contents($configFile, json_encode($data, JSON_PRETTY_PRINT));
-        echo green . "[+] Saved to $configFile\n" . reset;
-        sleep(2);
-        return $data;
-    }
-    return json_decode(file_get_contents($configFile), true);
-}
-
-// --- ANA DÖNGÜ ---
-login:
+// Ana program
 clear();
 banner();
+
+echo gray . "[*] Config kontrol ediliyor...\n" . reset;
 $config = getConfig($configFile);
-$apikey = $config['apikey'] ?? '';
-$coki   = $config['cookie'] ?? '';
-$ua     = $config['user_agent'] ?? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
 
-if (empty($apikey) || empty($coki)) {
-    echo red . "[!] Invalid config. Deleting and restarting..." . reset . "\n";
-    @unlink($configFile);
-    sleep(2);
-    goto login;}
+$apikey = $config['apikey'];
+$cookie = $config['cookie'];
+$ua = $config['user_agent'] ?? "Mozilla/5.0 (Linux; Android 10; K)";
 
-dash:
-clear();
-banner();
-echo gray . "[*] Fetching dashboard..." . reset . "\n";
+echo green . "[+] API Key: " . substr($apikey, 0, 10) . "...\n" . reset;echo green . "[+] Cookie loaded\n" . reset;
+sleep(2);
 
-$headers = [
-    "host: 99faucet.com",
-    "user-agent: " . $ua,
-    "accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-    "referer: " . host . "/faucet/pepe",
-    "cookie: " . $coki
-];
-
-$dash = skibidixxx(host . "/dashboard", "GET", [], $headers);
-
-if ($dash == "ngelek" || strpos($dash, "Just a moment") !== false) {
-    if (!bypassCloudflare($config, $configFile, host . "/dashboard")) {
-        echo red . "[!] Critical Bypass Failed. Check connection." . reset . "\n";
-        sleep(5);
-        goto dash;
-    }
-    $coki = $config['cookie'];
-    $ua   = $config['user_agent'];
-    $headers = ["host: 99faucet.com", "user-agent: " . $ua, "accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "referer: " . host . "/faucet/pepe", "cookie: " . $coki];
+// Ana döngü
+while (true) {
+    clear();
+    banner();
+    
+    echo gray . "[*] Dashboard çekiliyor...\n" . reset;
+    
+    $headers = [
+        "host: 99faucet.com",
+        "user-agent: $ua",
+        "accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "referer: " . host . "/faucet/pepe",
+        "cookie: $cookie"
+    ];
+    
     $dash = skibidixxx(host . "/dashboard", "GET", [], $headers);
-}
-
-if (strpos($dash, "Dashboard | 99Faucet") !== false) {
-    preg_match_all('/<a href="https:\/\/99faucet\.com\/faucet\/([^"]+)" class="">/', $dash, $matches);
+    
+    if ($dash == "error" || strpos($dash, "Just a moment") !== false) {
+        if (bypassCloudflare($config, $configFile, host . "/dashboard")) {
+            $cookie = $config['cookie'];
+            $ua = $config['user_agent'];
+            continue;
+        } else {
+            echo red . "[!] Bypass başarısız. 5 saniye bekleniyor...\n" . reset;
+            sleep(5);
+            continue;
+        }
+    }
+    
+    if (strpos($dash, "Dashboard") === false) {
+        echo red . "[!] Login başarısız! Cookie süresi dolmuş olabilir.\n" . reset;
+        echo yellow . "[*] Config siliniyor...\n" . reset;
+        unlink($configFile);
+        sleep(3);
+        $config = getConfig($configFile);
+        $cookie = $config['cookie'];
+        $ua = $config['user_agent'];
+        continue;
+    }
+    
+    // Coinleri bul
+    preg_match_all('/<a href="https:\/\/99faucet\.com\/faucet\/([^"]+)"/', $dash, $matches);
     $currencies = array_unique($matches[1]);
     
     if (empty($currencies)) {
-        echo red . "[!] No currencies found. Cookie might be expired." . reset . "\n";
-        sleep(3);
-        @unlink($configFile);
-        goto login;
+        echo red . "[!] Hiç coin bulunamadı!\n" . reset;
+        sleep(5);        continue;
     }
     
-    echo green . "[+] Found " . count($currencies) . " currencies!" . reset . "\n";
-    echo gray . "-----------------------------------------------------" . reset . "\n";
+    echo green . "[+] " . count($currencies) . " coin bulundu!\n" . reset;
+    echo gray . "----------------------------------------\n" . reset;
     
-    // MULTI-COIN DÖNGÜSÜ
+    // Tüm coinleri claim et
     foreach ($currencies as $index => $currency) {
-        $memek = strtolower($currency);
-        echo purple . bold . "\n  >> CLAIMING: " . pink . strtoupper($memek) . purple . " (" . ($index + 1) . "/" . count($currencies) . ")" . reset . "\n";
-        echo gray . "-----------------------------------------------------" . reset . "\n";
+        $coin = strtolower($currency);
+        echo purple . bold . "\n>> CLAIMING: " . pink . strtoupper($coin) . " (" . ($index + 1) . "/" . count($currencies) . ")\n" . reset;
+        echo gray . "----------------------------------------\n" . reset;
         
-        $faucet_headers = [            "host: 99faucet.com",
-            "user-agent: " . $ua,
-            "accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        $headers = [
+            "host: 99faucet.com",
+            "user-agent: $ua",
+            "accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "referer: " . host . "/dashboard",
-            "cookie: " . $coki
+            "cookie: $cookie"
         ];
         
-        $url = host . "/faucet/" . $memek;
-        $faucet = skibidixxx($url, "GET", [], $faucet_headers);
+        $url = host . "/faucet/$coin";
+        $faucet = skibidixxx($url, "GET", [], $headers);
         
-        if ($faucet == "ngelek" || strpos($faucet, "Just a moment") !== false) {
-            if (bypassCloudflare($config, $configFile, $url)) {
-                $coki = $config['cookie'];
-                $ua   = $config['user_agent'];
-                $faucet_headers = ["host: 99faucet.com", "user-agent: " . $ua, "accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "referer: " . host . "/dashboard", "cookie: " . $coki];
-                $faucet = skibidixxx($url, "GET", [], $faucet_headers);
-            } else {
-                echo red . "[-] Bypass Failed. Skipping " . strtoupper($memek) . reset . "\n";
-                continue;
-            }
+        if ($faucet == "error" || strpos($faucet, "Just a moment") !== false) {
+            bypassCloudflare($config, $configFile, $url);
+            $cookie = $config['cookie'];
+            $ua = $config['user_agent'];
         }
         
-        if (strpos($faucet, "Shortlinks | 99Faucet") !== false) {
-            echo yellow . "[!] Shortlink required. Skipping " . strtoupper($memek) . reset . "\n";
-            continue;
-        }
+        // Token al
+        preg_match('/<input type="hidden" name="token" value="([^"]+)"/', $faucet, $token_match);
+        $token = $token_match[1] ?? '';
         
-        $token = explode('"', explode('<input type="hidden" name="token" value="', $faucet)[1])[0] ?? '';
         if (empty($token)) {
-            echo red . "[-] Token not found. Skipping " . strtoupper($memek) . reset . "\n";
+            echo yellow . "[!] Token bulunamadı, geçiliyor...\n" . reset;
             continue;
         }
         
-        $bypass = slider("1044", "ws1WNm5E0xjtnezLT8r9", "v5", "https://99faucet.com/", $apikey);
+        // Captcha çöz
+        echo gray . "[*] Captcha çözülüyor...\n" . reset;
+        $bypass = slider("1044", "ws1WNm5E0xjtnezLT8r9", "v5", host . "/", $apikey);
         
-        if (is_array($bypass)) {
-            $post_headers = [
-                "host: 99faucet.com",
-                "origin: " . host,
-                "content-type: application/x-www-form-urlencoded",
-                "user-agent: " . $ua,
-                "accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                "referer: " . host . "/faucet/" . $memek,
-                "cookie: " . $coki
-            ];
-            
-            $data = http_build_query([
-                "ci_csrf_token" => "",
-                "token" => $token,
-                "currency" => $memek,                "captcha" => "rscaptchav37",
-                "rscaptcha_token" => $bypass["rs_token"],
-                "rscaptcha_response" => $bypass["rs_res"],
-                "uf" => uf(),
-                "utt" => zone(),
-                "ls" => "id,en-US,en,ms,ru"
-            ]);
-            
-            $claim = skibidixxx(host . "/faucet/verify", "POST", $data, $post_headers);
-            
-            if (strpos($claim, "Good job!") !== false) {
-                $msg = explode("'", explode("text: '", $claim)[1])[0] ?? "Success";
-                $timer_val = (int)(explode(' -', explode('let wait = ', $claim)[1])[0] ?? 60);
-                echo green . "[+] Claim Successful: " . $msg . reset . "\n";
-                if ($timer_val > 0) {
-                    fast_timer($timer_val, "[*] Next claim in");
-                }
-            } elseif (strpos($claim, "Invalid") !== false) {
-                echo red . "[-] Invalid captcha or claim." . reset . "\n";
-            } elseif (strpos($claim, "sufficient funds") !== false) {
-                echo yellow . "[!] Faucet empty for " . strtoupper($memek) . reset . "\n";
-            } else {
-                echo red . "[-] Unknown error." . reset . "\n";
-            }
-        } else {
-            echo red . "[-] Captcha solving failed." . reset . "\n";
+        if (!$bypass) {
+            echo red . "[-] Captcha çözülemedi!\n" . reset;
+            continue;
         }
+        
+        // Claim gönder
+        $post_data = http_build_query([
+            "ci_csrf_token" => "",            "token" => $token,
+            "currency" => $coin,
+            "captcha" => "rscaptchav37",
+            "rscaptcha_token" => $bypass["rs_token"],
+            "rscaptcha_response" => $bypass["rs_res"],
+            "uf" => md5(uniqid()),
+            "utt" => "Asia/Jakarta",
+            "ls" => "id,en-US,en"
+        ]);
+        
+        $post_headers = [
+            "host: 99faucet.com",
+            "origin: " . host,
+            "content-type: application/x-www-form-urlencoded",
+            "user-agent: $ua",
+            "referer: $url",
+            "cookie: $cookie"
+        ];
+        
+        $claim = skibidixxx(host . "/faucet/verify", "POST", $post_data, $post_headers);
+        
+        if (strpos($claim, "Good job!") !== false) {
+            preg_match("/text: '([^']+)'/", $claim, $msg_match);
+            $msg = $msg_match[1] ?? "Başarılı!";
+            echo green . "[+] $msg\n" . reset;
+            
+            preg_match('/let wait = (\d+)/', $claim, $timer_match);
+            $wait_time = (int)($timer_match[1] ?? 60);
+            
+            if ($wait_time > 0) {
+                echo gray . "[*] Sonraki claim: $wait_time saniye\n" . reset;
+                sleep($wait_time);
+            }
+        } elseif (strpos($claim, "sufficient funds") !== false) {
+            echo yellow . "[!] Faucet boş!\n" . reset;
+        } else {
+            echo red . "[-] Claim başarısız!\n" . reset;
+        }
+        
+        sleep(2);
     }
     
-    echo green . bold . "\n[+] All coins processed! Restarting loop in 10 seconds..." . reset . "\n";
-    fast_timer(10, "[*] Restarting in");
-    goto dash;
-    
-} else {
-    echo red . "[!] Login failed or session expired. Re-login..." . reset . "\n";
-    @unlink($configFile);
-    sleep(3);
-    goto login;
+    echo green . bold . "\n[+] Tüm coinler tamamlandı! 10 saniye sonra yeniden başlıyor...\n" . reset;
+    sleep(10);
 }
 ?>
