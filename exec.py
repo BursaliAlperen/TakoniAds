@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-NINOCOIN Cloudflare Bypass Module
-Desteklenen yöntemler: curl_cffi, cloudscraper, requests, httpx
+NINOCOIN - Cloudflare Bypass Module
+Author: NINOCOIN Team
+Version: 2.0
 """
 
 import sys
@@ -24,7 +25,6 @@ def bypass_with_curl_cffi(url):
     try:
         from curl_cffi import requests as cf_requests
         
-        log("curl_cffi deneniyor...")
         session = cf_requests.Session(impersonate="chrome124")
         
         # Warm-up request
@@ -40,15 +40,14 @@ def bypass_with_curl_cffi(url):
             '(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36')
         
         if cf_clearance:
-            log("curl_cffi başarılı!")
             return {
                 "cf_clearance": f"cf_clearance={cf_clearance}",
                 "user_agent": uagent
             }
     except ImportError:
         log("curl_cffi yüklü değil")
-    except Exception as e:        log(f"curl_cffi hatası: {str(e)}")
-    
+    except Exception as e:
+        log(f"curl_cffi hatası: {str(e)}")    
     return None
 
 
@@ -57,7 +56,6 @@ def bypass_with_cloudscraper(url):
     try:
         import cloudscraper
         
-        log("cloudscraper deneniyor...")
         scraper = cloudscraper.create_scraper(
             browser={'browser': 'chrome', 'platform': 'android', 'desktop': False}
         )
@@ -70,7 +68,6 @@ def bypass_with_cloudscraper(url):
         cf_clearance = cookies.get('cf_clearance', '')
         
         if cf_clearance:
-            log("cloudscraper başarılı!")
             return {
                 "cf_clearance": f"cf_clearance={cf_clearance}",
                 "user_agent": 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 '
@@ -89,24 +86,22 @@ def bypass_with_requests(url):
     try:
         import requests
         
-        log("requests deneniyor...")
         headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 '
                          '(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
             'Connection': 'keep-alive',
-        }        
+        }
+        
         session = requests.Session()
         session.get("https://99faucet.com", headers=headers, timeout=15)
-        time.sleep(3)
-        response = session.get(url, headers=headers, timeout=20, allow_redirects=True)
+        time.sleep(3)        response = session.get(url, headers=headers, timeout=20, allow_redirects=True)
         
         cookies = session.cookies.get_dict()
         cf_clearance = cookies.get('cf_clearance', '')
         
         if cf_clearance:
-            log("requests başarılı!")
             return {
                 "cf_clearance": f"cf_clearance={cf_clearance}",
                 "user_agent": headers['User-Agent']
@@ -124,7 +119,6 @@ def bypass_with_httpx(url):
     try:
         import httpx
         
-        log("httpx deneniyor...")
         headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 '
                          '(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
@@ -140,17 +134,16 @@ def bypass_with_httpx(url):
             cf_clearance = cookies.get('cf_clearance', '')
             
             if cf_clearance:
-                log("httpx başarılı!")
                 return {
                     "cf_clearance": f"cf_clearance={cf_clearance}",
                     "user_agent": headers['User-Agent']
                 }
-    except ImportError:        log("httpx yüklü değil")
+    except ImportError:
+        log("httpx yüklü değil")
     except Exception as e:
         log(f"httpx hatası: {str(e)}")
     
     return None
-
 
 def main():
     """Ana fonksiyon"""
@@ -163,23 +156,31 @@ def main():
     result = None
     
     # Deneme sırası: en güçlüden zayıfa
+    log("curl_cffi deneniyor...")
     result = bypass_with_curl_cffi(target_url)
     if result:
+        log("curl_cffi başarılı!")
         print(json.dumps(result))
         sys.exit(0)
     
+    log("cloudscraper deneniyor...")
     result = bypass_with_cloudscraper(target_url)
     if result:
+        log("cloudscraper başarılı!")
         print(json.dumps(result))
         sys.exit(0)
     
+    log("requests deneniyor...")
     result = bypass_with_requests(target_url)
     if result:
+        log("requests başarılı!")
         print(json.dumps(result))
         sys.exit(0)
     
+    log("httpx deneniyor...")
     result = bypass_with_httpx(target_url)
     if result:
+        log("httpx başarılı!")
         print(json.dumps(result))
         sys.exit(0)
     
