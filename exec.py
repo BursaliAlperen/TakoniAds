@@ -96,7 +96,8 @@ def bypass_with_requests(url):
         
         session = requests.Session()
         session.get("https://99faucet.com", headers=headers, timeout=15)
-        time.sleep(3)        response = session.get(url, headers=headers, timeout=20, allow_redirects=True)
+        time.sleep(3)
+        response = session.get(url, headers=headers, timeout=20, allow_redirects=True)
         
         cookies = session.cookies.get_dict()
         cf_clearance = cookies.get('cf_clearance', '')
